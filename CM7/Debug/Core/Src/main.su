@@ -1,8 +1,0 @@
-../Core/Src/main.c:80:5:main	32	static,ignoring_inline_asm
-../Core/Src/main.c:198:6:SystemClock_Config	120	static
-../Core/Src/main.c:254:13:MX_USART1_UART_Init	8	static
-../Core/Src/main.c:302:13:MX_GPIO_Init	24	static
-../Core/Src/main.c:319:13:Display_DemoDescription	88	static
-../Core/Src/main.c:361:13:LCD_SetHint	24	static
-../Core/Src/main.c:391:13:LCD_Show_Feature	144	static
-../Core/Src/main.c:507:6:Error_Handler	4	static,ignoring_inline_asm

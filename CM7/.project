@@ -30,9 +30,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Common</name>
+			<name>Drivers</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/Common</locationURI>
+			<location>D:/STM32WorkSpace/STM32H747_Mastering/Drivers</location>
+		</link>
+		<link>
+			<name>Utilities</name>
+			<type>2</type>
+			<location>D:/STM32WorkSpace/STM32H747_Mastering/Utilities</location>
 		</link>
 	</linkedResources>
 </projectDescription>
