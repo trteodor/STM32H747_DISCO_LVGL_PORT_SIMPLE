@@ -7,12 +7,13 @@
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2022 STMicroelectronics.
-  * All rights reserved.
+  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
+  * All rights reserved.</center></h2>
   *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
+  * This software component is licensed by ST under BSD 3-Clause license,
+  * the "License"; You may not use this file except in compliance with the
+  * License. You may obtain a copy of the License at:
+  *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
   */
@@ -31,6 +32,22 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+#include "stm32h747i_discovery.h"
+#include "stm32h747i_discovery_bus.h"
+#include "stm32h747i_discovery_lcd.h"
+#include "stm32h747i_discovery_sdram.h"
+#include "stm32_lcd.h"
+#include <stdio.h>
+#include "string.h"
+#include "stm32h747i_discovery_qspi.h"
+#include "stm32h747i_discovery_ts.h"
+
+/**
+  * @brief  SDRAM Write read buffer start address after CAM Frame buffer
+  * Assuming Camera frame buffer is of size 800x480 and format ARGB8888 (32 bits per pixel).
+  */
+#define SDRAM_WRITE_READ_ADDR_OFFSET ((uint32_t)0x0800)
 
 /* USER CODE END Includes */
 
@@ -57,20 +74,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define OSC32_OUT_Pin GPIO_PIN_15
-#define OSC32_OUT_GPIO_Port GPIOC
-#define OSC32_IN_Pin GPIO_PIN_14
-#define OSC32_IN_GPIO_Port GPIOC
-#define STLINK_TX_Pin GPIO_PIN_10
-#define STLINK_TX_GPIO_Port GPIOA
-#define STLINK_RX_Pin GPIO_PIN_9
-#define STLINK_RX_GPIO_Port GPIOA
-#define CEC_CK_MCO1_Pin GPIO_PIN_8
-#define CEC_CK_MCO1_GPIO_Port GPIOA
-#define OSC_OUT_Pin GPIO_PIN_1
-#define OSC_OUT_GPIO_Port GPIOH
-#define OSC_IN_Pin GPIO_PIN_0
-#define OSC_IN_GPIO_Port GPIOH
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
@@ -80,3 +83,5 @@ void Error_Handler(void);
 #endif
 
 #endif /* __MAIN_H */
+
+/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
