@@ -10,7 +10,6 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include Utilities/lcd/subdir.mk
--include Utilities/Fonts/subdir.mk
 -include Drivers/STM32H7xx_HAL_Driver/Src/Legacy/subdir.mk
 -include Drivers/STM32H7xx_HAL_Driver/Src/subdir.mk
 -include Drivers/BSP/STM32H747I-DISCO/subdir.mk
@@ -21,6 +20,7 @@ RM := rm -rf
 -include Drivers/BSP/Components/adv7533/subdir.mk
 -include Core/Startup/subdir.mk
 -include Core/Src/subdir.mk
+-include Common/Src/subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)

@@ -1,0 +1,8 @@
+../Core/Src/sdram.c:55:6:SDRAM_demo	8	static
+../Core/Src/sdram.c:120:6:SDRAM_DMA_demo	8	static
+../Core/Src/sdram.c:199:13:SDRAM_SetHint	24	static
+../Core/Src/sdram.c:232:13:SDRAM_DMA_SetHint	24	static
+../Core/Src/sdram.c:266:13:Fill_Buffer	48	static,ignoring_inline_asm
+../Core/Src/sdram.c:286:16:Buffercmp	40	static,ignoring_inline_asm
+../Core/Src/sdram.c:311:6:HAL_SDRAM_DMA_XferCpltCallback	16	static
+../Core/Src/sdram.c:322:6:HAL_SDRAM_DMA_XferErrorCallback	16	static

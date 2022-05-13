@@ -30,6 +30,11 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>Common</name>
+			<type>2</type>
+			<location>D:/STM32WorkSpace/STM32H747_Mastering/Common</location>
+		</link>
+		<link>
 			<name>Drivers</name>
 			<type>2</type>
 			<location>D:/STM32WorkSpace/STM32H747_Mastering/Drivers</location>

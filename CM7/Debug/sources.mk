@@ -21,6 +21,7 @@ C_DEPS :=
 
 # Every subdirectory with source files must be described here
 SUBDIRS := \
+Common/Src \
 Core/Src \
 Core/Startup \
 Drivers/BSP/Components/adv7533 \
@@ -31,6 +32,5 @@ Drivers/BSP/Components/otm8009a \
 Drivers/BSP/STM32H747I-DISCO \
 Drivers/STM32H7xx_HAL_Driver/Src/Legacy \
 Drivers/STM32H7xx_HAL_Driver/Src \
-Utilities/Fonts \
 Utilities/lcd \
 
