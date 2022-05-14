@@ -1,7 +1,0 @@
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:107:9:BSP_SDRAM_Init	24	static
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:169:9:BSP_SDRAM_DeInit	24	static
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:200:26:MX_SDRAM_Init	48	static
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:318:9:BSP_SDRAM_SendCmd	24	static
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:342:6:BSP_SDRAM_IRQHandler	16	static
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:361:13:SDRAM_MspInit	72	static
-D:/STM32WorkSpace/STM32H747_Mastering/Drivers/BSP/STM32H747I-DISCO/stm32h747i_discovery_sdram.c:458:13:SDRAM_MspDeInit	16	static

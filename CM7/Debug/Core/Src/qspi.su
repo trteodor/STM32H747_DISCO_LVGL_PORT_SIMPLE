@@ -1,4 +1,0 @@
-../Core/Src/qspi.c:53:6:QSPI_demo	40	static
-../Core/Src/qspi.c:181:13:QSPI_SetHint	24	static
-../Core/Src/qspi.c:216:13:Fill_Buffer	32	static
-../Core/Src/qspi.c:234:16:Buffercmp	24	static
