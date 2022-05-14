@@ -68,7 +68,7 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
-static void MX_DSIHOST_DSI_Initt(void);
+//static void MX_DSIHOST_DSI_Init(void);
 static void MX_FMC_Init(void);
 static void MX_LTDC_Initt(void);
 static void MX_QUADSPI_Init(void);
@@ -96,7 +96,7 @@ extern void SDRAM_DMA_demo (void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+//	hdsi = hlcd_dsi;
   /* USER CODE END 1 */
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
@@ -150,7 +150,7 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-//  MX_DSIHOST_DSI_Initt(); /*To Psuje?? */
+//  MX_DSIHOST_DSI_Init();
   MX_FMC_Init();
   MX_LTDC_Initt();
   MX_QUADSPI_Init();
@@ -166,7 +166,7 @@ Error_Handler();
 
   /*##-1- Initialize the LCD #################################################*/
   /* Initialize the LCD */
-  BSP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE);
+  BSP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi);
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
   Display_DemoDescription();
@@ -494,15 +494,15 @@ static void MX_QUADSPI_Init(void)
 
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
-  hqspi.Instance = QUADSPI;
-  hqspi.Init.ClockPrescaler = 3;
-  hqspi.Init.FifoThreshold = 1;
-  hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  hqspi.Init.FlashSize = 1;
-  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
-  hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
-  hqspi.Init.DualFlash = QSPI_DUALFLASH_ENABLE;
-  if (HAL_QSPI_Init(&hqspi) != HAL_OK)
+  MXhqspi.Instance = QUADSPI;
+  MXhqspi.Init.ClockPrescaler = 3;
+  MXhqspi.Init.FifoThreshold = 1;
+  MXhqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
+  MXhqspi.Init.FlashSize = 1;
+  MXhqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
+  MXhqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
+  MXhqspi.Init.DualFlash = QSPI_DUALFLASH_ENABLE;
+  if (HAL_QSPI_Init(&MXhqspi) != HAL_OK)
   {
     Error_Handler();
   }

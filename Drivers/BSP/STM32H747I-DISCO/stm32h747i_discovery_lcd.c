@@ -160,7 +160,7 @@ typedef struct
   * @{
   */
 void                *Lcd_CompObj = NULL;
-DSI_HandleTypeDef   hlcd_dsi;
+DSI_HandleTypeDef   *hlcd_dsi = NULL;
 DMA2D_HandleTypeDef hlcd_dma2d;
 LTDC_HandleTypeDef  hlcd_ltdc;
 BSP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
@@ -216,8 +216,10 @@ static void LCD_DeInitSequence(void);
   * @param  Orientation LCD_ORIENTATION_PORTRAIT or LCD_ORIENTATION_LANDSCAPE
   * @retval BSP status
   */
-int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation)
+int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi )
 {
+	hlcd_dsi = hdsi;
+
   return BSP_LCD_InitEx(Instance, Orientation, LCD_PIXEL_FORMAT_RGB888, LCD_DEFAULT_WIDTH, LCD_DEFAULT_HEIGHT);
 }
 
@@ -273,7 +275,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     /* Initializes peripherals instance value */
     hlcd_ltdc.Instance = LTDC;
     hlcd_dma2d.Instance = DMA2D;
-    hlcd_dsi.Instance = DSI;
+    hlcd_dsi->Instance = DSI;
 
     /* MSP initialization */
 #if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
@@ -301,9 +303,9 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
       }
     }
 #else
-    DSI_MspInit(&hlcd_dsi);
+    DSI_MspInit(hlcd_dsi);
 #endif
-    if(MX_DSIHOST_DSI_Init(&hlcd_dsi) != HAL_OK)
+    if(MX_DSIHOST_DSI_Init(hlcd_dsi) != HAL_OK)
     {
       ret = BSP_ERROR_PERIPH_FAILURE;
     }
@@ -346,10 +348,10 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
       {
         /* Enable the DSI host and wrapper after the LTDC initialization
         To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
-        (void)HAL_DSI_Start(&hlcd_dsi);
+        (void)HAL_DSI_Start(hlcd_dsi);
 
         /* Enable the DSI BTW for read operations */
-        (void)HAL_DSI_ConfigFlowControl(&hlcd_dsi, DSI_FLOW_CONTROL_BTA);
+        (void)HAL_DSI_ConfigFlowControl(hlcd_dsi, DSI_FLOW_CONTROL_BTA);
 
 #if (USE_LCD_CTRL_OTM8009A == 1)
         /* Initialize the OTM8009A LCD Display IC Driver (KoD LCD IC Driver)
@@ -395,9 +397,9 @@ int32_t BSP_LCD_DeInit(uint32_t Instance)
     DMA2D_MspDeInit(&hlcd_dma2d);
 
 #if (USE_HAL_DSI_REGISTER_CALLBACKS == 0)
-    DSI_MspDeInit(&hlcd_dsi);
+    DSI_MspDeInit(hlcd_dsi);
 #endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 0) */
-    if(HAL_DSI_DeInit(&hlcd_dsi) != HAL_OK)
+    if(HAL_DSI_DeInit(hlcd_dsi) != HAL_OK)
     {
       ret = BSP_ERROR_PERIPH_FAILURE;
     }
@@ -452,7 +454,7 @@ int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format)
     /* Initializes peripherals instance value */
     hlcd_ltdc.Instance = LTDC;
     hlcd_dma2d.Instance = DMA2D;
-    hlcd_dsi.Instance = DSI;
+    hlcd_dsi->Instance = DSI;
 
     if(ADV7533_Probe() != BSP_ERROR_NONE)
     {
@@ -495,23 +497,23 @@ int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format)
         }
       }
 #else
-      DSI_MspInit(&hlcd_dsi);
+      DSI_MspInit(hlcd_dsi);
 #endif
 
       /*************************DSI Initialization***********************************/
       /* Base address of DSI Host/Wrapper registers to be set before calling De-Init */
-      hlcd_dsi.Instance = DSI;
+      hlcd_dsi->Instance = DSI;
       /* Set number of Lanes */
-      hlcd_dsi.Init.NumberOfLanes = DSI_TWO_DATA_LANES;
+      hlcd_dsi->Init.NumberOfLanes = DSI_TWO_DATA_LANES;
       /* Set the TX escape clock division ratio */
-      hlcd_dsi.Init.TXEscapeCkdiv = 3U;
-      hlcd_dsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
+      hlcd_dsi->Init.TXEscapeCkdiv = 3U;
+      hlcd_dsi->Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
 
       /* Configure the DSI PLL */
       dsiPllInit.PLLNDIV    = 65U;
       dsiPllInit.PLLIDF     = DSI_PLL_IN_DIV5;
       dsiPllInit.PLLODF     = DSI_PLL_OUT_DIV1;
-      if(HAL_DSI_Init(&hlcd_dsi, &dsiPllInit) != HAL_OK)
+      if(HAL_DSI_Init(hlcd_dsi, &dsiPllInit) != HAL_OK)
       {
         return BSP_ERROR_PERIPH_FAILURE;
       }
@@ -523,7 +525,7 @@ int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format)
       dsiPhyInit.DataLaneLP2HSTime   = hdmi_timing.DataLaneLP2HSTime;
       dsiPhyInit.DataLaneMaxReadTime = hdmi_timing.DataLaneMaxReadTime;
       dsiPhyInit.StopWaitTime        = hdmi_timing.StopWaitTime;
-      if(HAL_DSI_ConfigPhyTimer(&hlcd_dsi, &dsiPhyInit) != HAL_OK)
+      if(HAL_DSI_ConfigPhyTimer(hlcd_dsi, &dsiPhyInit) != HAL_OK)
       {
         return BSP_ERROR_PERIPH_FAILURE;
       }
@@ -576,7 +578,7 @@ int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format)
       hDsiVideoMode.FrameBTAAcknowledgeEnable    = DSI_FBTAA_DISABLE;
 
       /* Configure DSI Video mode timings with settings set above */
-      (void)HAL_DSI_ConfigVideoMode(&(hlcd_dsi), &(hDsiVideoMode));
+      (void)HAL_DSI_ConfigVideoMode((hlcd_dsi), &(hDsiVideoMode));
 
       if(MX_LTDC_ClockConfig2(&hlcd_ltdc) != HAL_OK)
       {
@@ -597,7 +599,7 @@ int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format)
       }
       /* Enable the DSI host and wrapper after the LTDC initialization
       To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
-      (void)HAL_DSI_Start(&(hlcd_dsi));
+      (void)HAL_DSI_Start((hlcd_dsi));
 
 #if !defined(DATA_IN_ExtSDRAM)
       /* Initialize the SDRAM */
@@ -917,13 +919,13 @@ int32_t BSP_LCD_RegisterDefaultMspCallbacks (uint32_t Instance)
 #if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
     if(ret == BSP_ERROR_NONE)
     {
-      if(HAL_DSI_RegisterCallback(&hlcd_dsi, HAL_DSI_MSPINIT_CB_ID, DSI_MspInit) != HAL_OK)
+      if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPINIT_CB_ID, DSI_MspInit) != HAL_OK)
       {
         ret = BSP_ERROR_PERIPH_FAILURE;
       }
       else
       {
-        if(HAL_DSI_RegisterCallback(&hlcd_dsi, HAL_DSI_MSPDEINIT_CB_ID, DSI_MspDeInit) != HAL_OK)
+        if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPDEINIT_CB_ID, DSI_MspDeInit) != HAL_OK)
         {
           ret = BSP_ERROR_PERIPH_FAILURE;
         }
@@ -970,13 +972,13 @@ int32_t BSP_LCD_RegisterMspCallbacks (uint32_t Instance, BSP_LCD_Cb_t *CallBacks
 #if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
     if(ret == BSP_ERROR_NONE)
     {
-      if(HAL_DSI_RegisterCallback(&hlcd_dsi, HAL_DSI_MSPINIT_CB_ID, CallBacks->pMspDsiInitCb) != HAL_OK)
+      if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPINIT_CB_ID, CallBacks->pMspDsiInitCb) != HAL_OK)
       {
         ret = BSP_ERROR_PERIPH_FAILURE;
       }
       else
       {
-        if(HAL_DSI_RegisterCallback(&hlcd_dsi, HAL_DSI_MSPDEINIT_CB_ID, CallBacks->pMspDsiDeInitCb) != HAL_OK)
+        if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPDEINIT_CB_ID, CallBacks->pMspDsiDeInitCb) != HAL_OK)
         {
           ret = BSP_ERROR_PERIPH_FAILURE;
         }
@@ -1910,14 +1912,14 @@ static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, u
 
   if(Size <= 1U)
   {
-    if(HAL_DSI_ShortWrite(&hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
+    if(HAL_DSI_ShortWrite(hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
     {
       ret = BSP_ERROR_BUS_FAILURE;
     }
   }
   else
   {
-    if(HAL_DSI_LongWrite(&hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
+    if(HAL_DSI_LongWrite(hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
     {
       ret = BSP_ERROR_BUS_FAILURE;
     }
@@ -1938,7 +1940,7 @@ static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
 {
   int32_t ret = BSP_ERROR_NONE;
 
-  if(HAL_DSI_Read(&hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
+  if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
   {
     ret = BSP_ERROR_BUS_FAILURE;
   }

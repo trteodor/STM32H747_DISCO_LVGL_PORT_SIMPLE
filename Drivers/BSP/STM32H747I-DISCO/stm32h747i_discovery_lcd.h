@@ -237,7 +237,7 @@ typedef struct
 /** @addtogroup STM32H747I_DISCO_LCD_Exported_Variables
   * @{
   */
-extern DSI_HandleTypeDef   hlcd_dsi;
+extern DSI_HandleTypeDef   *hlcd_dsi;
 extern DMA2D_HandleTypeDef hlcd_dma2d;
 extern LTDC_HandleTypeDef  hlcd_ltdc;
 extern BSP_LCD_Ctx_t       Lcd_Ctx[];
@@ -249,7 +249,7 @@ extern void               *Lcd_CompObj;
   * @{
   */
 /* Initialization APIs */
-int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation);
+int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi );
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
 #if (USE_LCD_CTRL_ADV7533 > 0)
 int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format);
