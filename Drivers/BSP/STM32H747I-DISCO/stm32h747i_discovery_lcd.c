@@ -303,7 +303,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
 #else
     DSI_MspInit(&hlcd_dsi);
 #endif
-    if(MX_DSIHOST_DSI_Init(&hlcd_dsi, Width, Height, dsi_pixel_format) != HAL_OK)
+    if(MX_DSIHOST_DSI_Init(&hlcd_dsi) != HAL_OK)
     {
       ret = BSP_ERROR_PERIPH_FAILURE;
     }
@@ -721,64 +721,64 @@ static void LCD_DeInitSequence(void)
   * @param  PixelFormat DSI color coding RGB888 or RGB565
   * @retval HAL status
   */
-__weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, uint32_t Height, uint32_t PixelFormat)
-{
-  DSI_PLLInitTypeDef PLLInit;
-  DSI_VidCfgTypeDef VidCfg;
-
-  hdsi->Instance = DSI;
-  hdsi->Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-  hdsi->Init.TXEscapeCkdiv = 4;
-  hdsi->Init.NumberOfLanes = DSI_TWO_DATA_LANES;
-  PLLInit.PLLNDIV = 100;
-  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
-  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
-  if (HAL_DSI_Init(hdsi, &PLLInit) != HAL_OK)
-  {
-    return HAL_ERROR;
-  }
-
-  /* Timing parameters for all Video modes */
-  /*
-  The lane byte clock is set 62500 Khz
-  The pixel clock is set to 27429 Khz
-  */
-  VidCfg.VirtualChannelID = 0;
-  VidCfg.ColorCoding = PixelFormat;
-  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-  VidCfg.Mode = DSI_VID_MODE_BURST;
-  VidCfg.PacketSize = Width;
-  VidCfg.NumberOfChunks = 0;
-  VidCfg.NullPacketSize = 0xFFFU;
-  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
-  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
-  VidCfg.HorizontalLine = ((Width + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
-  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
-  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
-  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
-  VidCfg.VerticalActive = Height;
-  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
-  VidCfg.LPLargestPacketSize = 4;
-  VidCfg.LPVACTLargestPacketSize = 4;
-
-  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
-  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
-  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
-  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
-  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
-  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
-  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
-
-  if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
-  {
-    return HAL_ERROR;
-  }
-
-  return HAL_OK;
-}
+//__weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, uint32_t Height, uint32_t PixelFormat)
+//{
+//  DSI_PLLInitTypeDef PLLInit;
+//  DSI_VidCfgTypeDef VidCfg;
+//
+//  hdsi->Instance = DSI;
+//  hdsi->Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
+//  hdsi->Init.TXEscapeCkdiv = 4;
+//  hdsi->Init.NumberOfLanes = DSI_TWO_DATA_LANES;
+//  PLLInit.PLLNDIV = 100;
+//  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
+//  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
+//  if (HAL_DSI_Init(hdsi, &PLLInit) != HAL_OK)
+//  {
+//    return HAL_ERROR;
+//  }
+//
+//  /* Timing parameters for all Video modes */
+//  /*
+//  The lane byte clock is set 62500 Khz
+//  The pixel clock is set to 27429 Khz
+//  */
+//  VidCfg.VirtualChannelID = 0;
+//  VidCfg.ColorCoding = PixelFormat;
+//  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
+//  VidCfg.Mode = DSI_VID_MODE_BURST;
+//  VidCfg.PacketSize = Width;
+//  VidCfg.NumberOfChunks = 0;
+//  VidCfg.NullPacketSize = 0xFFFU;
+//  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
+//  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
+//  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
+//  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
+//  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
+//  VidCfg.HorizontalLine = ((Width + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
+//  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
+//  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
+//  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
+//  VidCfg.VerticalActive = Height;
+//  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
+//  VidCfg.LPLargestPacketSize = 4;
+//  VidCfg.LPVACTLargestPacketSize = 4;
+//
+//  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
+//  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
+//  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
+//  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
+//  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
+//  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
+//  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
+//
+//  if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
+//  {
+//    return HAL_ERROR;
+//  }
+//
+//  return HAL_OK;
+//}
 
 /**
   * @brief  Initializes the LTDC.
