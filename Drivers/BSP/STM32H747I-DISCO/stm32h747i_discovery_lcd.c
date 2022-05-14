@@ -2,7 +2,7 @@
 #include "stm32h747i_discovery_bus.h"
 #include "stm32h747i_discovery_sdram.h"
 
-static LCD_Drv_t                *Lcd_Drv = NULL;
+extern LCD_Drv_t                *Lcd_Drv;
 
 const LCD_UTILS_Drv_t LCD_Driver =
 {
@@ -57,23 +57,12 @@ BSP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
 /** @defgroup STM32H747I_DISCO_LCD_Private_FunctionPrototypes Private FunctionPrototypes
   * @{
   */
-static void DSI_MspInit(DSI_HandleTypeDef *hdsi);
-static void DSI_MspDeInit(DSI_HandleTypeDef *hdsi);
-static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size);
-static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size);
-
-#if (USE_LCD_CTRL_OTM8009A > 0)
-static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation);
-# endif /* USE_LCD_CTRL_OTM8009A > 0 */
 
 
-static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc);
-static void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc);
-static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d);
 static void DMA2D_MspDeInit(DMA2D_HandleTypeDef *hdma2d);
 static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color);
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode);
-static void LCD_InitSequence(void);
+
 static void LCD_DeInitSequence(void);
 /**
   * @}
@@ -86,153 +75,7 @@ static void LCD_DeInitSequence(void);
                                      (((((Color) & 0x1FU) * 527U) + 23U) >> (6U)) | (0xFF000000U))
 
 
-int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi )
-{
-	hlcd_dsi = hdsi;
 
-  return BSP_LCD_InitEx(Instance, Orientation, LCD_PIXEL_FORMAT_RGB888, LCD_DEFAULT_WIDTH, LCD_DEFAULT_HEIGHT);
-}
-
-int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
-{
-  int32_t ret = BSP_ERROR_NONE;
-  uint32_t ctrl_pixel_format, ltdc_pixel_format, dsi_pixel_format;
-  MX_LTDC_LayerConfig_t config;
-
-  if((Orientation > LCD_ORIENTATION_LANDSCAPE) || (Instance >= LCD_INSTANCES_NBR) || \
-     ((PixelFormat != LCD_PIXEL_FORMAT_RGB565) && (PixelFormat != LTDC_PIXEL_FORMAT_RGB888)))
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    if(PixelFormat == LCD_PIXEL_FORMAT_RGB565)
-    {
-      ltdc_pixel_format = LTDC_PIXEL_FORMAT_RGB565;
-      dsi_pixel_format = DSI_RGB565;
-      ctrl_pixel_format = OTM8009A_FORMAT_RBG565;
-      Lcd_Ctx[Instance].BppFactor = 2U;
-    }
-    else /* LCD_PIXEL_FORMAT_RGB888 */
-    {
-      ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
-      dsi_pixel_format = DSI_RGB888;
-      ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
-      Lcd_Ctx[Instance].BppFactor = 4U;
-    }
-
-    /* Store pixel format, xsize and ysize information */
-    Lcd_Ctx[Instance].PixelFormat = PixelFormat;
-    Lcd_Ctx[Instance].XSize  = Width;
-    Lcd_Ctx[Instance].YSize  = Height;
-
-    /* Toggle Hardware Reset of the LCD using its XRES signal (active low) */
-    BSP_LCD_Reset(Instance);
-
-
-    /* Initialize LCD special pins GPIOs */
-    LCD_InitSequence();
-
-    /* Initializes peripherals instance value */
-    hlcd_ltdc.Instance = LTDC;
-    hlcd_dma2d.Instance = DMA2D;
-    hlcd_dsi->Instance = DSI;
-
-    /* MSP initialization */
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
-    /* Register the LTDC MSP Callbacks */
-    if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
-    {
-      if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-    }
-#else
-    LTDC_MspInit(&hlcd_ltdc);
-#endif
-
-    DMA2D_MspInit(&hlcd_dma2d);
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-    /* Register the DSI MSP Callbacks */
-    if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
-    {
-      if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-    }
-#else
-    DSI_MspInit(hlcd_dsi);
-#endif
-
-    MX_DSIHOST_DSI_Init();
-
-    if(MX_LTDC_ClockConfig(&hlcd_ltdc) != HAL_OK)
-    {
-      ret = BSP_ERROR_PERIPH_FAILURE;
-    }
-    else
-    {
-     if(MX_LTDC_Init(&hlcd_ltdc, Width, Height) != HAL_OK)
-     {
-       ret = BSP_ERROR_PERIPH_FAILURE;
-     }
-    }
-
-    if(ret == BSP_ERROR_NONE)
-    {
-      /* Before configuring LTDC layer, ensure SDRAM is initialized */
-#if !defined(DATA_IN_ExtSDRAM)
-      /* Initialize the SDRAM */
-      if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-#endif /* DATA_IN_ExtSDRAM */
-
-      /* Configure default LTDC Layer 0. This configuration can be override by calling
-      BSP_LCD_ConfigLayer() at application level */
-      config.X0          = 0;
-      config.X1          = Width;
-      config.Y0          = 0;
-      config.Y1          = Height;
-      config.PixelFormat = ltdc_pixel_format;
-      config.Address     = LCD_LAYER_0_ADDRESS;
-      if(MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, &config) != HAL_OK)
-      {
-        ret = BSP_ERROR_PERIPH_FAILURE;
-      }
-      else
-      {
-        /* Enable the DSI host and wrapper after the LTDC initialization
-        To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
-        (void)HAL_DSI_Start(hlcd_dsi);
-
-        /* Enable the DSI BTW for read operations */
-        (void)HAL_DSI_ConfigFlowControl(hlcd_dsi, DSI_FLOW_CONTROL_BTA);
-
-#if (USE_LCD_CTRL_OTM8009A == 1)
-        /* Initialize the OTM8009A LCD Display IC Driver (KoD LCD IC Driver)
-        depending on configuration of DSI */
-        if(OTM8009A_Probe(ctrl_pixel_format, Orientation) != BSP_ERROR_NONE)
-        {
-          ret = BSP_ERROR_UNKNOWN_COMPONENT;
-        }
-        else
-        {
-          ret = BSP_ERROR_NONE;
-        }
-#endif
-      }
-    /* By default the reload is activated and executed immediately */
-    Lcd_Ctx[Instance].ReloadEnable = 1U;
-   }
-  }
-
-  return ret;
-}
 
 int32_t BSP_LCD_DeInit(uint32_t Instance)
 {
@@ -297,45 +140,7 @@ void BSP_LCD_Reset(uint32_t Instance)
 }
 
 
-static void LCD_InitSequence(void)
-{
-  GPIO_InitTypeDef  gpio_init_structure;
 
-  /* LCD_BL_CTRL GPIO configuration */
-  LCD_BL_CTRL_GPIO_CLK_ENABLE();
-
-  gpio_init_structure.Pin       = LCD_BL_CTRL_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_OUTPUT_PP;
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Pull      = GPIO_NOPULL;
-
-  HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &gpio_init_structure);
-  /* Assert back-light LCD_BL_CTRL pin */
-  HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-
-  /* LCD_TE_CTRL GPIO configuration */
-  LCD_TE_GPIO_CLK_ENABLE();
-
-  gpio_init_structure.Pin       = LCD_TE_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_INPUT;
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-
-  HAL_GPIO_Init(LCD_TE_GPIO_PORT, &gpio_init_structure);
-  /* Assert back-light LCD_BL_CTRL pin */
-  HAL_GPIO_WritePin(LCD_TE_GPIO_PORT, LCD_TE_PIN, GPIO_PIN_SET);
-
-      /** @brief NVIC configuration for LTDC interrupt that is now enabled */
-  HAL_NVIC_SetPriority(LTDC_IRQn, 0x0F, 0);
-  HAL_NVIC_EnableIRQ(LTDC_IRQn);
-
-  /** @brief NVIC configuration for DMA2D interrupt that is now enabled */
-  HAL_NVIC_SetPriority(DMA2D_IRQn, 0x0F, 0);
-  HAL_NVIC_EnableIRQ(DMA2D_IRQn);
-
-  /** @brief NVIC configuration for DSI interrupt that is now enabled */
-  HAL_NVIC_SetPriority(DSI_IRQn, 0x0F, 0);
-  HAL_NVIC_EnableIRQ(DSI_IRQn);
-}
 
 
 static void LCD_DeInitSequence(void)
@@ -397,12 +202,6 @@ __weak HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t
   return HAL_LTDC_ConfigLayer(hltdc, &pLayerCfg, LayerIndex);
 }
 
-/**
-  * @brief  LTDC Clock Config for LCD DSI display.
-  * @param  hltdc  LTDC Handle
-  *         Being __weak it can be overwritten by the application
-  * @retval HAL_status
-  */
 __weak HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc)
 {
   RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
@@ -419,12 +218,6 @@ __weak HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc)
   return HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 }
 
-/**
-  * @brief  LTDC Clock Config for LCD 2 DPI display.
-  * @param  hltdc  LTDC Handle
-  *         Being __weak it can be overwritten by the application
-  * @retval HAL_status
-  */
 __weak HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc)
 {
   RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
@@ -441,15 +234,6 @@ __weak HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc)
   return HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 }
 
-
-
-/**
-  * @brief  LTDC layer configuration.
-  * @param  Instance   LCD instance
-  * @param  LayerIndex Layer 0 or 1
-  * @param  Config     Layer configuration
-  * @retval HAL status
-  */
 int32_t BSP_LCD_ConfigLayer(uint32_t Instance, uint32_t LayerIndex, BSP_LCD_LayerConfig_t *Config)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -467,12 +251,6 @@ int32_t BSP_LCD_ConfigLayer(uint32_t Instance, uint32_t LayerIndex, BSP_LCD_Laye
   return ret;
 }
 
-/**
-  * @brief  Set the LCD Active Layer.
-  * @param  Instance    LCD Instance
-  * @param  LayerIndex  LCD layer index
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -488,12 +266,7 @@ int32_t BSP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex)
 
   return ret;
 }
-/**
-  * @brief  Gets the LCD Active LCD Pixel Format.
-  * @param  Instance    LCD Instance
-  * @param  PixelFormat Active LCD Pixel Format
-  * @retval BSP status
-  */
+
 int32_t BSP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -510,15 +283,7 @@ int32_t BSP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat)
 
   return ret;
 }
-/**
-  * @brief  Control the LTDC reload
-  * @param  Instance    LCD Instance
-  * @param  ReloadType can be one of the following values
-  *         - BSP_LCD_RELOAD_NONE
-  *         - BSP_LCD_RELOAD_IMMEDIATE
-  *         - BSP_LCD_RELOAD_VERTICAL_BLANKING
-  * @retval BSP status
-  */
+
 int32_t BSP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -543,16 +308,6 @@ int32_t BSP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType)
   return ret;
 }
 
-/**
-  * @brief  Sets an LCD Layer visible
-  * @param  Instance    LCD Instance
-  * @param  LayerIndex  Visible Layer
-  * @param  State  New state of the specified layer
-  *          This parameter can be one of the following values:
-  *            @arg  ENABLE
-  *            @arg  DISABLE
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, FunctionalState State)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -581,14 +336,6 @@ int32_t BSP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, Function
   return ret;
 }
 
-/**
-  * @brief  Configures the transparency.
-  * @param  Instance      LCD Instance
-  * @param  LayerIndex    Layer foreground or background.
-  * @param  Transparency  Transparency
-  *           This parameter must be a number between Min_Data = 0x00 and Max_Data = 0xFF
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t Transparency)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -612,13 +359,6 @@ int32_t BSP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t 
   return ret;
 }
 
-/**
-  * @brief  Sets an LCD layer frame buffer address.
-  * @param  Instance    LCD Instance
-  * @param  LayerIndex  Layer foreground or background
-  * @param  Address     New LCD frame buffer value
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_t Address)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -642,16 +382,6 @@ int32_t BSP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_t
   return ret;
 }
 
-/**
-  * @brief  Sets display window.
-  * @param  Instance    LCD Instance
-  * @param  LayerIndex  Layer index
-  * @param  Xpos   LCD X position
-  * @param  Ypos   LCD Y position
-  * @param  Width  LCD window width
-  * @param  Height LCD window height
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -682,13 +412,6 @@ int32_t BSP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t 
   return ret;
 }
 
-/**
-  * @brief  Configures and sets the color keying.
-  * @param  Instance    LCD Instance
-  * @param  LayerIndex  Layer foreground or background
-  * @param  Color       Color reference
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t Color)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -715,12 +438,6 @@ int32_t BSP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t 
   return ret;
 }
 
-/**
-  * @brief  Disables the color keying.
-  * @param  Instance    LCD Instance
-  * @param  LayerIndex Layer foreground or background
-  * @retval BSP status
-  */
 int32_t BSP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -746,12 +463,6 @@ int32_t BSP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex)
   return ret;
 }
 
-/**
-  * @brief  Gets the LCD X size.
-  * @param  Instance  LCD Instance
-  * @param  XSize     LCD width
-  * @retval BSP status
-  */
 int32_t BSP_LCD_GetXSize(uint32_t Instance, uint32_t *XSize)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -768,12 +479,6 @@ int32_t BSP_LCD_GetXSize(uint32_t Instance, uint32_t *XSize)
   return ret;
 }
 
-/**
-  * @brief  Gets the LCD Y size.
-  * @param  Instance  LCD Instance
-  * @param  YSize     LCD Height
-  * @retval BSP status
-  */
 int32_t BSP_LCD_GetYSize(uint32_t Instance, uint32_t *YSize)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -790,11 +495,6 @@ int32_t BSP_LCD_GetYSize(uint32_t Instance, uint32_t *YSize)
   return ret;
 }
 
-/**
-  * @brief  Switch On the display.
-  * @param  Instance    LCD Instance
-  * @retval BSP status
-  */
 int32_t BSP_LCD_DisplayOn(uint32_t Instance)
 {
   int32_t ret;
@@ -818,11 +518,6 @@ int32_t BSP_LCD_DisplayOn(uint32_t Instance)
   return ret;
 }
 
-/**
-  * @brief  Switch Off the display.
-  * @param  Instance    LCD Instance
-  * @retval BSP status
-  */
 int32_t BSP_LCD_DisplayOff(uint32_t Instance)
 {
   int32_t ret;
@@ -846,12 +541,6 @@ int32_t BSP_LCD_DisplayOff(uint32_t Instance)
   return ret;
 }
 
-/**
-  * @brief  Set the brightness value
-  * @param  Instance    LCD Instance
-  * @param  Brightness [00: Min (black), 100 Max]
-  * @retval BSP status
-  */
 int32_t BSP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -871,12 +560,6 @@ int32_t BSP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness)
   return ret;
 }
 
-/**
-  * @brief  Set the brightness value
-  * @param  Instance    LCD Instance
-  * @param  Brightness [00: Min (black), 100 Max]
-  * @retval BSP status
-  */
 int32_t BSP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -896,14 +579,6 @@ int32_t BSP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness)
   return ret;
 }
 
-/**
-  * @brief  Draws a bitmap picture loaded in the internal Flash in currently active layer.
-  * @param  Instance LCD Instance
-  * @param  Xpos Bmp X position in the LCD
-  * @param  Ypos Bmp Y position in the LCD
-  * @param  pBmp Pointer to Bmp picture address in the internal Flash.
-  * @retval BSP status
-  */
 int32_t BSP_LCD_DrawBitmap(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pBmp)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -957,16 +632,7 @@ int32_t BSP_LCD_DrawBitmap(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint
 
   return ret;
 }
-/**
-  * @brief  Draw a horizontal line on LCD.
-  * @param  Instance LCD Instance.
-  * @param  Xpos X position.
-  * @param  Ypos Y position.
-  * @param  pData Pointer to RGB line data
-  * @param  Width Rectangle width.
-  * @param  Height Rectangle Height.
-  * @retval BSP status.
-  */
+
 int32_t BSP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height)
 {
     uint32_t i;
@@ -1004,15 +670,6 @@ int32_t BSP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uin
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  Draws an horizontal line in currently active layer.
-  * @param  Instance   LCD Instance
-  * @param  Xpos  X position
-  * @param  Ypos  Y position
-  * @param  Length  Line length
-  * @param  Color Pixel color
-  * @retval BSP status.
-  */
 int32_t BSP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color)
 {
   uint32_t  Xaddress;
@@ -1030,15 +687,6 @@ int32_t BSP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  Draws a vertical line in currently active layer.
-  * @param  Instance   LCD Instance
-  * @param  Xpos  X position
-  * @param  Ypos  Y position
-  * @param  Length  Line length
-  * @param  Color Pixel color
-  * @retval BSP status.
-  */
 int32_t BSP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color)
 {
   uint32_t  Xaddress;
@@ -1056,16 +704,6 @@ int32_t BSP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  Draws a full rectangle in currently active layer.
-  * @param  Instance   LCD Instance
-  * @param  Xpos X position
-  * @param  Ypos Y position
-  * @param  Width Rectangle width
-  * @param  Height Rectangle height
-  * @param  Color Pixel color
-  * @retval BSP status.
-  */
 int32_t BSP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t Color)
 {
   uint32_t  Xaddress;
@@ -1079,14 +717,6 @@ int32_t BSP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  Reads an LCD pixel.
-  * @param  Instance    LCD Instance
-  * @param  Xpos X position
-  * @param  Ypos Y position
-  * @param  Color RGB pixel color
-  * @retval BSP status
-  */
 int32_t BSP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t *Color)
 {
   if(hlcd_ltdc.LayerCfg[Lcd_Ctx[Instance].ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
@@ -1103,14 +733,6 @@ int32_t BSP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  Draws a pixel on LCD.
-  * @param  Instance    LCD Instance
-  * @param  Xpos X position
-  * @param  Ypos Y position
-  * @param  Color Pixel color
-  * @retval BSP status
-  */
 int32_t BSP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Color)
 {
   if(hlcd_ltdc.LayerCfg[Lcd_Ctx[Instance].ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
@@ -1127,22 +749,6 @@ int32_t BSP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @}
-  */
-
-/** @defgroup STM32H747I_DISCO_LCD_Private_Functions Private Functions
-  * @{
-  */
-/**
-  * @brief  Fills a buffer.
-  * @param  Instance LCD Instance
-  * @param  pDst Pointer to destination buffer
-  * @param  xSize Buffer width
-  * @param  ySize Buffer height
-  * @param  OffLine Offset
-  * @param  Color Color index
-  */
 static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color)
 {
   uint32_t output_color_mode, input_color = Color;
@@ -1180,14 +786,6 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
   }
 }
 
-/**
-  * @brief  Converts a line to an RGB pixel format.
-  * @param  Instance LCD Instance
-  * @param  pSrc Pointer to source buffer
-  * @param  pDst Output color
-  * @param  xSize Buffer width
-  * @param  ColorMode Input color mode
-  */
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode)
 {
   uint32_t output_color_mode;
@@ -1230,37 +828,7 @@ static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDs
   }
 }
 
-/*******************************************************************************
-                       BSP Routines:
-                                       LTDC
-                                       DMA2D
-                                       DSI
-*******************************************************************************/
-/**
-  * @brief  Initialize the BSP LTDC Msp.
-  * @param  hltdc  LTDC handle
-  * @retval None
-  */
-static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
-{
-  if(hltdc->Instance == LTDC)
-  {
-    /** Enable the LTDC clock */
-    __HAL_RCC_LTDC_CLK_ENABLE();
-
-
-    /** Toggle Sw reset of LTDC IP */
-    __HAL_RCC_LTDC_FORCE_RESET();
-    __HAL_RCC_LTDC_RELEASE_RESET();
-  }
-}
-
-/**
-  * @brief  De-Initializes the BSP LTDC Msp
-  * @param  hltdc  LTDC handle
-  * @retval None
-  */
-static void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc)
+void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc)
 {
   if(hltdc->Instance == LTDC)
   {
@@ -1272,29 +840,6 @@ static void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc)
   }
 }
 
-/**
-  * @brief  Initialize the BSP DMA2D Msp.
-  * @param  hdma2d  DMA2D handle
-  * @retval None
-  */
-static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
-{
-  if(hdma2d->Instance == DMA2D)
-  {
-    /** Enable the DMA2D clock */
-    __HAL_RCC_DMA2D_CLK_ENABLE();
-
-    /** Toggle Sw reset of DMA2D IP */
-    __HAL_RCC_DMA2D_FORCE_RESET();
-    __HAL_RCC_DMA2D_RELEASE_RESET();
-  }
-}
-
-/**
-  * @brief  De-Initializes the BSP DMA2D Msp
-  * @param  hdma2d  DMA2D handle
-  * @retval None
-  */
 static void DMA2D_MspDeInit(DMA2D_HandleTypeDef *hdma2d)
 {
   if(hdma2d->Instance == DMA2D)
@@ -1310,30 +855,7 @@ static void DMA2D_MspDeInit(DMA2D_HandleTypeDef *hdma2d)
   }
 }
 
-/**
-  * @brief  Initialize the BSP DSI Msp.
-  * @param  hdsi  DSI handle
-  * @retval None
-  */
-static void DSI_MspInit(DSI_HandleTypeDef *hdsi)
-{
-  if(hdsi->Instance == DSI)
-  {
-    /** Enable DSI Host and wrapper clocks */
-    __HAL_RCC_DSI_CLK_ENABLE();
-
-    /** Soft Reset the DSI Host and wrapper */
-    __HAL_RCC_DSI_FORCE_RESET();
-    __HAL_RCC_DSI_RELEASE_RESET();
-  }
-}
-
-/**
-  * @brief  De-Initializes the BSP DSI Msp
-  * @param  hdsi  DSI handle
-  * @retval None
-  */
-static void DSI_MspDeInit(DSI_HandleTypeDef *hdsi)
+void DSI_MspDeInit(DSI_HandleTypeDef *hdsi)
 {
   if(hdsi->Instance == DSI)
   {
@@ -1347,103 +869,4 @@ static void DSI_MspDeInit(DSI_HandleTypeDef *hdsi)
     __HAL_RCC_DSI_CLK_DISABLE();
   }
 }
-
-/**
-  * @brief  DCS or Generic short/long write command
-  * @param  ChannelNbr Virtual channel ID
-  * @param  Reg Register to be written
-  * @param  pData pointer to a buffer of data to be write
-  * @param  Size To precise command to be used (short or long)
-  * @retval BSP status
-  */
-static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
-{
-  int32_t ret = BSP_ERROR_NONE;
-
-  if(Size <= 1U)
-  {
-    if(HAL_DSI_ShortWrite(hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
-    {
-      ret = BSP_ERROR_BUS_FAILURE;
-    }
-  }
-  else
-  {
-    if(HAL_DSI_LongWrite(hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
-    {
-      ret = BSP_ERROR_BUS_FAILURE;
-    }
-  }
-
-  return ret;
-}
-
-/**
-  * @brief  DCS or Generic read command
-  * @param  ChannelNbr Virtual channel ID
-  * @param  Reg Register to be read
-  * @param  pData pointer to a buffer to store the payload of a read back operation.
-  * @param  Size  Data size to be read (in byte).
-  * @retval BSP status
-  */
-static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
-{
-  int32_t ret = BSP_ERROR_NONE;
-
-  if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
-  {
-    ret = BSP_ERROR_BUS_FAILURE;
-  }
-
-  return ret;
-}
-
-
-#if (USE_LCD_CTRL_OTM8009A > 0)
-/**
-  * @brief  Register Bus IOs if component ID is OK
-  * @retval error status
-  */
-static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
-{
-  int32_t ret;
-  uint32_t id;
-  OTM8009A_IO_t              IOCtx;
-  static OTM8009A_Object_t   OTM8009AObj;
-
-  /* Configure the audio driver */
-  IOCtx.Address     = 0;
-  IOCtx.GetTick     = BSP_GetTick;
-  IOCtx.WriteReg    = DSI_IO_Write;
-  IOCtx.ReadReg     = DSI_IO_Read;
-
-  if(OTM8009A_RegisterBusIO(&OTM8009AObj, &IOCtx) != OTM8009A_OK)
-  {
-    ret = BSP_ERROR_BUS_FAILURE;
-  }
-  else
-  {
-    Lcd_CompObj = &OTM8009AObj;
-
-    if(OTM8009A_ReadID(Lcd_CompObj, &id) != OTM8009A_OK)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-
-    else
-    {
-      Lcd_Drv = (LCD_Drv_t *)(void *) &OTM8009A_LCD_Driver;
-      if(Lcd_Drv->Init(Lcd_CompObj, ColorCoding, Orientation) != OTM8009A_OK)
-      {
-        ret = BSP_ERROR_COMPONENT_FAILURE;
-      }
-      else
-      {
-        ret = BSP_ERROR_NONE;
-      }
-    }
-  }
-  return ret;
-}
-#endif /* USE_LCD_CTRL_OTM8009A */
 

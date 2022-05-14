@@ -53,7 +53,7 @@ DSI_HandleTypeDef hdsi;
 
 LTDC_HandleTypeDef hltdc;
 
-QSPI_HandleTypeDef MXhqspi;
+QSPI_HandleTypeDef hqspi;
 
 UART_HandleTypeDef huart1;
 
@@ -68,11 +68,11 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
-//static void MX_DSIHOST_DSI_Init(void);
+void MX_DSIHOST_DSI_Init(void);
 static void MX_FMC_Init(void);
 static void MX_LTDC_Initt(void);
-static void MX_QUADSPI_Init(void);
 static void MX_DMA2D_Init(void);
+static void MX_QUADSPI_Init(void);
 /* USER CODE BEGIN PFP */
 
 static void Display_DemoDescription(void);
@@ -87,6 +87,312 @@ extern void SDRAM_DMA_demo (void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+static void LCD_InitSequence(void)
+{
+  GPIO_InitTypeDef  gpio_init_structure;
+
+  /* LCD_BL_CTRL GPIO configuration */
+  LCD_BL_CTRL_GPIO_CLK_ENABLE();
+
+  gpio_init_structure.Pin       = LCD_BL_CTRL_PIN;
+  gpio_init_structure.Mode      = GPIO_MODE_OUTPUT_PP;
+  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+  gpio_init_structure.Pull      = GPIO_NOPULL;
+
+  HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &gpio_init_structure);
+  /* Assert back-light LCD_BL_CTRL pin */
+  HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+
+  /* LCD_TE_CTRL GPIO configuration */
+  LCD_TE_GPIO_CLK_ENABLE();
+
+  gpio_init_structure.Pin       = LCD_TE_PIN;
+  gpio_init_structure.Mode      = GPIO_MODE_INPUT;
+  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+
+  HAL_GPIO_Init(LCD_TE_GPIO_PORT, &gpio_init_structure);
+  /* Assert back-light LCD_BL_CTRL pin */
+  HAL_GPIO_WritePin(LCD_TE_GPIO_PORT, LCD_TE_PIN, GPIO_PIN_SET);
+
+      /** @brief NVIC configuration for LTDC interrupt that is now enabled */
+  HAL_NVIC_SetPriority(LTDC_IRQn, 0x0F, 0);
+  HAL_NVIC_EnableIRQ(LTDC_IRQn);
+
+  /** @brief NVIC configuration for DMA2D interrupt that is now enabled */
+  HAL_NVIC_SetPriority(DMA2D_IRQn, 0x0F, 0);
+  HAL_NVIC_EnableIRQ(DMA2D_IRQn);
+
+  /** @brief NVIC configuration for DSI interrupt that is now enabled */
+  HAL_NVIC_SetPriority(DSI_IRQn, 0x0F, 0);
+  HAL_NVIC_EnableIRQ(DSI_IRQn);
+}
+
+static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
+{
+  if(hltdc->Instance == LTDC)
+  {
+    /** Enable the LTDC clock */
+    __HAL_RCC_LTDC_CLK_ENABLE();
+
+
+    /** Toggle Sw reset of LTDC IP */
+    __HAL_RCC_LTDC_FORCE_RESET();
+    __HAL_RCC_LTDC_RELEASE_RESET();
+  }
+}
+
+static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
+{
+  if(hdma2d->Instance == DMA2D)
+  {
+    /** Enable the DMA2D clock */
+    __HAL_RCC_DMA2D_CLK_ENABLE();
+
+    /** Toggle Sw reset of DMA2D IP */
+    __HAL_RCC_DMA2D_FORCE_RESET();
+    __HAL_RCC_DMA2D_RELEASE_RESET();
+  }
+}
+
+static void DSI_MspInit(DSI_HandleTypeDef *hdsi)
+{
+  if(hdsi->Instance == DSI)
+  {
+    /** Enable DSI Host and wrapper clocks */
+    __HAL_RCC_DSI_CLK_ENABLE();
+
+    /** Soft Reset the DSI Host and wrapper */
+    __HAL_RCC_DSI_FORCE_RESET();
+    __HAL_RCC_DSI_RELEASE_RESET();
+  }
+}
+
+static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
+{
+  int32_t ret = BSP_ERROR_NONE;
+
+  if(Size <= 1U)
+  {
+    if(HAL_DSI_ShortWrite(hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
+    {
+      ret = BSP_ERROR_BUS_FAILURE;
+    }
+  }
+  else
+  {
+    if(HAL_DSI_LongWrite(hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
+    {
+      ret = BSP_ERROR_BUS_FAILURE;
+    }
+  }
+
+  return ret;
+}
+
+static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
+{
+  int32_t ret = BSP_ERROR_NONE;
+
+  if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
+  {
+    ret = BSP_ERROR_BUS_FAILURE;
+  }
+
+  return ret;
+}
+
+LCD_Drv_t                *Lcd_Drv = NULL;
+
+static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
+{
+  int32_t ret;
+  uint32_t id;
+  OTM8009A_IO_t              IOCtx;
+  static OTM8009A_Object_t   OTM8009AObj;
+
+  /* Configure the audio driver */
+  IOCtx.Address     = 0;
+  IOCtx.GetTick     = BSP_GetTick;
+  IOCtx.WriteReg    = DSI_IO_Write;
+  IOCtx.ReadReg     = DSI_IO_Read;
+
+  if(OTM8009A_RegisterBusIO(&OTM8009AObj, &IOCtx) != OTM8009A_OK)
+  {
+    ret = BSP_ERROR_BUS_FAILURE;
+  }
+  else
+  {
+    Lcd_CompObj = &OTM8009AObj;
+
+    if(OTM8009A_ReadID(Lcd_CompObj, &id) != OTM8009A_OK)
+    {
+      ret = BSP_ERROR_COMPONENT_FAILURE;
+    }
+
+    else
+    {
+      Lcd_Drv = (LCD_Drv_t *)(void *) &OTM8009A_LCD_Driver;
+      if(Lcd_Drv->Init(Lcd_CompObj, ColorCoding, Orientation) != OTM8009A_OK)
+      {
+        ret = BSP_ERROR_COMPONENT_FAILURE;
+      }
+      else
+      {
+        ret = BSP_ERROR_NONE;
+      }
+    }
+  }
+  return ret;
+}
+
+int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi )
+{
+	hlcd_dsi = hdsi;
+
+  return BSP_LCD_InitEx(Instance, Orientation, LCD_PIXEL_FORMAT_RGB888, LCD_DEFAULT_WIDTH, LCD_DEFAULT_HEIGHT);
+}
+
+int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
+{
+  int32_t ret = BSP_ERROR_NONE;
+  uint32_t ctrl_pixel_format, ltdc_pixel_format, dsi_pixel_format;
+  MX_LTDC_LayerConfig_t config;
+
+  if((Orientation > LCD_ORIENTATION_LANDSCAPE) || (Instance >= LCD_INSTANCES_NBR) || \
+     ((PixelFormat != LCD_PIXEL_FORMAT_RGB565) && (PixelFormat != LTDC_PIXEL_FORMAT_RGB888)))
+  {
+    ret = BSP_ERROR_WRONG_PARAM;
+  }
+  else
+  {
+    if(PixelFormat == LCD_PIXEL_FORMAT_RGB565)
+    {
+      ltdc_pixel_format = LTDC_PIXEL_FORMAT_RGB565;
+      dsi_pixel_format = DSI_RGB565;
+      ctrl_pixel_format = OTM8009A_FORMAT_RBG565;
+      Lcd_Ctx[Instance].BppFactor = 2U;
+    }
+    else /* LCD_PIXEL_FORMAT_RGB888 */
+    {
+      ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
+      dsi_pixel_format = DSI_RGB888;
+      ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
+      Lcd_Ctx[Instance].BppFactor = 4U;
+    }
+
+    /* Store pixel format, xsize and ysize information */
+    Lcd_Ctx[Instance].PixelFormat = PixelFormat;
+    Lcd_Ctx[Instance].XSize  = Width;
+    Lcd_Ctx[Instance].YSize  = Height;
+
+    /* Toggle Hardware Reset of the LCD using its XRES signal (active low) */
+    BSP_LCD_Reset(Instance);
+
+
+    /* Initialize LCD special pins GPIOs */
+    LCD_InitSequence();
+
+    /* Initializes peripherals instance value */
+    hlcd_ltdc.Instance = LTDC;
+    hlcd_dma2d.Instance = DMA2D;
+    hlcd_dsi->Instance = DSI;
+
+    /* MSP initialization */
+#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
+    /* Register the LTDC MSP Callbacks */
+    if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
+    {
+      if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
+      {
+        return BSP_ERROR_PERIPH_FAILURE;
+      }
+    }
+#else
+    LTDC_MspInit(&hlcd_ltdc);
+#endif
+
+    DMA2D_MspInit(&hlcd_dma2d);
+
+#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
+    /* Register the DSI MSP Callbacks */
+    if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
+    {
+      if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
+      {
+        return BSP_ERROR_PERIPH_FAILURE;
+      }
+    }
+#else
+    DSI_MspInit(hlcd_dsi);
+#endif
+
+    MX_DSIHOST_DSI_Init();
+
+    if(MX_LTDC_ClockConfig(&hlcd_ltdc) != HAL_OK)
+    {
+      ret = BSP_ERROR_PERIPH_FAILURE;
+    }
+    else
+    {
+     if(MX_LTDC_Init(&hlcd_ltdc, Width, Height) != HAL_OK)
+     {
+       ret = BSP_ERROR_PERIPH_FAILURE;
+     }
+    }
+
+    if(ret == BSP_ERROR_NONE)
+    {
+      /* Before configuring LTDC layer, ensure SDRAM is initialized */
+#if !defined(DATA_IN_ExtSDRAM)
+      /* Initialize the SDRAM */
+      if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
+      {
+        return BSP_ERROR_PERIPH_FAILURE;
+      }
+#endif /* DATA_IN_ExtSDRAM */
+
+      /* Configure default LTDC Layer 0. This configuration can be override by calling
+      BSP_LCD_ConfigLayer() at application level */
+      config.X0          = 0;
+      config.X1          = Width;
+      config.Y0          = 0;
+      config.Y1          = Height;
+      config.PixelFormat = ltdc_pixel_format;
+      config.Address     = LCD_LAYER_0_ADDRESS;
+      if(MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, &config) != HAL_OK)
+      {
+        ret = BSP_ERROR_PERIPH_FAILURE;
+      }
+      else
+      {
+        /* Enable the DSI host and wrapper after the LTDC initialization
+        To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
+        (void)HAL_DSI_Start(hlcd_dsi);
+
+        /* Enable the DSI BTW for read operations */
+        (void)HAL_DSI_ConfigFlowControl(hlcd_dsi, DSI_FLOW_CONTROL_BTA);
+
+#if (USE_LCD_CTRL_OTM8009A == 1)
+        /* Initialize the OTM8009A LCD Display IC Driver (KoD LCD IC Driver)
+        depending on configuration of DSI */
+        if(OTM8009A_Probe(ctrl_pixel_format, Orientation) != BSP_ERROR_NONE)
+        {
+          ret = BSP_ERROR_UNKNOWN_COMPONENT;
+        }
+        else
+        {
+          ret = BSP_ERROR_NONE;
+        }
+#endif
+      }
+    /* By default the reload is activated and executed immediately */
+    Lcd_Ctx[Instance].ReloadEnable = 1U;
+   }
+  }
+
+  return ret;
+}
 /* USER CODE END 0 */
 
 /**
@@ -153,8 +459,8 @@ Error_Handler();
 //  MX_DSIHOST_DSI_Init();
   MX_FMC_Init();
   MX_LTDC_Initt();
-  MX_QUADSPI_Init();
   MX_DMA2D_Init();
+  MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
 
   /* Configure the Wakeup push-button in EXTI Mode */
@@ -338,15 +644,12 @@ static void MX_DMA2D_Init(void)
   */
 void MX_DSIHOST_DSI_Init(void)
 {
-	  /* USER CODE BEGIN DSIHOST_Init 0 */
 
-	  /* USER CODE END DSIHOST_Init 0 */
-
+  /* USER CODE BEGIN DSIHOST_Init 0 */
 	  DSI_PLLInitTypeDef PLLInit = {0};
 	  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
 	  DSI_PHY_TimerTypeDef PhyTimings = {0};
-	  DSI_LPCmdTypeDef LPCmd = {0};
-	  DSI_CmdCfgTypeDef CmdCfg = {0};
+	  DSI_VidCfgTypeDef VidCfg = {0};
 
 	  /* USER CODE BEGIN DSIHOST_Init 1 */
 
@@ -362,82 +665,167 @@ void MX_DSIHOST_DSI_Init(void)
 	  {
 	    Error_Handler();
 	  }
-	  HostTimeouts.TimeoutCkdiv = 1;
-	  HostTimeouts.HighSpeedTransmissionTimeout = 0;
-	  HostTimeouts.LowPowerReceptionTimeout = 0;
-	  HostTimeouts.HighSpeedReadTimeout = 0;
-	  HostTimeouts.LowPowerReadTimeout = 0;
-	  HostTimeouts.HighSpeedWriteTimeout = 0;
-	  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
-	  HostTimeouts.LowPowerWriteTimeout = 0;
-	  HostTimeouts.BTATimeout = 0;
-	  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  PhyTimings.ClockLaneHS2LPTime = 28;
-	  PhyTimings.ClockLaneLP2HSTime = 33;
-	  PhyTimings.DataLaneHS2LPTime = 15;
-	  PhyTimings.DataLaneLP2HSTime = 25;
-	  PhyTimings.DataLaneMaxReadTime = 0;
-	  PhyTimings.StopWaitTime = 0;
-	  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 10000) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_NONE) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  LPCmd.LPGenShortWriteNoP = DSI_LP_GSW0P_DISABLE;
-	  LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_DISABLE;
-	  LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_DISABLE;
-	  LPCmd.LPGenShortReadNoP = DSI_LP_GSR0P_DISABLE;
-	  LPCmd.LPGenShortReadOneP = DSI_LP_GSR1P_DISABLE;
-	  LPCmd.LPGenShortReadTwoP = DSI_LP_GSR2P_DISABLE;
-	  LPCmd.LPGenLongWrite = DSI_LP_GLW_DISABLE;
-	  LPCmd.LPDcsShortWriteNoP = DSI_LP_DSW0P_DISABLE;
-	  LPCmd.LPDcsShortWriteOneP = DSI_LP_DSW1P_DISABLE;
-	  LPCmd.LPDcsShortReadNoP = DSI_LP_DSR0P_DISABLE;
-	  LPCmd.LPDcsLongWrite = DSI_LP_DLW_DISABLE;
-	  LPCmd.LPMaxReadPacket = DSI_LP_MRDP_DISABLE;
-	  LPCmd.AcknowledgeRequest = DSI_ACKNOWLEDGE_ENABLE;
-	  if (HAL_DSI_ConfigCommand(&hdsi, &LPCmd) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  CmdCfg.VirtualChannelID = 0;
-	  CmdCfg.ColorCoding = DSI_RGB565;
-	  CmdCfg.CommandSize = 800;
-	  CmdCfg.TearingEffectSource = DSI_TE_EXTERNAL;
-	  CmdCfg.TearingEffectPolarity = DSI_TE_RISING_EDGE;
-	  CmdCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-	  CmdCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-	  CmdCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-	  CmdCfg.VSyncPol = DSI_VSYNC_RISING;
-	  CmdCfg.AutomaticRefresh = DSI_AR_ENABLE;
-	  CmdCfg.TEAcknowledgeRequest = DSI_TE_ACKNOWLEDGE_ENABLE;
-	  if (HAL_DSI_ConfigAdaptedCommandMode(&hdsi, &CmdCfg) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-	  /* USER CODE BEGIN DSIHOST_Init 2 */
 
-	  /* USER CODE END DSIHOST_Init 2 */
+
+
+
+//#define ActivateCubeGenDSI
+
+#ifdef ActivateCubeGenDSI
+  /* USER CODE END DSIHOST_Init 0 */
+
+  DSI_PLLInitTypeDef PLLInit = {0};
+  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
+  DSI_PHY_TimerTypeDef PhyTimings = {0};
+  DSI_VidCfgTypeDef VidCfg = {0};
+
+  /* USER CODE BEGIN DSIHOST_Init 1 */
+
+  /* USER CODE END DSIHOST_Init 1 */
+  hdsi.Instance = DSI;
+  hdsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
+  hdsi.Init.TXEscapeCkdiv = 4;
+  hdsi.Init.NumberOfLanes = DSI_TWO_DATA_LANES;
+  PLLInit.PLLNDIV = 99;
+  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
+  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
+  if (HAL_DSI_Init(&hdsi, &PLLInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  HostTimeouts.TimeoutCkdiv = 1;
+  HostTimeouts.HighSpeedTransmissionTimeout = 10000;
+  HostTimeouts.LowPowerReceptionTimeout = 5000;
+  HostTimeouts.HighSpeedReadTimeout = 0;
+  HostTimeouts.LowPowerReadTimeout = 0;
+  HostTimeouts.HighSpeedWriteTimeout = 0;
+  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
+  HostTimeouts.LowPowerWriteTimeout = 0;
+  HostTimeouts.BTATimeout = 0;
+  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  PhyTimings.ClockLaneHS2LPTime = 28;
+  PhyTimings.ClockLaneLP2HSTime = 33;
+  PhyTimings.DataLaneHS2LPTime = 15;
+  PhyTimings.DataLaneLP2HSTime = 25;
+  PhyTimings.DataLaneMaxReadTime = 0;
+  PhyTimings.StopWaitTime = 0;
+  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_CLOCK_LANE, 4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_CLOCK_LANE, 4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_DATA_LANES, 4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_DATA_LANES, 4) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_TX|HAL_DSI_ERROR_RX) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetSDD(&hdsi, ENABLE) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  VidCfg.VirtualChannelID = 0;
+  VidCfg.ColorCoding = DSI_RGB888;
+  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
+  VidCfg.Mode = DSI_VID_MODE_BURST;
+  VidCfg.PacketSize = 800;
+  VidCfg.NumberOfChunks = 0;
+  VidCfg.NullPacketSize = 0;
+  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
+  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
+  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
+  VidCfg.HorizontalSyncActive = 2;
+  VidCfg.HorizontalBackPorch = 3;
+  VidCfg.HorizontalLine = 1982;
+  VidCfg.VerticalSyncActive = 4;
+  VidCfg.VerticalBackPorch = 2;
+  VidCfg.VerticalFrontPorch = 2;
+  VidCfg.VerticalActive = 480;
+  VidCfg.LPCommandEnable = DSI_LP_COMMAND_DISABLE;
+  VidCfg.LPLargestPacketSize = 0;
+  VidCfg.LPVACTLargestPacketSize = 0;
+  VidCfg.LPHorizontalFrontPorchEnable = DSI_LP_HFP_ENABLE;
+  VidCfg.LPHorizontalBackPorchEnable = DSI_LP_HBP_ENABLE;
+  VidCfg.LPVerticalActiveEnable = DSI_LP_VACT_ENABLE;
+  VidCfg.LPVerticalFrontPorchEnable = DSI_LP_VFP_ENABLE;
+  VidCfg.LPVerticalBackPorchEnable = DSI_LP_VBP_ENABLE;
+  VidCfg.LPVerticalSyncActiveEnable = DSI_LP_VSYNC_ENABLE;
+  VidCfg.FrameBTAAcknowledgeEnable = DSI_FBTAA_DISABLE;
+  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN DSIHOST_Init 2 */
+#endif
+  /*Own COnfiguration because I dk how to configure it correctly in CubeMX :( - it may be impossible!!! */
+  VidCfg.VirtualChannelID = 0;
+  VidCfg.ColorCoding = DSI_RGB888;
+  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
+  VidCfg.Mode = DSI_VID_MODE_BURST;
+  VidCfg.PacketSize = 800;
+  VidCfg.NumberOfChunks = 0;
+  VidCfg.NullPacketSize = 0xFFFU;
+  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
+  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
+  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
+  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
+  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
+  VidCfg.HorizontalLine = ((800 + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
+  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
+  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
+  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
+  VidCfg.VerticalActive = 480;
+  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
+  VidCfg.LPLargestPacketSize = 4;
+  VidCfg.LPVACTLargestPacketSize = 4;
+
+  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
+  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
+  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
+  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
+  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
+  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
+  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
+
+  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE END DSIHOST_Init 2 */
+
 }
-
 
 /**
   * @brief LTDC Initialization Function
@@ -471,7 +859,7 @@ static void MX_LTDC_Initt(void)
   hltdc.Init.TotalHeigh = 487;
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
-  hltdc.Init.Backcolor.Red = 0;
+  hltdc.Init.Backcolor.Red = 20;
   if (HAL_LTDC_Init(&hltdc) != HAL_OK)
   {
     Error_Handler();
@@ -517,15 +905,15 @@ static void MX_QUADSPI_Init(void)
 
   /* USER CODE END QUADSPI_Init 1 */
   /* QUADSPI parameter configuration*/
-  MXhqspi.Instance = QUADSPI;
-  MXhqspi.Init.ClockPrescaler = 3;
-  MXhqspi.Init.FifoThreshold = 1;
-  MXhqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  MXhqspi.Init.FlashSize = 1;
-  MXhqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
-  MXhqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
-  MXhqspi.Init.DualFlash = QSPI_DUALFLASH_ENABLE;
-  if (HAL_QSPI_Init(&MXhqspi) != HAL_OK)
+  hqspi.Instance = QUADSPI;
+  hqspi.Init.ClockPrescaler = 3;
+  hqspi.Init.FifoThreshold = 1;
+  hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
+  hqspi.Init.FlashSize = 1;
+  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
+  hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
+  hqspi.Init.DualFlash = QSPI_DUALFLASH_ENABLE;
+  if (HAL_QSPI_Init(&hqspi) != HAL_OK)
   {
     Error_Handler();
   }

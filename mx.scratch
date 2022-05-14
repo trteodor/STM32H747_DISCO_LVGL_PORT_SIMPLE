@@ -325,9 +325,6 @@
           <name>Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_ltdc_ex.c</name>
         </file>
         <file>
-          <name>Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_qspi.c</name>
-        </file>
-        <file>
           <name>Drivers\STM32H7xx_HAL_Driver\Src\stm32h7xx_hal_tim.c</name>
         </file>
         <file>

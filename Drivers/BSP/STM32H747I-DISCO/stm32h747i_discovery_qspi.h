@@ -194,7 +194,7 @@ typedef struct
 /** @addtogroup STM32H747I_DISCO_QSPI_Exported_Variables
   * @{
   */
-extern QSPI_HandleTypeDef hqspi;
+extern QSPI_HandleTypeDef BSP_hqspi;
 extern BSP_QSPI_Ctx_t     QSPI_Ctx[];
 /**
   * @}
@@ -223,7 +223,7 @@ int32_t BSP_QSPI_ConfigFlash(uint32_t Instance, BSP_QSPI_Interface_t Mode, BSP_Q
 
 /* These functions can be modified in case the current settings
    need to be changed for specific application needs */
-HAL_StatusTypeDef MX_QSPI_Init(QSPI_HandleTypeDef *hQspi, MX_QSPI_Init_t *Config);
+HAL_StatusTypeDef MX_QSPI_Init(QSPI_HandleTypeDef *BSP_hqspi, MX_QSPI_Init_t *Config);
 
 /**
   * @}
