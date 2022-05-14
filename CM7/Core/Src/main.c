@@ -336,63 +336,106 @@ static void MX_DMA2D_Init(void)
   * @param None
   * @retval None
   */
-HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi)
+void MX_DSIHOST_DSI_Init(void)
 {
-	  DSI_PLLInitTypeDef PLLInit;
-	  DSI_VidCfgTypeDef VidCfg;
+	  /* USER CODE BEGIN DSIHOST_Init 0 */
 
-	  hdsi->Instance = DSI;
-	  hdsi->Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-	  hdsi->Init.TXEscapeCkdiv = 4;
-	  hdsi->Init.NumberOfLanes = DSI_TWO_DATA_LANES;
-	  PLLInit.PLLNDIV = 100;
+	  /* USER CODE END DSIHOST_Init 0 */
+
+	  DSI_PLLInitTypeDef PLLInit = {0};
+	  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
+	  DSI_PHY_TimerTypeDef PhyTimings = {0};
+	  DSI_LPCmdTypeDef LPCmd = {0};
+	  DSI_CmdCfgTypeDef CmdCfg = {0};
+
+	  /* USER CODE BEGIN DSIHOST_Init 1 */
+
+	  /* USER CODE END DSIHOST_Init 1 */
+	  hdsi.Instance = DSI;
+	  hdsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
+	  hdsi.Init.TXEscapeCkdiv = 4;
+	  hdsi.Init.NumberOfLanes = DSI_TWO_DATA_LANES;
+	  PLLInit.PLLNDIV = 99;
 	  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
 	  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
-	  if (HAL_DSI_Init(hdsi, &PLLInit) != HAL_OK)
+	  if (HAL_DSI_Init(&hdsi, &PLLInit) != HAL_OK)
 	  {
-	    return HAL_ERROR;
+	    Error_Handler();
 	  }
-
-	  /* Timing parameters for all Video modes */
-	  /*
-	  The lane byte clock is set 62500 Khz
-	  The pixel clock is set to 27429 Khz
-	  */
-	  VidCfg.VirtualChannelID = 0;
-	  VidCfg.ColorCoding = DSI_RGB888;
-	  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-	  VidCfg.Mode = DSI_VID_MODE_BURST;
-	  VidCfg.PacketSize = 800;
-	  VidCfg.NumberOfChunks = 0;
-	  VidCfg.NullPacketSize = 0xFFFU;
-	  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-	  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-	  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-	  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
-	  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
-	  VidCfg.HorizontalLine = ((800 + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
-	  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
-	  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
-	  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
-	  VidCfg.VerticalActive = 480;
-	  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
-	  VidCfg.LPLargestPacketSize = 4;
-	  VidCfg.LPVACTLargestPacketSize = 4;
-
-	  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
-	  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
-	  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
-	  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
-	  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
-	  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
-	  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
-
-	  if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
+	  HostTimeouts.TimeoutCkdiv = 1;
+	  HostTimeouts.HighSpeedTransmissionTimeout = 0;
+	  HostTimeouts.LowPowerReceptionTimeout = 0;
+	  HostTimeouts.HighSpeedReadTimeout = 0;
+	  HostTimeouts.LowPowerReadTimeout = 0;
+	  HostTimeouts.HighSpeedWriteTimeout = 0;
+	  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
+	  HostTimeouts.LowPowerWriteTimeout = 0;
+	  HostTimeouts.BTATimeout = 0;
+	  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
 	  {
-	    return HAL_ERROR;
+	    Error_Handler();
 	  }
+	  PhyTimings.ClockLaneHS2LPTime = 28;
+	  PhyTimings.ClockLaneLP2HSTime = 33;
+	  PhyTimings.DataLaneHS2LPTime = 15;
+	  PhyTimings.DataLaneLP2HSTime = 25;
+	  PhyTimings.DataLaneMaxReadTime = 0;
+	  PhyTimings.StopWaitTime = 0;
+	  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 10000) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_NONE) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  LPCmd.LPGenShortWriteNoP = DSI_LP_GSW0P_DISABLE;
+	  LPCmd.LPGenShortWriteOneP = DSI_LP_GSW1P_DISABLE;
+	  LPCmd.LPGenShortWriteTwoP = DSI_LP_GSW2P_DISABLE;
+	  LPCmd.LPGenShortReadNoP = DSI_LP_GSR0P_DISABLE;
+	  LPCmd.LPGenShortReadOneP = DSI_LP_GSR1P_DISABLE;
+	  LPCmd.LPGenShortReadTwoP = DSI_LP_GSR2P_DISABLE;
+	  LPCmd.LPGenLongWrite = DSI_LP_GLW_DISABLE;
+	  LPCmd.LPDcsShortWriteNoP = DSI_LP_DSW0P_DISABLE;
+	  LPCmd.LPDcsShortWriteOneP = DSI_LP_DSW1P_DISABLE;
+	  LPCmd.LPDcsShortReadNoP = DSI_LP_DSR0P_DISABLE;
+	  LPCmd.LPDcsLongWrite = DSI_LP_DLW_DISABLE;
+	  LPCmd.LPMaxReadPacket = DSI_LP_MRDP_DISABLE;
+	  LPCmd.AcknowledgeRequest = DSI_ACKNOWLEDGE_ENABLE;
+	  if (HAL_DSI_ConfigCommand(&hdsi, &LPCmd) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  CmdCfg.VirtualChannelID = 0;
+	  CmdCfg.ColorCoding = DSI_RGB565;
+	  CmdCfg.CommandSize = 800;
+	  CmdCfg.TearingEffectSource = DSI_TE_EXTERNAL;
+	  CmdCfg.TearingEffectPolarity = DSI_TE_RISING_EDGE;
+	  CmdCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
+	  CmdCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
+	  CmdCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
+	  CmdCfg.VSyncPol = DSI_VSYNC_RISING;
+	  CmdCfg.AutomaticRefresh = DSI_AR_ENABLE;
+	  CmdCfg.TEAcknowledgeRequest = DSI_TE_ACKNOWLEDGE_ENABLE;
+	  if (HAL_DSI_ConfigAdaptedCommandMode(&hdsi, &CmdCfg) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  /* USER CODE BEGIN DSIHOST_Init 2 */
 
-	  return HAL_OK;
+	  /* USER CODE END DSIHOST_Init 2 */
 }
 
 
@@ -409,23 +452,22 @@ static void MX_LTDC_Initt(void)
   /* USER CODE END LTDC_Init 0 */
 
   LTDC_LayerCfgTypeDef pLayerCfg = {0};
-  LTDC_LayerCfgTypeDef pLayerCfg1 = {0};
 
   /* USER CODE BEGIN LTDC_Init 1 */
 
   /* USER CODE END LTDC_Init 1 */
   hltdc.Instance = LTDC;
-  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
+  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AH;
+  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AH;
   hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
   hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc.Init.HorizontalSync = 7;
+  hltdc.Init.HorizontalSync = 0;
   hltdc.Init.VerticalSync = 3;
-  hltdc.Init.AccumulatedHBP = 14;
+  hltdc.Init.AccumulatedHBP = 2;
   hltdc.Init.AccumulatedVBP = 5;
-  hltdc.Init.AccumulatedActiveW = 654;
+  hltdc.Init.AccumulatedActiveW = 802;
   hltdc.Init.AccumulatedActiveH = 485;
-  hltdc.Init.TotalWidth = 660;
+  hltdc.Init.TotalWidth = 803;
   hltdc.Init.TotalHeigh = 487;
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
@@ -435,40 +477,21 @@ static void MX_LTDC_Initt(void)
     Error_Handler();
   }
   pLayerCfg.WindowX0 = 0;
-  pLayerCfg.WindowX1 = 0;
+  pLayerCfg.WindowX1 = 800;
   pLayerCfg.WindowY0 = 0;
-  pLayerCfg.WindowY1 = 0;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
-  pLayerCfg.Alpha = 0;
+  pLayerCfg.WindowY1 = 480;
+  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB888;
+  pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
-  pLayerCfg.FBStartAdress = 0;
-  pLayerCfg.ImageWidth = 0;
-  pLayerCfg.ImageHeight = 0;
-  pLayerCfg.Backcolor.Blue = 0;
-  pLayerCfg.Backcolor.Green = 0;
-  pLayerCfg.Backcolor.Red = 0;
+  pLayerCfg.FBStartAdress = 0xD0000000;
+  pLayerCfg.ImageWidth = 800;
+  pLayerCfg.ImageHeight = 480;
+  pLayerCfg.Backcolor.Blue = 20;
+  pLayerCfg.Backcolor.Green = 40;
+  pLayerCfg.Backcolor.Red = 60;
   if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  pLayerCfg1.WindowX0 = 0;
-  pLayerCfg1.WindowX1 = 0;
-  pLayerCfg1.WindowY0 = 0;
-  pLayerCfg1.WindowY1 = 0;
-  pLayerCfg1.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
-  pLayerCfg1.Alpha = 0;
-  pLayerCfg1.Alpha0 = 0;
-  pLayerCfg1.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
-  pLayerCfg1.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
-  pLayerCfg1.FBStartAdress = 0;
-  pLayerCfg1.ImageWidth = 0;
-  pLayerCfg1.ImageHeight = 0;
-  pLayerCfg1.Backcolor.Blue = 0;
-  pLayerCfg1.Backcolor.Green = 0;
-  pLayerCfg1.Backcolor.Red = 0;
-  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg1, 1) != HAL_OK)
   {
     Error_Handler();
   }

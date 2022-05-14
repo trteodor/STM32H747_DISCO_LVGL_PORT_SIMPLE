@@ -1,123 +1,9 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_lcd.c
-  * @author  MCD Application Team
-  * @brief   This file includes the driver for Liquid Crystal Display (LCD) module
-  *          mounted on STM32H747I_DISCO board.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-/*  How To use this driver:
-  --------------------------
-   - This driver is used to drive directly a LCD TFT using the DSI interface.
-     The following IPs are implied : DSI Host IP block working in conjunction to the
-	 LTDC controller.
-   - This driver is linked by construction to LCD KoD mounted on MB1166 daughter board.
-   - This driver is also used to drive monitors using HDMI interface.
-
-  Driver description:
-  ---------------------
-   + Initialization steps:
-     o Initialize the LCD in default mode using the BSP_LCD_Init() function with the
-       following settings:
-        - DSI is configured in video mode
-        - Pixelformat : LCD_PIXEL_FORMAT_RBG888
-        - Orientation : LCD_ORIENTATION_LANDSCAPE.
-        - Width       : LCD_DEFAULT_WIDTH (800)
-        - Height      : LCD_DEFAULT_HEIGHT(480)
-       The default LTDC layer configured is layer 0.
-       BSP_LCD_Init() includes DSI, LTDC, LTDC Layer and clock configurations by calling:
-        - MX_LTDC_ClockConfig()
-        - MX_LTDC_Init()
-        - MX_DSIHOST_DSI_Init()
-        - MX_LTDC_ConfigLayer()
-
-     o Initialize the LCD with required parameters using the BSP_LCD_InitEx() function.
-       To initialize DSI in command mode, user have to override MX_DSIHOST_DSI_Init(), weak function,
-       content at application level.
-
-     o Initialize the display with HDMI using BSP_LCD_InitHDMI(). Two display formats
-       are supported: HDMI_FORMAT_720_480 or HDMI_FORMAT_720_576
-
-     o Select the LCD layer to be used using the BSP_LCD_SelectLayer() function.
-     o Enable the LCD display using the BSP_LCD_DisplayOn() function.
-     o Disable the LCD display using the BSP_LCD_DisplayOff() function.
-     o Set the display brightness using the BSP_LCD_SetBrightness() function.
-     o Get the display brightness using the BSP_LCD_GetBrightness() function.
-     o Write a pixel to the LCD memory using the BSP_LCD_WritePixel() function.
-     o Read a pixel from the LCD memory using the BSP_LCD_ReadPixel() function.
-     o Draw an horizontal line using the BSP_LCD_DrawHLine() function.
-     o Draw a vertical line using the BSP_LCD_DrawVLine() function.
-     o Draw a bitmap image using the BSP_LCD_DrawBitmap() function.
-
-   + Options
-     o Configure the LTDC reload mode by calling BSP_LCD_Relaod(). By default, the
-       reload mode is set to BSP_LCD_RELOAD_IMMEDIATE then LTDC is reloaded immediately.
-       To control the reload mode:
-         - Call BSP_LCD_Relaod() with ReloadType parameter set to BSP_LCD_RELOAD_NONE
-         - Configure LTDC (color keying, transparency ..)
-         - Call BSP_LCD_Relaod() with ReloadType parameter set to BSP_LCD_RELOAD_IMMEDIATE
-           for immediate reload or BSP_LCD_RELOAD_VERTICAL_BLANKING for LTDC reload
-           in the next vertical blanking
-     o Configure LTDC layers using BSP_LCD_ConfigLayer()
-     o Control layer visibility using BSP_LCD_SetLayerVisible()
-     o Configure and enable the color keying functionality using the
-       BSP_LCD_SetColorKeying() function.
-     o Disable the color keying functionality using the BSP_LCD_ResetColorKeying() function.
-     o Modify on the fly the transparency and/or the frame buffer address
-       using the following functions:
-       - BSP_LCD_SetTransparency()
-       - BSP_LCD_SetLayerAddress()
-
-   + Display on LCD
-     o To draw and fill a basic shapes (dot, line, rectangle, circle, ellipse, .. bitmap)
-       on LCD and display text, utility basic_gui.c/.h must be called. Once the LCD is initialized,
-       user should call GUI_SetFuncDriver() API to link board LCD drivers to BASIC GUI LCD drivers.
-       The basic gui services, defined in basic_gui utility, are ready for use.
-
-  Note:
-  --------
-    Regarding the "Instance" parameter, needed for all functions, it is used to select
-    an LCD instance. On the STM32H747I_DISCO board, there's one instance. Then, this
-    parameter should be 0.
-  */
-
-/* Includes ------------------------------------------------------------------*/
 #include "stm32h747i_discovery_lcd.h"
 #include "stm32h747i_discovery_bus.h"
 #include "stm32h747i_discovery_sdram.h"
-/** @addtogroup BSP
-  * @{
-  */
 
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
-
-/** @defgroup STM32H747I_DISCO_LCD LCD
-  * @{
-  */
-/** @defgroup STM32H747I_DISCO_LCD_Private_Variables Private Variables
-  * @{
-  */
 static LCD_Drv_t                *Lcd_Drv = NULL;
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_LCD_Private_TypesDefinitions Private TypesDefinitions
-  * @{
-  */
 const LCD_UTILS_Drv_t LCD_Driver =
 {
   BSP_LCD_DrawBitmap,
@@ -180,11 +66,6 @@ static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
 static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation);
 # endif /* USE_LCD_CTRL_OTM8009A > 0 */
 
-#if (USE_LCD_CTRL_ADV7533 > 0)
-static int32_t ADV7533_Probe(void);
-static void LCD_Get_HDMI_VideoModeTiming(uint32_t Format, LCD_HDMI_Timing_t *Timing);
-static void LTDC_HDMI_Init(LCD_HDMI_Timing_t *Timing);
-#endif /* (USE_LCD_CTRL_ADV7533 > 0) */
 
 static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc);
 static void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc);
@@ -204,18 +85,7 @@ static void LCD_DeInitSequence(void);
                                      (((((((Color) >> (5U)) & 0x3FU) * 259U) + 33U) >> (6U)) << (8U)) |\
                                      (((((Color) & 0x1FU) * 527U) + 23U) >> (6U)) | (0xFF000000U))
 
-/**
-  * @}
-  */
-/** @defgroup STM32H747I_DISCO_LCD_Exported_Functions LCD Exported Functions
-  * @{
-  */
-/**
-  * @brief  Initializes the LCD in default mode.
-  * @param  Instance    LCD Instance
-  * @param  Orientation LCD_ORIENTATION_PORTRAIT or LCD_ORIENTATION_LANDSCAPE
-  * @retval BSP status
-  */
+
 int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi )
 {
 	hlcd_dsi = hdsi;
@@ -223,15 +93,6 @@ int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *
   return BSP_LCD_InitEx(Instance, Orientation, LCD_PIXEL_FORMAT_RGB888, LCD_DEFAULT_WIDTH, LCD_DEFAULT_HEIGHT);
 }
 
-/**
-  * @brief  Initializes the LCD.
-  * @param  Instance    LCD Instance
-  * @param  Orientation LCD_ORIENTATION_PORTRAIT or LCD_ORIENTATION_LANDSCAPE
-  * @param  PixelFormat LCD_PIXEL_FORMAT_RBG565 or LCD_PIXEL_FORMAT_RBG888
-  * @param  Width       Display width
-  * @param  Height      Display height
-  * @retval BSP status
-  */
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -305,11 +166,10 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
 #else
     DSI_MspInit(hlcd_dsi);
 #endif
-    if(MX_DSIHOST_DSI_Init(hlcd_dsi) != HAL_OK)
-    {
-      ret = BSP_ERROR_PERIPH_FAILURE;
-    }
-    else if(MX_LTDC_ClockConfig(&hlcd_ltdc) != HAL_OK)
+
+    MX_DSIHOST_DSI_Init();
+
+    if(MX_LTDC_ClockConfig(&hlcd_ltdc) != HAL_OK)
     {
       ret = BSP_ERROR_PERIPH_FAILURE;
     }
@@ -374,11 +234,6 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
   return ret;
 }
 
-/**
-  * @brief  De-Initializes the LCD resources.
-  * @param  Instance    LCD Instance
-  * @retval BSP status
-  */
 int32_t BSP_LCD_DeInit(uint32_t Instance)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -419,222 +274,8 @@ int32_t BSP_LCD_DeInit(uint32_t Instance)
 
   return ret;
 }
-#if (USE_LCD_CTRL_ADV7533 > 0)
-/**
-  * @brief  Initializes the LCD HDMI Mode.
-  * @param  Instance    LCD Instance
-  * @param  Format      HDMI format could be HDMI_FORMAT_720_480 or HDMI_FORMAT_720_576
-  * @retval BSP status
-  */
-int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format)
-{
-  int32_t ret;
-  DSI_PLLInitTypeDef    dsiPllInit;
-  DSI_PHY_TimerTypeDef  dsiPhyInit;
-  MX_LTDC_LayerConfig_t hdmi_config;
-  LCD_HDMI_Timing_t     hdmi_timing;
-  DSI_VidCfgTypeDef     hDsiVideoMode;
-
-  if(Instance >= LCD_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    LCD_Get_HDMI_VideoModeTiming(Format, &hdmi_timing);
-    Lcd_Ctx[Instance].XSize       = hdmi_timing.HACT;
-    Lcd_Ctx[Instance].YSize       = hdmi_timing.VACT;
-    Lcd_Ctx[Instance].PixelFormat = LCD_PIXEL_FORMAT_RGB888;
-    Lcd_Ctx[Instance].BppFactor = 4U;
-
-    /* Toggle Hardware Reset of the DSI LCD using
-    * its XRES signal (active low) */
-    BSP_LCD_Reset(Instance);
-
-    /* Initializes peripherals instance value */
-    hlcd_ltdc.Instance = LTDC;
-    hlcd_dma2d.Instance = DMA2D;
-    hlcd_dsi->Instance = DSI;
-
-    if(ADV7533_Probe() != BSP_ERROR_NONE)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-    else if(Lcd_Drv->DisplayOn(Lcd_CompObj)!= BSP_ERROR_NONE)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-    else
-    {
-      /* Call first MSP Initialize only in case of first initialization
-      * This will set IP blocks LTDC, DSI and DMA2D
-      * - out of reset
-      * - clocked
-      * - NVIC IRQ related to IP blocks enabled
-      */
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
-      /* Register the LTDC MSP Callbacks */
-      if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
-      {
-        if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
-        {
-          return BSP_ERROR_PERIPH_FAILURE;
-        }
-      }
-#else
-      LTDC_MspInit(&hlcd_ltdc);
-#endif
-
-      DMA2D_MspInit(&hlcd_dma2d);
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-      /* Register the DSI MSP Callbacks */
-      if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
-      {
-        if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
-        {
-          return BSP_ERROR_PERIPH_FAILURE;
-        }
-      }
-#else
-      DSI_MspInit(hlcd_dsi);
-#endif
-
-      /*************************DSI Initialization***********************************/
-      /* Base address of DSI Host/Wrapper registers to be set before calling De-Init */
-      hlcd_dsi->Instance = DSI;
-      /* Set number of Lanes */
-      hlcd_dsi->Init.NumberOfLanes = DSI_TWO_DATA_LANES;
-      /* Set the TX escape clock division ratio */
-      hlcd_dsi->Init.TXEscapeCkdiv = 3U;
-      hlcd_dsi->Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-
-      /* Configure the DSI PLL */
-      dsiPllInit.PLLNDIV    = 65U;
-      dsiPllInit.PLLIDF     = DSI_PLL_IN_DIV5;
-      dsiPllInit.PLLODF     = DSI_PLL_OUT_DIV1;
-      if(HAL_DSI_Init(hlcd_dsi, &dsiPllInit) != HAL_OK)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-
-      /* Configure the D-PHY Timings */
-      dsiPhyInit.ClockLaneHS2LPTime  = hdmi_timing.ClockLaneHS2LPTime;
-      dsiPhyInit.ClockLaneLP2HSTime  = hdmi_timing.ClockLaneLP2HSTime;
-      dsiPhyInit.DataLaneHS2LPTime   = hdmi_timing.DataLaneHS2LPTime;
-      dsiPhyInit.DataLaneLP2HSTime   = hdmi_timing.DataLaneLP2HSTime;
-      dsiPhyInit.DataLaneMaxReadTime = hdmi_timing.DataLaneMaxReadTime;
-      dsiPhyInit.StopWaitTime        = hdmi_timing.StopWaitTime;
-      if(HAL_DSI_ConfigPhyTimer(hlcd_dsi, &dsiPhyInit) != HAL_OK)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-
-      /* Timing parameters for all Video modes */
-      /*
-      The lane byte clock is set 40625 Khz
-      The pixel clock is set to 27083 Khz
-      */
-      hDsiVideoMode.VirtualChannelID = 0;
-      hDsiVideoMode.ColorCoding      = DSI_RGB888;
-      hDsiVideoMode.LooselyPacked    = DSI_LOOSELY_PACKED_DISABLE;
-      hDsiVideoMode.VSPolarity       = DSI_VSYNC_ACTIVE_LOW;
-      hDsiVideoMode.HSPolarity       = DSI_HSYNC_ACTIVE_LOW;
-      hDsiVideoMode.DEPolarity       = DSI_DATA_ENABLE_ACTIVE_HIGH;
-      hDsiVideoMode.Mode             = DSI_VID_MODE_NB_PULSES;
-      hDsiVideoMode.NullPacketSize   = 0U;
-      hDsiVideoMode.NumberOfChunks   = 1U;
-      hDsiVideoMode.PacketSize       = hdmi_timing.HACT; /* Value depending on display format */
-      hDsiVideoMode.HorizontalSyncActive = (hdmi_timing.HSYNC * 40625U)/27083U;
-      hDsiVideoMode.HorizontalBackPorch  = (hdmi_timing.HBP * 40625U)/27083U;
-      hDsiVideoMode.HorizontalLine = ((hdmi_timing.HACT + hdmi_timing.HSYNC + hdmi_timing.HBP + hdmi_timing.HFP) * 40625U)/27083U; /* Value depending on display format */
-      hDsiVideoMode.VerticalSyncActive        = hdmi_timing.VSYNC;
-      hDsiVideoMode.VerticalBackPorch         = hdmi_timing.VBP;
-      hDsiVideoMode.VerticalFrontPorch        = hdmi_timing.VFP;
-      hDsiVideoMode.VerticalActive            = hdmi_timing.VACT; /* Value depending on display format */
-
-      /* Disable or disable sending LP command while streaming is active in video mode */
-      hDsiVideoMode.LPCommandEnable = DSI_LP_COMMAND_DISABLE; /* Disable sending commands in mode LP (Low Power) */
-
-      /* Largest packet size possible to transmit in LP mode in VSA, VBP, VFP regions */
-      /* Only useful when sending LP packets is allowed while streaming is active in video mode */
-      hDsiVideoMode.LPLargestPacketSize     = 4;
-
-      /* Largest packet size possible to transmit in LP mode in HFP region during VACT period */
-      /* Only useful when sending LP packets is allowed while streaming is active in video mode */
-      hDsiVideoMode.LPVACTLargestPacketSize = 4;
-
-      /* Specify for each region, if the going in LP mode is allowed */
-      /* while streaming is active in video mode                                                                         */
-      hDsiVideoMode.LPHorizontalFrontPorchEnable = DSI_LP_HFP_DISABLE;
-      hDsiVideoMode.LPHorizontalBackPorchEnable  = DSI_LP_HBP_DISABLE;
-      hDsiVideoMode.LPVerticalActiveEnable       = DSI_LP_VACT_DISABLE;
-      hDsiVideoMode.LPVerticalFrontPorchEnable   = DSI_LP_VFP_DISABLE;
-      hDsiVideoMode.LPVerticalBackPorchEnable    = DSI_LP_VBP_DISABLE;
-      hDsiVideoMode.LPVerticalSyncActiveEnable   = DSI_LP_VSYNC_DISABLE;
 
 
-      /* No acknowledge at the end of a frame */
-      hDsiVideoMode.FrameBTAAcknowledgeEnable    = DSI_FBTAA_DISABLE;
-
-      /* Configure DSI Video mode timings with settings set above */
-      (void)HAL_DSI_ConfigVideoMode((hlcd_dsi), &(hDsiVideoMode));
-
-      if(MX_LTDC_ClockConfig2(&hlcd_ltdc) != HAL_OK)
-      {
-        return BSP_ERROR_CLOCK_FAILURE;
-      }
-
-      /* Initialize LTDC */
-      LTDC_HDMI_Init(&hdmi_timing);
-      hdmi_config.X0          = 0;
-      hdmi_config.X1          = Lcd_Ctx[Instance].XSize;
-      hdmi_config.Y0          = 0;
-      hdmi_config.Y1          = Lcd_Ctx[Instance].YSize;
-      hdmi_config.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
-      hdmi_config.Address     = LCD_LAYER_0_ADDRESS;
-      if(MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, &hdmi_config) != HAL_OK)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-      /* Enable the DSI host and wrapper after the LTDC initialization
-      To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
-      (void)HAL_DSI_Start((hlcd_dsi));
-
-#if !defined(DATA_IN_ExtSDRAM)
-      /* Initialize the SDRAM */
-      if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-#endif /* DATA_IN_ExtSDRAM */
-
-      /** @brief NVIC configuration for LTDC interrupt that is now enabled */
-      HAL_NVIC_SetPriority(LTDC_IRQn, 0x0F, 0);
-      HAL_NVIC_EnableIRQ(LTDC_IRQn);
-
-      /** @brief NVIC configuration for DMA2D interrupt that is now enabled */
-      HAL_NVIC_SetPriority(DMA2D_IRQn, 0x0F, 0);
-      HAL_NVIC_EnableIRQ(DMA2D_IRQn);
-
-      /** @brief NVIC configuration for DSI interrupt that is now enabled */
-      HAL_NVIC_SetPriority(DSI_IRQn, 0x0F, 0);
-      HAL_NVIC_EnableIRQ(DSI_IRQn);
-
-      ret = BSP_ERROR_NONE;
-    }
-  }
-
-  return ret;
-}
-
-#endif /*USE_LCD_CTRL_ADV7533 > 0*/
-/**
-  * @brief  BSP LCD Reset
-  *         Hw reset the LCD DSI activating its XRES signal (active low for some time)
-  *         and deactivating it later.
-  * @param  Instance LCD Instance
-  */
 void BSP_LCD_Reset(uint32_t Instance)
 {
   GPIO_InitTypeDef  gpio_init_structure;
@@ -655,10 +296,7 @@ void BSP_LCD_Reset(uint32_t Instance)
   HAL_Delay(10);/* Wait for 10ms after releasing XRES before sending commands */
 }
 
-/**
-  * @brief  Configure LCD control pins (Back-light, Display Enable and TE)
-  * @retval None
-  */
+
 static void LCD_InitSequence(void)
 {
   GPIO_InitTypeDef  gpio_init_structure;
@@ -699,10 +337,7 @@ static void LCD_InitSequence(void)
   HAL_NVIC_EnableIRQ(DSI_IRQn);
 }
 
-/**
-  * @brief  DeInitializes LCD GPIO special pins MSP.
-  * @retval None
-  */
+
 static void LCD_DeInitSequence(void)
 {
   GPIO_InitTypeDef  gpio_init_structure;
@@ -715,80 +350,6 @@ static void LCD_DeInitSequence(void)
   /* LCD_TE_CTRL GPIO configuration */
 }
 
-/**
-  * @brief  Initializes the DSIHOST.
-  * @param  hdsi   DSI handle
-  * @param  Width  Horizontal active width
-  * @param  Height Vertical active height
-  * @param  PixelFormat DSI color coding RGB888 or RGB565
-  * @retval HAL status
-  */
-//__weak HAL_StatusTypeDef MX_DSIHOST_DSI_Init(DSI_HandleTypeDef *hdsi, uint32_t Width, uint32_t Height, uint32_t PixelFormat)
-//{
-//  DSI_PLLInitTypeDef PLLInit;
-//  DSI_VidCfgTypeDef VidCfg;
-//
-//  hdsi->Instance = DSI;
-//  hdsi->Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-//  hdsi->Init.TXEscapeCkdiv = 4;
-//  hdsi->Init.NumberOfLanes = DSI_TWO_DATA_LANES;
-//  PLLInit.PLLNDIV = 100;
-//  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
-//  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
-//  if (HAL_DSI_Init(hdsi, &PLLInit) != HAL_OK)
-//  {
-//    return HAL_ERROR;
-//  }
-//
-//  /* Timing parameters for all Video modes */
-//  /*
-//  The lane byte clock is set 62500 Khz
-//  The pixel clock is set to 27429 Khz
-//  */
-//  VidCfg.VirtualChannelID = 0;
-//  VidCfg.ColorCoding = PixelFormat;
-//  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-//  VidCfg.Mode = DSI_VID_MODE_BURST;
-//  VidCfg.PacketSize = Width;
-//  VidCfg.NumberOfChunks = 0;
-//  VidCfg.NullPacketSize = 0xFFFU;
-//  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-//  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-//  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-//  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
-//  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
-//  VidCfg.HorizontalLine = ((Width + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
-//  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
-//  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
-//  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
-//  VidCfg.VerticalActive = Height;
-//  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
-//  VidCfg.LPLargestPacketSize = 4;
-//  VidCfg.LPVACTLargestPacketSize = 4;
-//
-//  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
-//  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
-//  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
-//  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
-//  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
-//  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
-//  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
-//
-//  if (HAL_DSI_ConfigVideoMode(hdsi, &VidCfg) != HAL_OK)
-//  {
-//    return HAL_ERROR;
-//  }
-//
-//  return HAL_OK;
-//}
-
-/**
-  * @brief  Initializes the LTDC.
-  * @param  hltdc  LTDC handle
-  * @param  Width  LTDC width
-  * @param  Height LTDC height
-  * @retval HAL status
-  */
 __weak HAL_StatusTypeDef MX_LTDC_Init(LTDC_HandleTypeDef *hltdc, uint32_t Width, uint32_t Height)
 {
   hltdc->Instance = LTDC;
@@ -813,13 +374,7 @@ __weak HAL_StatusTypeDef MX_LTDC_Init(LTDC_HandleTypeDef *hltdc, uint32_t Width,
   return HAL_LTDC_Init(hltdc);
 }
 
-/**
-  * @brief  MX LTDC layer configuration.
-  * @param  hltdc      LTDC handle
-  * @param  LayerIndex Layer 0 or 1
-  * @param  Config     Layer configuration
-  * @retval HAL status
-  */
+
 __weak HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t LayerIndex, MX_LTDC_LayerConfig_t *Config)
 {
   LTDC_LayerCfgTypeDef pLayerCfg;
@@ -886,112 +441,7 @@ __weak HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc)
   return HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
 }
 
-#if ((USE_HAL_LTDC_REGISTER_CALLBACKS == 1) || (USE_HAL_DSI_REGISTER_CALLBACKS == 1))
-/**
-  * @brief Default BSP LCD Msp Callbacks
-  * @param Instance BSP LCD Instance
-  * @retval BSP status
-  */
-int32_t BSP_LCD_RegisterDefaultMspCallbacks (uint32_t Instance)
-{
-  int32_t ret = BSP_ERROR_NONE;
 
-  if(Instance >= LCD_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
-    if(HAL_LTDC_RegisterCallback(&hlcd_ltdc, HAL_LTDC_MSPINIT_CB_ID, LTDC_MspInit) != HAL_OK)
-    {
-      ret = BSP_ERROR_PERIPH_FAILURE;
-    }
-    else
-    {
-      if(HAL_LTDC_RegisterCallback(&hlcd_ltdc, HAL_LTDC_MSPDEINIT_CB_ID, LTDC_MspDeInit) != HAL_OK)
-      {
-        ret = BSP_ERROR_PERIPH_FAILURE;
-      }
-    }
-#endif /* (USE_HAL_LTDC_REGISTER_CALLBACKS == 1) */
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-    if(ret == BSP_ERROR_NONE)
-    {
-      if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPINIT_CB_ID, DSI_MspInit) != HAL_OK)
-      {
-        ret = BSP_ERROR_PERIPH_FAILURE;
-      }
-      else
-      {
-        if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPDEINIT_CB_ID, DSI_MspDeInit) != HAL_OK)
-        {
-          ret = BSP_ERROR_PERIPH_FAILURE;
-        }
-      }
-    }
-#endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 1) */
-
-    Lcd_Ctx[Instance].IsMspCallbacksValid = 1;
-  }
-
-  return ret;
-}
-
-/**
-  * @brief BSP LCD Msp Callback registering
-  * @param Instance    LCD Instance
-  * @param CallBacks   pointer to LCD MspInit/MspDeInit functions
-  * @retval BSP status
-  */
-int32_t BSP_LCD_RegisterMspCallbacks (uint32_t Instance, BSP_LCD_Cb_t *CallBacks)
-{
-  int32_t ret = BSP_ERROR_NONE;
-
-  if(Instance >= LCD_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
-    if(HAL_LTDC_RegisterCallback(&hlcd_ltdc, HAL_LTDC_MSPINIT_CB_ID, CallBacks->pMspLtdcInitCb) != HAL_OK)
-    {
-      ret = BSP_ERROR_PERIPH_FAILURE;
-    }
-    else
-    {
-      if(HAL_LTDC_RegisterCallback(&hlcd_ltdc, HAL_LTDC_MSPDEINIT_CB_ID, CallBacks->pMspLtdcDeInitCb) != HAL_OK)
-      {
-        ret = BSP_ERROR_PERIPH_FAILURE;
-      }
-    }
-#endif /* (USE_HAL_LTDC_REGISTER_CALLBACKS == 1) */
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-    if(ret == BSP_ERROR_NONE)
-    {
-      if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPINIT_CB_ID, CallBacks->pMspDsiInitCb) != HAL_OK)
-      {
-        ret = BSP_ERROR_PERIPH_FAILURE;
-      }
-      else
-      {
-        if(HAL_DSI_RegisterCallback(hlcd_dsi, HAL_DSI_MSPDEINIT_CB_ID, CallBacks->pMspDsiDeInitCb) != HAL_OK)
-        {
-          ret = BSP_ERROR_PERIPH_FAILURE;
-        }
-      }
-    }
-#endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 1) */
-
-    Lcd_Ctx[Instance].IsMspCallbacksValid = 1;
-  }
-
-  return ret;
-}
-#endif /*((USE_HAL_LTDC_REGISTER_CALLBACKS == 1) || (USE_HAL_DSI_REGISTER_CALLBACKS == 1)) */
 
 /**
   * @brief  LTDC layer configuration.
@@ -1948,129 +1398,7 @@ static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
   return ret;
 }
 
-#if (USE_LCD_CTRL_ADV7533 > 0)
-/**
-  * @brief  Get HDMI DSI video mode timings for selected format
-  * @param  Format   Display format
-  * @param  Timing   pointer to timing structure
-  * @retval None
-  */
-static void LCD_Get_HDMI_VideoModeTiming(uint32_t Format, LCD_HDMI_Timing_t *Timing)
-{
-  if(Format == HDMI_FORMAT_720_480)
-  {
-    Timing->HSYNC = 62U;
-    Timing->HBP   = 60U;
-    Timing->HFP   = 30U;
-    Timing->VSYNC = 6U;
-    Timing->VBP   = 19U;
-    Timing->VFP   = 9U;
-    Timing->HACT  = 720U;
-    Timing->VACT  = 480U;
-  }
-  else /* (Format == HDMI_FORMAT_720_576) */
-  {
-    Timing->HSYNC = 64U;
-    Timing->HBP   = 68U;
-    Timing->HFP   = 12U;
-    Timing->VSYNC = 5U;
-    Timing->VBP   = 39U;
-    Timing->VFP   = 5U;
-    Timing->HACT  = 720U;
-    Timing->VACT  = 576U;
-  }
-  Timing->ClockLaneHS2LPTime = 0x14;
-  Timing->ClockLaneLP2HSTime = 0x14;
-  Timing->DataLaneHS2LPTime = 0x0A;
-  Timing->DataLaneLP2HSTime = 0x0A;
-  Timing->DataLaneMaxReadTime = 0x00;
-  Timing->StopWaitTime = 0x00;
-}
 
-/**
-  * @brief  LTDC initialization
-  * @param  Timing   pointer to timing structure
-  * @retval None
-  */
-static void LTDC_HDMI_Init(LCD_HDMI_Timing_t *Timing)
-{
-  /* Background value */
-  hlcd_ltdc.Init.Backcolor.Blue = 0x00;
-  hlcd_ltdc.Init.Backcolor.Green = 0xFF;
-  hlcd_ltdc.Init.Backcolor.Red = 0xFF;
-
-  hlcd_ltdc.Init.HorizontalSync     = Timing->HSYNC - 1;
-  hlcd_ltdc.Init.AccumulatedHBP     = Timing->HSYNC + Timing->HBP - 1;
-  hlcd_ltdc.Init.AccumulatedActiveW = Timing->HSYNC + Timing->HACT + Timing->HBP - 1;
-  hlcd_ltdc.Init.TotalWidth         = Timing->HSYNC + Timing->HACT + Timing->HBP + Timing->HFP - 1;
-  hlcd_ltdc.Init.VerticalSync       = Timing->VSYNC - 1;
-  hlcd_ltdc.Init.AccumulatedVBP     = Timing->VSYNC + Timing->VBP - 1;
-  hlcd_ltdc.Init.AccumulatedActiveH = Timing->VSYNC + Timing->VACT + Timing->VBP - 1;
-  hlcd_ltdc.Init.TotalHeigh         = Timing->VSYNC + Timing->VACT + Timing->VBP + Timing->VFP - 1;
-
-  /* Polarity */
-  hlcd_ltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-  hlcd_ltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
-  hlcd_ltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
-  hlcd_ltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hlcd_ltdc.Instance = LTDC;
-
-  /* Initialize the LTDC */
-  (void)HAL_LTDC_Init(&hlcd_ltdc);
-}
-
-/**
-  * @brief  Register Bus IOs if component ID is OK
-  * @retval error status
-  */
-static int32_t ADV7533_Probe(void)
-{
-  int32_t ret;
-  uint32_t id;
-  ADV7533_IO_t              IOCtx;
-  static ADV7533_Object_t         ADV7533Obj;
-
-  /* Configure the audio driver */
-  IOCtx.Address     = ADV7533_MAIN_I2C_ADDR;
-  IOCtx.Init        = BSP_I2C4_Init;
-  IOCtx.DeInit      = BSP_I2C4_DeInit;
-  IOCtx.ReadReg     = BSP_I2C4_ReadReg;
-  IOCtx.WriteReg    = BSP_I2C4_WriteReg;
-  IOCtx.GetTick     = BSP_GetTick;
-
-  if(ADV7533_RegisterBusIO (&ADV7533Obj, &IOCtx) != ADV7533_OK)
-  {
-    ret = BSP_ERROR_BUS_FAILURE;
-  }
-  else if(ADV7533_ReadID(&ADV7533Obj, &id) != ADV7533_OK)
-  {
-    ret = BSP_ERROR_COMPONENT_FAILURE;
-  }
-  else if(id != ADV7533_ID)
-  {
-    ret = BSP_ERROR_UNKNOWN_COMPONENT;
-  }
-  else
-  {
-    Lcd_Drv = (LCD_Drv_t *) &ADV7533_LCD_Driver;
-    Lcd_CompObj = &ADV7533Obj;
-    if(Lcd_Drv->Init(Lcd_CompObj, 0, 0) != ADV7533_OK)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-    else if(ADV7533_Configure(Lcd_CompObj, 2)!= ADV7533_OK)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-    else
-    {
-      ret = BSP_ERROR_NONE;
-    }
-  }
-
-  return ret;
-}
-#endif /*USE_LCD_CTRL_ADV7533 */
 #if (USE_LCD_CTRL_OTM8009A > 0)
 /**
   * @brief  Register Bus IOs if component ID is OK
@@ -2118,20 +1446,4 @@ static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
   return ret;
 }
 #endif /* USE_LCD_CTRL_OTM8009A */
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
