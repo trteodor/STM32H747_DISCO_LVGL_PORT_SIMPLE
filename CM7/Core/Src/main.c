@@ -78,6 +78,7 @@ static void MX_QUADSPI_Init(void);
 static void Display_DemoDescription(void);
 static void LCD_SetHint(void);
 static void LCD_Show_Feature(uint8_t feature);
+static void LetsDrawSometging(void);
 
 extern void SDRAM_demo (void);
 extern void SDRAM_DMA_demo (void);
@@ -255,43 +256,72 @@ int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *
 
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
 {
-  int32_t ret = BSP_ERROR_NONE;
-  uint32_t ctrl_pixel_format, ltdc_pixel_format, dsi_pixel_format;
-  MX_LTDC_LayerConfig_t config;
+	int32_t ret = BSP_ERROR_NONE;
+	uint32_t ctrl_pixel_format, ltdc_pixel_format, dsi_pixel_format;
+	MX_LTDC_LayerConfig_t config;
 
-  if((Orientation > LCD_ORIENTATION_LANDSCAPE) || (Instance >= LCD_INSTANCES_NBR) || \
-     ((PixelFormat != LCD_PIXEL_FORMAT_RGB565) && (PixelFormat != LTDC_PIXEL_FORMAT_RGB888)))
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    if(PixelFormat == LCD_PIXEL_FORMAT_RGB565)
-    {
-      ltdc_pixel_format = LTDC_PIXEL_FORMAT_RGB565;
-      dsi_pixel_format = DSI_RGB565;
-      ctrl_pixel_format = OTM8009A_FORMAT_RBG565;
-      Lcd_Ctx[Instance].BppFactor = 2U;
-    }
-    else /* LCD_PIXEL_FORMAT_RGB888 */
-    {
-      ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
-      dsi_pixel_format = DSI_RGB888;
-      ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
-      Lcd_Ctx[Instance].BppFactor = 4U;
-    }
-
+	ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
+	dsi_pixel_format = DSI_RGB888;
+	ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
+	Lcd_Ctx[Instance].BppFactor = 4U;
     /* Store pixel format, xsize and ysize information */
     Lcd_Ctx[Instance].PixelFormat = PixelFormat;
     Lcd_Ctx[Instance].XSize  = Width;
     Lcd_Ctx[Instance].YSize  = Height;
-
     /* Toggle Hardware Reset of the LCD using its XRES signal (active low) */
-    BSP_LCD_Reset(Instance);
 
+    GPIO_InitTypeDef  gpio_init_structure;
 
+    __HAL_RCC_GPIOG_CLK_ENABLE(); /*LCD RESET CLK ENABLE*/
+
+    /* Configure the GPIO Reset pin */
+    gpio_init_structure.Pin   = LCD_RESET_PIN;
+    gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
+    gpio_init_structure.Pull  = GPIO_PULLUP;
+    gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+    HAL_GPIO_Init(LCD_RESET_GPIO_PORT , &gpio_init_structure);
+
+    /* Activate XRES active low */
+    HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT , LCD_RESET_PIN, GPIO_PIN_RESET);
+    HAL_Delay(20);/* wait 20 ms */
+    HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT , LCD_RESET_PIN, GPIO_PIN_SET);/* Deactivate XRES */
+    HAL_Delay(10);/* Wait for 10ms after releasing XRES before sending commands */
     /* Initialize LCD special pins GPIOs */
-    LCD_InitSequence();
+
+    /* LCD_BL_CTRL GPIO configuration */
+    LCD_BL_CTRL_GPIO_CLK_ENABLE();
+
+    gpio_init_structure.Pin       = LCD_BL_CTRL_PIN;
+    gpio_init_structure.Mode      = GPIO_MODE_OUTPUT_PP;
+    gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+    gpio_init_structure.Pull      = GPIO_NOPULL;
+
+    HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &gpio_init_structure);
+    /* Assert back-light LCD_BL_CTRL pin */
+    HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
+
+    /* LCD_TE_CTRL GPIO configuration */
+    LCD_TE_GPIO_CLK_ENABLE();
+
+    gpio_init_structure.Pin       = LCD_TE_PIN;
+    gpio_init_structure.Mode      = GPIO_MODE_INPUT;
+    gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
+
+    HAL_GPIO_Init(LCD_TE_GPIO_PORT, &gpio_init_structure);
+    /* Assert back-light LCD_BL_CTRL pin */
+    HAL_GPIO_WritePin(LCD_TE_GPIO_PORT, LCD_TE_PIN, GPIO_PIN_SET);
+
+        /** @brief NVIC configuration for LTDC interrupt that is now enabled */
+    HAL_NVIC_SetPriority(LTDC_IRQn, 0x0F, 0);
+    HAL_NVIC_EnableIRQ(LTDC_IRQn);
+
+    /** @brief NVIC configuration for DMA2D interrupt that is now enabled */
+    HAL_NVIC_SetPriority(DMA2D_IRQn, 0x0F, 0);
+    HAL_NVIC_EnableIRQ(DMA2D_IRQn);
+
+    /** @brief NVIC configuration for DSI interrupt that is now enabled */
+    HAL_NVIC_SetPriority(DSI_IRQn, 0x0F, 0);
+    HAL_NVIC_EnableIRQ(DSI_IRQn);
 
     /* Initializes peripherals instance value */
     hlcd_ltdc.Instance = LTDC;
@@ -299,35 +329,11 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     hlcd_dsi->Instance = DSI;
 
     /* MSP initialization */
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
-    /* Register the LTDC MSP Callbacks */
-    if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
-    {
-      if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-    }
-#else
     LTDC_MspInit(&hlcd_ltdc);
-#endif
-
     DMA2D_MspInit(&hlcd_dma2d);
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-    /* Register the DSI MSP Callbacks */
-    if(Lcd_Ctx[Instance].IsMspCallbacksValid == 0U)
-    {
-      if(BSP_LCD_RegisterDefaultMspCallbacks(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-    }
-#else
     DSI_MspInit(hlcd_dsi);
-#endif
-
     MX_DSIHOST_DSI_Init();
+
 
     if(MX_LTDC_ClockConfig(&hlcd_ltdc) != HAL_OK)
     {
@@ -389,8 +395,6 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     /* By default the reload is activated and executed immediately */
     Lcd_Ctx[Instance].ReloadEnable = 1U;
    }
-  }
-
   return ret;
 }
 /* USER CODE END 0 */
@@ -402,7 +406,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-//	hdsi = hlcd_dsi;
+
   /* USER CODE END 1 */
 /* USER CODE BEGIN Boot_Mode_Sequence_0 */
   int32_t timeout;
@@ -493,7 +497,9 @@ Error_Handler();
   QSPI_demo();
   HAL_Delay(2000);
 
-  Touchscreen_demo1();
+  LetsDrawSometging();
+
+//  Touchscreen_demo1();
 
 
   /* USER CODE END 2 */
@@ -1121,6 +1127,31 @@ static void LCD_SetHint(void)
 
   UTIL_LCD_DrawRect(10, 90, x_size - 20, y_size- 100, UTIL_LCD_COLOR_BLUE);
   UTIL_LCD_DrawRect(11, 91, x_size - 22, y_size- 102, UTIL_LCD_COLOR_BLUE);
+ }
+
+static void LetsDrawSometging(void)
+{
+  uint32_t x_size;
+  uint32_t y_size;
+  BSP_LCD_GetXSize(0, &x_size);
+  BSP_LCD_GetYSize(0, &y_size);
+  /* Clear the LCD */
+  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
+
+  /*  Set the LCD Text Color */
+  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_DARKBLUE);
+  UTIL_LCD_FillRect(0, 0, x_size, 80, UTIL_LCD_COLOR_BLUE);
+  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
+  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_BLUE);
+  UTIL_LCD_SetFont(&Font24);
+  UTIL_LCD_DisplayStringAt(0, 0, (uint8_t *)"HELLO DISPLAY", CENTER_MODE);
+  UTIL_LCD_SetFont(&Font12);
+  UTIL_LCD_DisplayStringAt(0, 300, (uint8_t *)"This example shows the different", CENTER_MODE);
+  UTIL_LCD_DisplayStringAt(0, 345, (uint8_t *)"Its really simple but difficult :/ ", CENTER_MODE);
+  UTIL_LCD_DisplayStringAt(0, 360, (uint8_t *)"next page", CENTER_MODE);
+
+  UTIL_LCD_DrawRect(10, 90, x_size - 20, y_size- 100, UTIL_LCD_COLOR_MAGENTA);
+  UTIL_LCD_DrawRect(11, 91, x_size - 22, y_size- 102, UTIL_LCD_COLOR_MAGENTA);
  }
 
 /**
