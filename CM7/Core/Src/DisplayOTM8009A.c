@@ -16,7 +16,75 @@
 /*Temporary use BSP*/
 #include "stm32h747i_discovery_sdram.h"
 
+
+
 #include "DisplayOTM8009A.h"
+
+/**
+ * VARIABLE SECTION START
+ **************************************************************************************************************************
+ */
+
+extern LCD_Drv_t                *Lcd_Drv;
+
+const LCD_UTILS_Drv_t LCD_Driver =
+{
+  DISP_LCD_DrawBitmap,
+  DISP_LCD_FillRGBRect,
+  DISP_LCD_DrawHLine,
+  DISP_LCD_DrawVLine,
+  DISP_LCD_FillRect,
+  DISP_LCD_ReadPixel,
+  DISP_LCD_WritePixel,
+  DISP_LCD_GetXSize,
+  DISP_LCD_GetYSize,
+  DISP_LCD_SetActiveLayer,
+  DISP_LCD_GetPixelFormat
+};
+
+typedef struct
+{
+  uint32_t      HACT;
+  uint32_t      VACT;
+  uint32_t      HSYNC;
+  uint32_t      HBP;
+  uint32_t      HFP;
+  uint32_t      VSYNC;
+  uint32_t      VBP;
+  uint32_t      VFP;
+
+  /* Configure the D-PHY Timings */
+  uint32_t      ClockLaneHS2LPTime;
+  uint32_t      ClockLaneLP2HSTime;
+  uint32_t      DataLaneHS2LPTime;
+  uint32_t      DataLaneLP2HSTime;
+  uint32_t      DataLaneMaxReadTime;
+  uint32_t      StopWaitTime;
+} LCD_HDMI_Timing_t;
+
+
+void                *Lcd_CompObj = NULL;
+DSI_HandleTypeDef   *hlcd_dsi = NULL;
+DMA2D_HandleTypeDef *hlcd_dma2d;
+LTDC_HandleTypeDef  *hlcd_ltdc = NULL;
+DISP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
+
+
+static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color);
+static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode);
+
+
+#define CONVERTRGB5652ARGB8888(Color)((((((((Color) >> (11U)) & 0x1FU) * 527U) + 23U) >> (6U)) << (16U)) |\
+                                     (((((((Color) >> (5U)) & 0x3FU) * 259U) + 33U) >> (6U)) << (8U)) |\
+                                     (((((Color) & 0x1FU) * 527U) + 23U) >> (6U)) | (0xFF000000U))
+
+
+
+
+/**
+ *INIT SECTION START
+ **************************************************************************************************************************
+ */
 
 
 int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
@@ -154,11 +222,10 @@ void ConfigAndSetNecessaryGPIO(void)
 
 }
 
-
-
 int32_t DISP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi, LTDC_HandleTypeDef *hltdc)
 {
 	/**/
+	hlcd_dma2d = &hdma2d; /*TODO*/
 	hlcd_dsi = hdsi;
 	hlcd_ltdc = hltdc;
 
@@ -191,75 +258,12 @@ int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelF
 
   return ret;
 }
-
-
-
-
-extern LCD_Drv_t                *Lcd_Drv;
-
-const LCD_UTILS_Drv_t LCD_Driver =
-{
-  DISP_LCD_DrawBitmap,
-  DISP_LCD_FillRGBRect,
-  DISP_LCD_DrawHLine,
-  DISP_LCD_DrawVLine,
-  DISP_LCD_FillRect,
-  DISP_LCD_ReadPixel,
-  DISP_LCD_WritePixel,
-  DISP_LCD_GetXSize,
-  DISP_LCD_GetYSize,
-  DISP_LCD_SetActiveLayer,
-  DISP_LCD_GetPixelFormat
-};
-
-typedef struct
-{
-  uint32_t      HACT;
-  uint32_t      VACT;
-  uint32_t      HSYNC;
-  uint32_t      HBP;
-  uint32_t      HFP;
-  uint32_t      VSYNC;
-  uint32_t      VBP;
-  uint32_t      VFP;
-
-  /* Configure the D-PHY Timings */
-  uint32_t      ClockLaneHS2LPTime;
-  uint32_t      ClockLaneLP2HSTime;
-  uint32_t      DataLaneHS2LPTime;
-  uint32_t      DataLaneLP2HSTime;
-  uint32_t      DataLaneMaxReadTime;
-  uint32_t      StopWaitTime;
-} LCD_HDMI_Timing_t;
 /**
-  * @}
-  */
-
-/** @defgroup STM32H747I_DISCO_LCD_Exported_Variables Exported Variables
-  * @{
-  */
-void                *Lcd_CompObj = NULL;
-DSI_HandleTypeDef   *hlcd_dsi = NULL;
-DMA2D_HandleTypeDef hlcd_dma2d;
-LTDC_HandleTypeDef  *hlcd_ltdc = NULL;
-DISP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
-/**
-  * @}
-  */
-
-/** @defgroup STM32H747I_DISCO_LCD_Private_FunctionPrototypes Private FunctionPrototypes
-  * @{
-  */
+ *INIT SECTION END
+ **************************************************************************************************************************
+ */
 
 
-
-static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color);
-static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode);
-
-
-#define CONVERTRGB5652ARGB8888(Color)((((((((Color) >> (11U)) & 0x1FU) * 527U) + 23U) >> (6U)) << (16U)) |\
-                                     (((((((Color) >> (5U)) & 0x3FU) * 259U) + 33U) >> (6U)) << (8U)) |\
-                                     (((((Color) & 0x1FU) * 527U) + 23U) >> (6U)) | (0xFF000000U))
 
 
 int32_t DISP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex)
@@ -760,6 +764,9 @@ int32_t DISP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uin
   return BSP_ERROR_NONE;
 }
 
+static volatile int FlagDmaTransmitEnd = 0;
+void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d);
+
 static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color)
 {
   uint32_t output_color_mode, input_color = Color;
@@ -777,24 +784,41 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
   }
 
   /* Register to memory mode with ARGB8888 as color Mode */
-  hlcd_dma2d.Init.Mode         = DMA2D_R2M;
-  hlcd_dma2d.Init.ColorMode    = output_color_mode;
-  hlcd_dma2d.Init.OutputOffset = OffLine;
+  hlcd_dma2d->Init.Mode         = DMA2D_R2M;
+  hlcd_dma2d->Init.ColorMode    = output_color_mode;
+  hlcd_dma2d->Init.OutputOffset = OffLine;
 
-  hlcd_dma2d.Instance = DMA2D;
+  hlcd_dma2d->Instance = DMA2D;
 
-  /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hlcd_dma2d) == HAL_OK)
+  /*Temporary - wait for previous transmit end..*/
+  while(FlagDmaTransmitEnd == 1)
   {
-    if(HAL_DMA2D_ConfigLayer(&hlcd_dma2d, 1) == HAL_OK)
+
+  }
+  FlagDmaTransmitEnd = 1;
+  /*Register the callback...*/
+  hlcd_dma2d->XferCpltCallback = DMA2D_TransmitCpltCallBack;
+
+  if(HAL_DMA2D_Init(hlcd_dma2d) == HAL_OK)
+  {
+    if(HAL_DMA2D_ConfigLayer(hlcd_dma2d, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hlcd_dma2d, input_color, (uint32_t)pDst, xSize, ySize) == HAL_OK)
+      if (HAL_DMA2D_Start_IT(hlcd_dma2d, input_color, (uint32_t)pDst, xSize, ySize) == HAL_OK)
       {
+
         /* Polling For DMA transfer */
-        (void)HAL_DMA2D_PollForTransfer(&hlcd_dma2d, 25);
+//         (void)HAL_DMA2D_PollForTransfer(hlcd_dma2d, 25);
       }
     }
   }
+}
+
+void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(hdma2d);
+  FlagDmaTransmitEnd = 0;
+
 }
 
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode)
@@ -813,27 +837,27 @@ static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDs
   }
 
   /* Configure the DMA2D Mode, Color Mode and output offset */
-  hlcd_dma2d.Init.Mode         = DMA2D_M2M_PFC;
-  hlcd_dma2d.Init.ColorMode    = output_color_mode;
-  hlcd_dma2d.Init.OutputOffset = 0;
+  hlcd_dma2d->Init.Mode         = DMA2D_M2M_PFC;
+  hlcd_dma2d->Init.ColorMode    = output_color_mode;
+  hlcd_dma2d->Init.OutputOffset = 0;
 
   /* Foreground Configuration */
-  hlcd_dma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hlcd_dma2d.LayerCfg[1].InputAlpha = 0xFF;
-  hlcd_dma2d.LayerCfg[1].InputColorMode = ColorMode;
-  hlcd_dma2d.LayerCfg[1].InputOffset = 0;
+  hlcd_dma2d->LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hlcd_dma2d->LayerCfg[1].InputAlpha = 0xFF;
+  hlcd_dma2d->LayerCfg[1].InputColorMode = ColorMode;
+  hlcd_dma2d->LayerCfg[1].InputOffset = 0;
 
-  hlcd_dma2d.Instance = DMA2D;
+  hlcd_dma2d->Instance = DMA2D;
 
   /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hlcd_dma2d) == HAL_OK)
+  if(HAL_DMA2D_Init(hlcd_dma2d) == HAL_OK)
   {
-    if(HAL_DMA2D_ConfigLayer(&hlcd_dma2d, 1) == HAL_OK)
+    if(HAL_DMA2D_ConfigLayer(hlcd_dma2d, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hlcd_dma2d, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
+      if (HAL_DMA2D_Start(hlcd_dma2d, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
       {
         /* Polling For DMA transfer */
-        (void)HAL_DMA2D_PollForTransfer(&hlcd_dma2d, 50);
+        (void)HAL_DMA2D_PollForTransfer(hlcd_dma2d, 50);
       }
     }
   }

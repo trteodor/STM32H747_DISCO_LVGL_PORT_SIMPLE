@@ -30,14 +30,16 @@ DSI_HandleTypeDef hdsi;
 
 void MX_DSIHOST_DSI_Init(void)
 {
+	/* USER CODE BEGIN DSIHOST_Init 0 */
+	DSI_PLLInitTypeDef PLLInit = {0};
+	DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
+	DSI_PHY_TimerTypeDef PhyTimings = {0};
+	DSI_VidCfgTypeDef VidCfg = {0};
 
-  /* USER CODE BEGIN DSIHOST_Init 0 */
-	  DSI_PLLInitTypeDef PLLInit = {0};
-	  //DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
-	 // DSI_PHY_TimerTypeDef PhyTimings = {0};
-	  DSI_VidCfgTypeDef VidCfg = {0};
+	/* USER CODE BEGIN DSIHOST_Init 1 */
+#define ActivateCubeGenDSI
+#ifndef ActivateCubeGenDSI
 
-	  /* USER CODE BEGIN DSIHOST_Init 1 */
 
 	  /* USER CODE END DSIHOST_Init 1 */
 	  hdsi.Instance = DSI;
@@ -52,19 +54,47 @@ void MX_DSIHOST_DSI_Init(void)
 	    Error_Handler();
 	  }
 
+	  /*Own COnfiguration because I dk how to configure it correctly in CubeMX :( - it may be impossible!!! */
+	  VidCfg.VirtualChannelID = 0;
+	  VidCfg.ColorCoding = DSI_RGB888;
+	  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
+	  VidCfg.Mode = DSI_VID_MODE_BURST;
+	  VidCfg.PacketSize = 800;
+	  VidCfg.NumberOfChunks = 0;
+	  VidCfg.NullPacketSize = 0xFFFU;
+	  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
+	  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
+	  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
+	  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
+	  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
+	  VidCfg.HorizontalLine = ((800 + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
+	  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
+	  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
+	  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
+	  VidCfg.VerticalActive = 480;
+	  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
+	  VidCfg.LPLargestPacketSize = 4;
+	  VidCfg.LPVACTLargestPacketSize = 4;
+
+	  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
+	  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
+	  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
+	  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
+	  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
+	  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
+	  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
+
+	  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
+	  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
 
 
-
-//#define ActivateCubeGenDSI
-
-#ifdef ActivateCubeGenDSI
-  /* USER CODE END DSIHOST_Init 0 */
-
-  DSI_PLLInitTypeDef PLLInit = {0};
-  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
-  DSI_PHY_TimerTypeDef PhyTimings = {0};
-  DSI_VidCfgTypeDef VidCfg = {0};
-
+#else
   /* USER CODE BEGIN DSIHOST_Init 1 */
 
   /* USER CODE END DSIHOST_Init 1 */
@@ -79,61 +109,61 @@ void MX_DSIHOST_DSI_Init(void)
   {
     Error_Handler();
   }
-  HostTimeouts.TimeoutCkdiv = 1;
-  HostTimeouts.HighSpeedTransmissionTimeout = 10000;
-  HostTimeouts.LowPowerReceptionTimeout = 5000;
-  HostTimeouts.HighSpeedReadTimeout = 0;
-  HostTimeouts.LowPowerReadTimeout = 0;
-  HostTimeouts.HighSpeedWriteTimeout = 0;
-  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
-  HostTimeouts.LowPowerWriteTimeout = 0;
-  HostTimeouts.BTATimeout = 0;
-  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PhyTimings.ClockLaneHS2LPTime = 28;
-  PhyTimings.ClockLaneLP2HSTime = 33;
-  PhyTimings.DataLaneHS2LPTime = 15;
-  PhyTimings.DataLaneLP2HSTime = 25;
-  PhyTimings.DataLaneMaxReadTime = 0;
-  PhyTimings.StopWaitTime = 0;
-  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_CLOCK_LANE, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_CLOCK_LANE, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_DATA_LANES, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_DATA_LANES, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_TX|HAL_DSI_ERROR_RX) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSDD(&hdsi, ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
+//  HostTimeouts.TimeoutCkdiv = 1;
+//  HostTimeouts.HighSpeedTransmissionTimeout = 10000;
+//  HostTimeouts.LowPowerReceptionTimeout = 5000;
+//  HostTimeouts.HighSpeedReadTimeout = 0;
+//  HostTimeouts.LowPowerReadTimeout = 0;
+//  HostTimeouts.HighSpeedWriteTimeout = 0;
+//  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
+//  HostTimeouts.LowPowerWriteTimeout = 0;
+//  HostTimeouts.BTATimeout = 0;
+//  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  PhyTimings.ClockLaneHS2LPTime = 28;
+//  PhyTimings.ClockLaneLP2HSTime = 33;
+//  PhyTimings.DataLaneHS2LPTime = 15;
+//  PhyTimings.DataLaneLP2HSTime = 25;
+//  PhyTimings.DataLaneMaxReadTime = 0;
+//  PhyTimings.StopWaitTime = 0;
+//  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_CLOCK_LANE, 4) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_CLOCK_LANE, 4) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_DATA_LANES, 4) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_DATA_LANES, 4) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 0) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_TX|HAL_DSI_ERROR_RX) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
+//  if (HAL_DSI_SetSDD(&hdsi, ENABLE) != HAL_OK)
+//  {
+//    Error_Handler();
+//  }
   VidCfg.VirtualChannelID = 0;
   VidCfg.ColorCoding = DSI_RGB888;
   VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
@@ -171,44 +201,7 @@ void MX_DSIHOST_DSI_Init(void)
   }
   /* USER CODE BEGIN DSIHOST_Init 2 */
 #endif
-  /*Own COnfiguration because I dk how to configure it correctly in CubeMX :( - it may be impossible!!! */
-  VidCfg.VirtualChannelID = 0;
-  VidCfg.ColorCoding = DSI_RGB888;
-  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-  VidCfg.Mode = DSI_VID_MODE_BURST;
-  VidCfg.PacketSize = 800;
-  VidCfg.NumberOfChunks = 0;
-  VidCfg.NullPacketSize = 0xFFFU;
-  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
-  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
-  VidCfg.HorizontalLine = ((800 + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
-  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
-  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
-  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
-  VidCfg.VerticalActive = 480;
-  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
-  VidCfg.LPLargestPacketSize = 4;
-  VidCfg.LPVACTLargestPacketSize = 4;
 
-  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
-  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
-  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
-  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
-  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
-  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
-  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
-
-  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE END DSIHOST_Init 2 */
 
 }
