@@ -83,6 +83,9 @@ static void LetsDrawSometging(void);
 extern void SDRAM_demo (void);
 extern void SDRAM_DMA_demo (void);
 
+
+void QSPI_demo (void);
+void QSPI_TestDist(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -460,6 +463,8 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
+  HAL_UART_Transmit(&huart1, (uint8_t*)"AAAAA\n\r", 7, 100);
+
 //  MX_DSIHOST_DSI_Init();
   MX_FMC_Init();
   MX_LTDC_Initt();
@@ -479,6 +484,8 @@ Error_Handler();
   BSP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi);
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
+  QSPI_demo();
+  HAL_Delay(2000);
   LetsDrawSometging();
   HAL_Delay(5000);
 
@@ -494,7 +501,7 @@ Error_Handler();
 //  SDRAM_demo();
 //  HAL_Delay(3000);
 //
-//  QSPI_demo();
+
 //  HAL_Delay(3000);
 //
 
@@ -508,14 +515,18 @@ static uint32_t LedTime =0;
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
 	  if(LedTime + 400 < HAL_GetTick() )
 	  {
+		  LedTime = HAL_GetTick();
+
 		  BSP_LED_Toggle(LED_GREEN);
 		  BSP_LED_Toggle(LED_ORANGE);
 		  BSP_LED_Toggle(LED_RED);
 		  BSP_LED_Toggle(LED_BLUE);
 	  }
 
+	  QSPI_TestDist();
 
 	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
 	  {
@@ -1074,6 +1085,47 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+void HAL_UART_MspInit(UART_HandleTypeDef* huart)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
+  if(huart->Instance==USART1)
+  {
+  /* USER CODE BEGIN USART1_MspInit 0 */
+
+  /* USER CODE END USART1_MspInit 0 */
+
+  /** Initializes the peripherals clock
+  */
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1;
+    PeriphClkInitStruct.Usart16ClockSelection = RCC_USART16CLKSOURCE_D2PCLK2;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* Peripheral clock enable */
+    __HAL_RCC_USART1_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**USART1 GPIO Configuration
+    PA10     ------> USART1_RX
+    PA9     ------> USART1_TX
+    */
+    GPIO_InitStruct.Pin = STLINK_TX_Pin|STLINK_RX_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN USART1_MspInit 1 */
+
+  /* USER CODE END USART1_MspInit 1 */
+  }
+
+}
 
 /**
   * @brief  Display main demo messages

@@ -50,6 +50,72 @@ static uint8_t  Buffercmp   (uint8_t* pBuffer1, uint8_t* pBuffer2, uint32_t Buff
   * @param  None
   * @retval None
   */
+
+extern UART_HandleTypeDef huart1;
+
+void QSPI_TestDist(void)
+{
+
+    if(BSP_QSPI_EraseBlock(0,WRITE_READ_ADDR,BSP_QSPI_ERASE_8K) != BSP_ERROR_NONE)
+    {
+    	char tempbuf [] = "ERASE FAIL\n\r";
+    	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+    }
+    else
+    {
+    	char tempbuf [] = "ERASE PASS\n\r";
+    	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+    }
+
+    Fill_Buffer(qspi_aTxBuffer, BUFFER_SIZE, 0xD20F);
+
+    /* Write data to the QSPI memory */
+    if(BSP_QSPI_Write(0,qspi_aTxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != BSP_ERROR_NONE)
+    {
+    	char tempbuf [] = "BSP_QSPI_Write FAIL\n\r";
+    	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+    }
+    else
+    {
+    	char tempbuf [] = "BSP_QSPI_Write OK\n\r";
+    	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+
+      if(BSP_QSPI_Read(0,qspi_aRxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != BSP_ERROR_NONE)
+      {
+    	  char tempbuf [] = "READ FAIL\n\r";
+    	  HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+      }
+      else
+      {
+    	  char tempbuf [] = "READ OK\n\r";
+    	  HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+
+        /*##-5- Checking data integrity ############################################*/
+        if(Buffercmp(qspi_aRxBuffer, qspi_aTxBuffer, BUFFER_SIZE) > 0)
+        {
+        	char tempbuf [] = "COMPARE BUFF FAIL\n\r";
+        	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+        }
+        else
+        {
+        	char tempbuf [] = "COMPARE BUFF PASS\n\r";
+        	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
+//          /*##-6-Memory Mapped Mode ###############################################*/
+//         if(BSP_QSPI_EnableMemoryMappedMode(0)!=BSP_ERROR_NONE)
+//         {
+//           HAL_UART_Transmit(&huart1, (uint8_t*)"QSPI Memory Mapped Mode FAIL \n\r", 40, 100);
+//         }
+//         else
+//         {
+//        	 HAL_UART_Transmit(&huart1, (uint8_t*)"QSPI Memory Mapped Mode OK \n\r", 40, 100);
+//         }
+        	HAL_UART_Transmit(&huart1, (uint8_t*)"\n\r\n\r", 4, 100);
+        }
+      }
+    }
+}
+
+
 void QSPI_demo (void)
 {
   /* QSPI info structure */
@@ -147,16 +213,16 @@ void QSPI_demo (void)
             {
               UTIL_LCD_DisplayStringAt(20, 175, (uint8_t*)"QSPI COMPARE : OK.     ", LEFT_MODE);
               /*##-6-Memory Mapped Mode ###############################################*/
-             if(BSP_QSPI_EnableMemoryMappedMode(0)!=BSP_ERROR_NONE)
-             {
-               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Memory Mapped Mode : FAILED.     ", LEFT_MODE);
-               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
-             }
-             else
-             {
-               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Memory Mapped Mode : OK.     ", LEFT_MODE);
-               UTIL_LCD_DisplayStringAt(20, 175, (uint8_t*)"QSPI Test : OK.     ", LEFT_MODE);
-             }
+//             if(BSP_QSPI_EnableMemoryMappedMode(0)!=BSP_ERROR_NONE)
+//             {
+//               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Memory Mapped Mode : FAILED.     ", LEFT_MODE);
+//               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
+//             }
+//             else
+//             {
+//               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Memory Mapped Mode : OK.     ", LEFT_MODE);
+//               UTIL_LCD_DisplayStringAt(20, 175, (uint8_t*)"QSPI Test : OK.     ", LEFT_MODE);
+//             }
             }
           }
         }
