@@ -24,7 +24,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "stlogo.h"
-
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -468,7 +468,7 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
 
   /* Configure the Wakeup push-button in EXTI Mode */
-  BSP_PB_Init(BUTTON_WAKEUP, BUTTON_MODE_EXTI);
+  BSP_PB_Init(BUTTON_WAKEUP, BUTTON_MODE_GPIO);
   BSP_LED_Init(LED1);
   BSP_LED_Init(LED2);
   BSP_LED_Init(LED3);
@@ -479,8 +479,8 @@ Error_Handler();
   BSP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi);
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-  Display_DemoDescription();
-  HAL_Delay(2000);
+  LetsDrawSometging();
+  HAL_Delay(5000);
 
 //  LCD_SetHint();
 //  HAL_Delay(2000);
@@ -497,7 +497,7 @@ Error_Handler();
 //  QSPI_demo();
 //  HAL_Delay(3000);
 //
-  LetsDrawSometging();
+
 
 //  Touchscreen_demo1();
 
@@ -516,10 +516,21 @@ static uint32_t LedTime =0;
 		  BSP_LED_Toggle(LED_BLUE);
 	  }
 
-	  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
-//	  HAL_Delay(30);
-	  UTIL_LCD_Clear(UTIL_LCD_COLOR_BLUE);
-//	  HAL_Delay(30);
+
+	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
+	  {
+		  /*Stop process*/
+	  }
+	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
+	  HAL_Delay(30);
+
+
+	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
+	  {
+		  /*Stop process*/
+	  }
+	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
+	  HAL_Delay(30);
 
     /* USER CODE END WHILE */
 
@@ -1155,7 +1166,9 @@ static void LetsDrawSometging(void)
   UTIL_LCD_SetFont(&Font12);
   UTIL_LCD_DisplayStringAt(0, 300, (uint8_t *)"This example shows the different", CENTER_MODE);
   UTIL_LCD_DisplayStringAt(0, 345, (uint8_t *)"Its really simple but difficult :/ ", CENTER_MODE);
-  UTIL_LCD_DisplayStringAt(0, 360, (uint8_t *)"next page", CENTER_MODE);
+  UTIL_LCD_SetFont(&Font24);
+  UTIL_LCD_DisplayStringAt(0, 380, (uint8_t *)"Disturbances test will be activated", CENTER_MODE);
+  UTIL_LCD_DisplayStringAt(0, 410, (uint8_t *)"in time 5 seconds!", CENTER_MODE);
 
   UTIL_LCD_DrawRect(10, 90, x_size - 20, y_size- 100, UTIL_LCD_COLOR_MAGENTA);
   UTIL_LCD_DrawRect(11, 91, x_size - 22, y_size- 102, UTIL_LCD_COLOR_MAGENTA);

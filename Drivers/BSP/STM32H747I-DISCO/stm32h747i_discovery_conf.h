@@ -38,7 +38,7 @@
 #define LCD_LAYER_0_ADDRESS                 0xD0000000U
 #define LCD_LAYER_1_ADDRESS                 0xD0200000U
    
-#define USE_DMA2D_TO_FILL_RGB_RECT          0U   
+#define USE_DMA2D_TO_FILL_RGB_RECT          1U
 /* Camera sensors defines */
 #define USE_CAMERA_SENSOR_OV5640            1U
 #define USE_CAMERA_SENSOR_OV9655            1U
