@@ -19,6 +19,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma2d.h"
+#include "dsihost.h"
+#include "ltdc.h"
+#include "quadspi.h"
+#include "usart.h"
+#include "gpio.h"
+#include "fmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -47,18 +54,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-DMA2D_HandleTypeDef hdma2d;
-
-DSI_HandleTypeDef hdsi;
-
-LTDC_HandleTypeDef hltdc;
-
-QSPI_HandleTypeDef hqspi;
-
-UART_HandleTypeDef huart1;
-
-SDRAM_HandleTypeDef hsdram1;
-
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -66,13 +61,6 @@ SDRAM_HandleTypeDef hsdram1;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
-static void MX_GPIO_Init(void);
-static void MX_USART1_UART_Init(void);
-void MX_DSIHOST_DSI_Init(void);
-static void MX_FMC_Init(void);
-static void MX_LTDC_Initt(void);
-static void MX_DMA2D_Init(void);
-static void MX_QUADSPI_Init(void);
 /* USER CODE BEGIN PFP */
 static void LetsDrawSometging(void);
 
@@ -87,7 +75,7 @@ void QSPI_TestDist(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
+void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
 {
   if(hltdc->Instance == LTDC)
   {
@@ -101,7 +89,7 @@ static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
   }
 }
 
-static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
+void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
 {
   if(hdma2d->Instance == DMA2D)
   {
@@ -114,7 +102,7 @@ static void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
   }
 }
 
-static void DSI_MspInit(DSI_HandleTypeDef *hdsi)
+void DSI_MspInit(DSI_HandleTypeDef *hdsi)
 {
   if(hdsi->Instance == DSI)
   {
@@ -127,7 +115,7 @@ static void DSI_MspInit(DSI_HandleTypeDef *hdsi)
   }
 }
 
-static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
+int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
   int32_t ret = BSP_ERROR_NONE;
 
@@ -149,7 +137,7 @@ static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, u
   return ret;
 }
 
-static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
+int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
   int32_t ret = BSP_ERROR_NONE;
 
@@ -163,7 +151,7 @@ static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
 
 LCD_Drv_t                *Lcd_Drv = NULL;
 
-static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
+int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
 {
   int32_t ret;
   uint32_t id;
@@ -418,13 +406,11 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  HAL_UART_Transmit(&huart1, (uint8_t*)"AAAAA\n\r", 7, 100);
-
 //  MX_DSIHOST_DSI_Init();
-  MX_FMC_Init();
-  MX_LTDC_Initt();
-  MX_DMA2D_Init();
-  MX_QUADSPI_Init();
+//  MX_FMC_Init();
+//  MX_LTDC_Initt();
+//  MX_DMA2D_Init();
+//  MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
 
   /* Configure the Wakeup push-button in EXTI Mode */
@@ -481,22 +467,22 @@ static uint32_t LedTime =0;
 		  BSP_LED_Toggle(LED_BLUE);
 	  }
 
-	  QSPI_TestDist();
+//	  QSPI_TestDist();
 
-	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
-	  {
-		  /*Stop process*/
-	  }
-	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
-	  HAL_Delay(30);
-
-
-	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
-	  {
-		  /*Stop process*/
-	  }
-	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
-	  HAL_Delay(30);
+//	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
+//	  {
+//		  /*Stop process*/
+//	  }
+//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
+//	  HAL_Delay(30);
+//
+//
+//	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
+//	  {
+//		  /*Stop process*/
+//	  }
+//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
+//	  HAL_Delay(30);
 
     /* USER CODE END WHILE */
 
@@ -598,489 +584,7 @@ void PeriphCommonClock_Config(void)
   }
 }
 
-/**
-  * @brief DMA2D Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_DMA2D_Init(void)
-{
-
-  /* USER CODE BEGIN DMA2D_Init 0 */
-
-  /* USER CODE END DMA2D_Init 0 */
-
-  /* USER CODE BEGIN DMA2D_Init 1 */
-
-  /* USER CODE END DMA2D_Init 1 */
-  hdma2d.Instance = DMA2D;
-  hdma2d.Init.Mode = DMA2D_R2M;
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
-  hdma2d.Init.OutputOffset = 0;
-  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN DMA2D_Init 2 */
-
-  /* USER CODE END DMA2D_Init 2 */
-
-}
-
-/**
-  * @brief DSIHOST Initialization Function
-  * @param None
-  * @retval None
-  */
-void MX_DSIHOST_DSI_Init(void)
-{
-
-  /* USER CODE BEGIN DSIHOST_Init 0 */
-	  DSI_PLLInitTypeDef PLLInit = {0};
-	  //DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
-	 // DSI_PHY_TimerTypeDef PhyTimings = {0};
-	  DSI_VidCfgTypeDef VidCfg = {0};
-
-	  /* USER CODE BEGIN DSIHOST_Init 1 */
-
-	  /* USER CODE END DSIHOST_Init 1 */
-	  hdsi.Instance = DSI;
-	  hdsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-	  hdsi.Init.TXEscapeCkdiv = 4;
-	  hdsi.Init.NumberOfLanes = DSI_TWO_DATA_LANES;
-	  PLLInit.PLLNDIV = 99;
-	  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
-	  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
-	  if (HAL_DSI_Init(&hdsi, &PLLInit) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-
-
-
-
-//#define ActivateCubeGenDSI
-
-#ifdef ActivateCubeGenDSI
-  /* USER CODE END DSIHOST_Init 0 */
-
-  DSI_PLLInitTypeDef PLLInit = {0};
-  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
-  DSI_PHY_TimerTypeDef PhyTimings = {0};
-  DSI_VidCfgTypeDef VidCfg = {0};
-
-  /* USER CODE BEGIN DSIHOST_Init 1 */
-
-  /* USER CODE END DSIHOST_Init 1 */
-  hdsi.Instance = DSI;
-  hdsi.Init.AutomaticClockLaneControl = DSI_AUTO_CLK_LANE_CTRL_DISABLE;
-  hdsi.Init.TXEscapeCkdiv = 4;
-  hdsi.Init.NumberOfLanes = DSI_TWO_DATA_LANES;
-  PLLInit.PLLNDIV = 99;
-  PLLInit.PLLIDF = DSI_PLL_IN_DIV5;
-  PLLInit.PLLODF = DSI_PLL_OUT_DIV1;
-  if (HAL_DSI_Init(&hdsi, &PLLInit) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  HostTimeouts.TimeoutCkdiv = 1;
-  HostTimeouts.HighSpeedTransmissionTimeout = 10000;
-  HostTimeouts.LowPowerReceptionTimeout = 5000;
-  HostTimeouts.HighSpeedReadTimeout = 0;
-  HostTimeouts.LowPowerReadTimeout = 0;
-  HostTimeouts.HighSpeedWriteTimeout = 0;
-  HostTimeouts.HighSpeedWritePrespMode = DSI_HS_PM_DISABLE;
-  HostTimeouts.LowPowerWriteTimeout = 0;
-  HostTimeouts.BTATimeout = 0;
-  if (HAL_DSI_ConfigHostTimeouts(&hdsi, &HostTimeouts) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  PhyTimings.ClockLaneHS2LPTime = 28;
-  PhyTimings.ClockLaneLP2HSTime = 33;
-  PhyTimings.DataLaneHS2LPTime = 15;
-  PhyTimings.DataLaneLP2HSTime = 25;
-  PhyTimings.DataLaneMaxReadTime = 0;
-  PhyTimings.StopWaitTime = 0;
-  if (HAL_DSI_ConfigPhyTimer(&hdsi, &PhyTimings) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_ConfigFlowControl(&hdsi, DSI_FLOW_CONTROL_BTA) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_CLOCK_LANE, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_CLOCK_LANE, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_SLEW_RATE_HSTX, DSI_DATA_LANES, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSlewRateAndDelayTuning(&hdsi, DSI_HS_DELAY, DSI_DATA_LANES, 4) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetLowPowerRXFilter(&hdsi, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_ConfigErrorMonitor(&hdsi, HAL_DSI_ERROR_TX|HAL_DSI_ERROR_RX) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetSDD(&hdsi, ENABLE) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  VidCfg.VirtualChannelID = 0;
-  VidCfg.ColorCoding = DSI_RGB888;
-  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-  VidCfg.Mode = DSI_VID_MODE_BURST;
-  VidCfg.PacketSize = 800;
-  VidCfg.NumberOfChunks = 0;
-  VidCfg.NullPacketSize = 0;
-  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-  VidCfg.HorizontalSyncActive = 2;
-  VidCfg.HorizontalBackPorch = 3;
-  VidCfg.HorizontalLine = 1982;
-  VidCfg.VerticalSyncActive = 4;
-  VidCfg.VerticalBackPorch = 2;
-  VidCfg.VerticalFrontPorch = 2;
-  VidCfg.VerticalActive = 480;
-  VidCfg.LPCommandEnable = DSI_LP_COMMAND_DISABLE;
-  VidCfg.LPLargestPacketSize = 0;
-  VidCfg.LPVACTLargestPacketSize = 0;
-  VidCfg.LPHorizontalFrontPorchEnable = DSI_LP_HFP_ENABLE;
-  VidCfg.LPHorizontalBackPorchEnable = DSI_LP_HBP_ENABLE;
-  VidCfg.LPVerticalActiveEnable = DSI_LP_VACT_ENABLE;
-  VidCfg.LPVerticalFrontPorchEnable = DSI_LP_VFP_ENABLE;
-  VidCfg.LPVerticalBackPorchEnable = DSI_LP_VBP_ENABLE;
-  VidCfg.LPVerticalSyncActiveEnable = DSI_LP_VSYNC_ENABLE;
-  VidCfg.FrameBTAAcknowledgeEnable = DSI_FBTAA_DISABLE;
-  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN DSIHOST_Init 2 */
-#endif
-  /*Own COnfiguration because I dk how to configure it correctly in CubeMX :( - it may be impossible!!! */
-  VidCfg.VirtualChannelID = 0;
-  VidCfg.ColorCoding = DSI_RGB888;
-  VidCfg.LooselyPacked = DSI_LOOSELY_PACKED_DISABLE;
-  VidCfg.Mode = DSI_VID_MODE_BURST;
-  VidCfg.PacketSize = 800;
-  VidCfg.NumberOfChunks = 0;
-  VidCfg.NullPacketSize = 0xFFFU;
-  VidCfg.HSPolarity = DSI_HSYNC_ACTIVE_HIGH;
-  VidCfg.VSPolarity = DSI_VSYNC_ACTIVE_HIGH;
-  VidCfg.DEPolarity = DSI_DATA_ENABLE_ACTIVE_HIGH;
-  VidCfg.HorizontalSyncActive = (OTM8009A_480X800_HSYNC * 62500U)/27429U;
-  VidCfg.HorizontalBackPorch = (OTM8009A_480X800_HBP * 62500U)/27429U;
-  VidCfg.HorizontalLine = ((800 + OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP) * 62500U)/27429U;
-  VidCfg.VerticalSyncActive = OTM8009A_480X800_VSYNC;
-  VidCfg.VerticalBackPorch = OTM8009A_480X800_VBP;
-  VidCfg.VerticalFrontPorch = OTM8009A_480X800_VFP;
-  VidCfg.VerticalActive = 480;
-  VidCfg.LPCommandEnable = DSI_LP_COMMAND_ENABLE;
-  VidCfg.LPLargestPacketSize = 4;
-  VidCfg.LPVACTLargestPacketSize = 4;
-
-  VidCfg.LPHorizontalFrontPorchEnable  = DSI_LP_HFP_ENABLE;
-  VidCfg.LPHorizontalBackPorchEnable   = DSI_LP_HBP_ENABLE;
-  VidCfg.LPVerticalActiveEnable        = DSI_LP_VACT_ENABLE;
-  VidCfg.LPVerticalFrontPorchEnable    = DSI_LP_VFP_ENABLE;
-  VidCfg.LPVerticalBackPorchEnable     = DSI_LP_VBP_ENABLE;
-  VidCfg.LPVerticalSyncActiveEnable    = DSI_LP_VSYNC_ENABLE;
-  VidCfg.FrameBTAAcknowledgeEnable     = DSI_FBTAA_DISABLE;
-
-  if (HAL_DSI_ConfigVideoMode(&hdsi, &VidCfg) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DSI_SetGenericVCID(&hdsi, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE END DSIHOST_Init 2 */
-
-}
-
-/**
-  * @brief LTDC Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_LTDC_Initt(void)
-{
-
-  /* USER CODE BEGIN LTDC_Init 0 */
-
-  /* USER CODE END LTDC_Init 0 */
-
-  LTDC_LayerCfgTypeDef pLayerCfg = {0};
-
-  /* USER CODE BEGIN LTDC_Init 1 */
-
-  /* USER CODE END LTDC_Init 1 */
-  hltdc.Instance = LTDC;
-  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AH;
-  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AH;
-  hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
-  hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc.Init.HorizontalSync = 0;
-  hltdc.Init.VerticalSync = 3;
-  hltdc.Init.AccumulatedHBP = 2;
-  hltdc.Init.AccumulatedVBP = 5;
-  hltdc.Init.AccumulatedActiveW = 802;
-  hltdc.Init.AccumulatedActiveH = 485;
-  hltdc.Init.TotalWidth = 803;
-  hltdc.Init.TotalHeigh = 487;
-  hltdc.Init.Backcolor.Blue = 0;
-  hltdc.Init.Backcolor.Green = 0;
-  hltdc.Init.Backcolor.Red = 20;
-  if (HAL_LTDC_Init(&hltdc) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  pLayerCfg.WindowX0 = 0;
-  pLayerCfg.WindowX1 = 800;
-  pLayerCfg.WindowY0 = 0;
-  pLayerCfg.WindowY1 = 480;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB888;
-  pLayerCfg.Alpha = 255;
-  pLayerCfg.Alpha0 = 0;
-  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
-  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_CA;
-  pLayerCfg.FBStartAdress = 0xD0000000;
-  pLayerCfg.ImageWidth = 800;
-  pLayerCfg.ImageHeight = 480;
-  pLayerCfg.Backcolor.Blue = 20;
-  pLayerCfg.Backcolor.Green = 40;
-  pLayerCfg.Backcolor.Red = 60;
-  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN LTDC_Init 2 */
-
-  /* USER CODE END LTDC_Init 2 */
-
-}
-
-/**
-  * @brief QUADSPI Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_QUADSPI_Init(void)
-{
-
-  /* USER CODE BEGIN QUADSPI_Init 0 */
-
-  /* USER CODE END QUADSPI_Init 0 */
-
-  /* USER CODE BEGIN QUADSPI_Init 1 */
-
-  /* USER CODE END QUADSPI_Init 1 */
-  /* QUADSPI parameter configuration*/
-  hqspi.Instance = QUADSPI;
-  hqspi.Init.ClockPrescaler = 3;
-  hqspi.Init.FifoThreshold = 1;
-  hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  hqspi.Init.FlashSize = 1;
-  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
-  hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
-  hqspi.Init.DualFlash = QSPI_DUALFLASH_ENABLE;
-  if (HAL_QSPI_Init(&hqspi) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN QUADSPI_Init 2 */
-
-  /* USER CODE END QUADSPI_Init 2 */
-
-}
-
-/**
-  * @brief USART1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_USART1_UART_Init(void)
-{
-
-  /* USER CODE BEGIN USART1_Init 0 */
-
-  /* USER CODE END USART1_Init 0 */
-
-  /* USER CODE BEGIN USART1_Init 1 */
-
-  /* USER CODE END USART1_Init 1 */
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
-  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
-  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART1_Init 2 */
-
-  /* USER CODE END USART1_Init 2 */
-
-}
-
-/* FMC initialization function */
-void MX_FMC_Init(void)
-{
-
-  /* USER CODE BEGIN FMC_Init 0 */
-
-  /* USER CODE END FMC_Init 0 */
-
-  FMC_SDRAM_TimingTypeDef SdramTiming = {0};
-
-  /* USER CODE BEGIN FMC_Init 1 */
-
-  /* USER CODE END FMC_Init 1 */
-
-  /** Perform the SDRAM1 memory initialization sequence
-  */
-  hsdram1.Instance = FMC_SDRAM_DEVICE;
-  /* hsdram1.Init */
-  hsdram1.Init.SDBank = FMC_SDRAM_BANK2;
-  hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8;
-  hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_13;
-  hsdram1.Init.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_32;
-  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_2;
-  hsdram1.Init.CASLatency = FMC_SDRAM_CAS_LATENCY_1;
-  hsdram1.Init.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
-  hsdram1.Init.SDClockPeriod = FMC_SDRAM_CLOCK_DISABLE;
-  hsdram1.Init.ReadBurst = FMC_SDRAM_RBURST_DISABLE;
-  hsdram1.Init.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_0;
-  /* SdramTiming */
-  SdramTiming.LoadToActiveDelay = 16;
-  SdramTiming.ExitSelfRefreshDelay = 16;
-  SdramTiming.SelfRefreshTime = 16;
-  SdramTiming.RowCycleDelay = 16;
-  SdramTiming.WriteRecoveryTime = 16;
-  SdramTiming.RPDelay = 16;
-  SdramTiming.RCDDelay = 16;
-
-  if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)
-  {
-    Error_Handler( );
-  }
-
-  /* USER CODE BEGIN FMC_Init 2 */
-
-  /* USER CODE END FMC_Init 2 */
-}
-
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_GPIO_Init(void)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOI_CLK_ENABLE();
-  __HAL_RCC_GPIOG_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
-  __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOF_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOJ_CLK_ENABLE();
-
-  /*Configure GPIO pin : CEC_CK_MCO1_Pin */
-  GPIO_InitStruct.Pin = CEC_CK_MCO1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
-  HAL_GPIO_Init(CEC_CK_MCO1_GPIO_Port, &GPIO_InitStruct);
-
-}
-
 /* USER CODE BEGIN 4 */
-
-void HAL_UART_MspInit(UART_HandleTypeDef* huart)
-{
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-  if(huart->Instance==USART1)
-  {
-  /* USER CODE BEGIN USART1_MspInit 0 */
-
-  /* USER CODE END USART1_MspInit 0 */
-
-  /** Initializes the peripherals clock
-  */
-    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_USART1;
-    PeriphClkInitStruct.Usart16ClockSelection = RCC_USART16CLKSOURCE_D2PCLK2;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-    {
-      Error_Handler();
-    }
-
-    /* Peripheral clock enable */
-    __HAL_RCC_USART1_CLK_ENABLE();
-
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USART1 GPIO Configuration
-    PA10     ------> USART1_RX
-    PA9     ------> USART1_TX
-    */
-    GPIO_InitStruct.Pin = STLINK_TX_Pin|STLINK_RX_Pin;
-    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.Alternate = GPIO_AF7_USART1;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* USER CODE BEGIN USART1_MspInit 1 */
-
-  /* USER CODE END USART1_MspInit 1 */
-  }
-
-}
 
 static void LetsDrawSometging(void)
 {
