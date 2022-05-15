@@ -74,10 +74,6 @@ static void MX_LTDC_Initt(void);
 static void MX_DMA2D_Init(void);
 static void MX_QUADSPI_Init(void);
 /* USER CODE BEGIN PFP */
-
-static void Display_DemoDescription(void);
-static void LCD_SetHint(void);
-static void LCD_Show_Feature(uint8_t feature);
 static void LetsDrawSometging(void);
 
 extern void SDRAM_demo (void);
@@ -90,47 +86,6 @@ void QSPI_TestDist(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
-static void LCD_InitSequence(void)
-{
-  GPIO_InitTypeDef  gpio_init_structure;
-
-  /* LCD_BL_CTRL GPIO configuration */
-  LCD_BL_CTRL_GPIO_CLK_ENABLE();
-
-  gpio_init_structure.Pin       = LCD_BL_CTRL_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_OUTPUT_PP;
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-  gpio_init_structure.Pull      = GPIO_NOPULL;
-
-  HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &gpio_init_structure);
-  /* Assert back-light LCD_BL_CTRL pin */
-  HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-
-  /* LCD_TE_CTRL GPIO configuration */
-  LCD_TE_GPIO_CLK_ENABLE();
-
-  gpio_init_structure.Pin       = LCD_TE_PIN;
-  gpio_init_structure.Mode      = GPIO_MODE_INPUT;
-  gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-
-  HAL_GPIO_Init(LCD_TE_GPIO_PORT, &gpio_init_structure);
-  /* Assert back-light LCD_BL_CTRL pin */
-  HAL_GPIO_WritePin(LCD_TE_GPIO_PORT, LCD_TE_PIN, GPIO_PIN_SET);
-
-      /** @brief NVIC configuration for LTDC interrupt that is now enabled */
-  HAL_NVIC_SetPriority(LTDC_IRQn, 0x0F, 0);
-  HAL_NVIC_EnableIRQ(LTDC_IRQn);
-
-  /** @brief NVIC configuration for DMA2D interrupt that is now enabled */
-  HAL_NVIC_SetPriority(DMA2D_IRQn, 0x0F, 0);
-  HAL_NVIC_EnableIRQ(DMA2D_IRQn);
-
-  /** @brief NVIC configuration for DSI interrupt that is now enabled */
-  HAL_NVIC_SetPriority(DSI_IRQn, 0x0F, 0);
-  HAL_NVIC_EnableIRQ(DSI_IRQn);
-}
 
 static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
 {
@@ -260,11 +215,11 @@ int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
 {
 	int32_t ret = BSP_ERROR_NONE;
-	uint32_t ctrl_pixel_format, ltdc_pixel_format, dsi_pixel_format;
+	uint32_t ctrl_pixel_format, ltdc_pixel_format;
 	MX_LTDC_LayerConfig_t config;
 
 	ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
-	dsi_pixel_format = DSI_RGB888;
+
 	ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
 	Lcd_Ctx[Instance].BppFactor = 4U;
     /* Store pixel format, xsize and ysize information */
@@ -682,8 +637,8 @@ void MX_DSIHOST_DSI_Init(void)
 
   /* USER CODE BEGIN DSIHOST_Init 0 */
 	  DSI_PLLInitTypeDef PLLInit = {0};
-	  DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
-	  DSI_PHY_TimerTypeDef PhyTimings = {0};
+	  //DSI_HOST_TimeoutTypeDef HostTimeouts = {0};
+	 // DSI_PHY_TimerTypeDef PhyTimings = {0};
 	  DSI_VidCfgTypeDef VidCfg = {0};
 
 	  /* USER CODE BEGIN DSIHOST_Init 1 */
@@ -1127,78 +1082,6 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
 
 }
 
-/**
-  * @brief  Display main demo messages
-  * @param  None
-  * @retval None
-  */
-static void Display_DemoDescription(void)
-{
-  char desc[64];
-  uint32_t x_size;
-  uint32_t y_size;
-
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
-  /* Set LCD Foreground Layer  */
-  UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-
-  /* Clear the LCD */
-  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
-
-  /* Set the LCD Text Color */
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_DARKBLUE);
-
-  /* Display LCD messages */
-  UTIL_LCD_DisplayStringAt(0, 10, (uint8_t *)"STM32H747I BSP", CENTER_MODE);
-  UTIL_LCD_DisplayStringAt(0, 35, (uint8_t *)"Drivers examples", CENTER_MODE);
-
-  /* Draw Bitmap */
-//  UTIL_LCD_DrawBitmap((x_size - 80)/2, 65, (uint8_t *)stlogo);
-
-  UTIL_LCD_SetFont(&Font12);
-  UTIL_LCD_DisplayStringAt(0, y_size - 20, (uint8_t *)"Copyright (c) STMicroelectronics 2018", CENTER_MODE);
-
-  UTIL_LCD_SetFont(&Font16);
-  BSP_LCD_FillRect(0, 0, y_size/2 + 15, x_size, 60, UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_DisplayStringAt(0, y_size / 2 + 30, (uint8_t *)"Press Wakeup button to start :", CENTER_MODE);
-//  sprintf(desc,"%s example", BSP_examples[DemoIndex].DemoName);
-  UTIL_LCD_DisplayStringAt(0, y_size/2 + 45, (uint8_t *)desc, CENTER_MODE);
-}
-
-/**
-  * @brief  Display LCD demo hint
-  * @param  None
-  * @retval None
-  */
-static void LCD_SetHint(void)
-{
-  uint32_t x_size;
-  uint32_t y_size;
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
-  /* Clear the LCD */
-  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
-
-  /*  Set the LCD Text Color */
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_DARKBLUE);
-  UTIL_LCD_FillRect(0, 0, x_size, 80, UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_SetFont(&Font24);
-  UTIL_LCD_DisplayStringAt(0, 0, (uint8_t *)"LCD", CENTER_MODE);
-  UTIL_LCD_SetFont(&Font12);
-  UTIL_LCD_DisplayStringAt(0, 30, (uint8_t *)"This example shows the different", CENTER_MODE);
-  UTIL_LCD_DisplayStringAt(0, 45, (uint8_t *)"LCD Features, use Tamper push-button to display", CENTER_MODE);
-  UTIL_LCD_DisplayStringAt(0, 60, (uint8_t *)"next page", CENTER_MODE);
-
-  UTIL_LCD_DrawRect(10, 90, x_size - 20, y_size- 100, UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_DrawRect(11, 91, x_size - 22, y_size- 102, UTIL_LCD_COLOR_BLUE);
- }
-
 static void LetsDrawSometging(void)
 {
   uint32_t x_size;
@@ -1226,120 +1109,6 @@ static void LetsDrawSometging(void)
   UTIL_LCD_DrawRect(11, 91, x_size - 22, y_size- 102, UTIL_LCD_COLOR_MAGENTA);
  }
 
-/**
-  * @brief  Show LCD Features
-  * @param  feature : feature index
-  * @retval None
-  */
-static void LCD_Show_Feature(uint8_t feature)
-{
-  Point Points[]= {{220, 220}, {280, 180}, {320, 180}, {370, 220}, {370, 260}, {320, 310}, {280, 310}, {220, 260}};
-  Point Points2[3];
-  uint32_t x_size, y_size;
-  int32_t i = 0;
-  uint8_t text[50];
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
-
-  Points2[0].X = x_size - 80;
-  Points2[0].Y = 150;
-  Points2[1].X = x_size - 20;
-  Points2[1].Y = 150;
-  Points2[2].X = x_size - 20;
-  Points2[2].Y = 200;
-
-  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_FillRect(12, 92, x_size - 24, y_size- 104, UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_BLACK);
-
-  switch (feature)
-  {
-  case 0:
-    /* Text Feature */
-
-    UTIL_LCD_DisplayStringAt(14, 100, (uint8_t *)"Left aligned Text", LEFT_MODE);
-    UTIL_LCD_DisplayStringAt(0, 115, (uint8_t *)"Center aligned Text", CENTER_MODE);
-    UTIL_LCD_DisplayStringAt(14, 130, (uint8_t*)"Right aligned Text", RIGHT_MODE);
-    UTIL_LCD_SetFont(&Font24);
-    UTIL_LCD_DisplayStringAt(14, 180, (uint8_t *)"Font24", LEFT_MODE);
-    UTIL_LCD_SetFont(&Font20);
-    UTIL_LCD_DisplayStringAt(x_size/2 -20, 180, (uint8_t *)"Font20", LEFT_MODE);
-    UTIL_LCD_SetFont(&Font16);
-    UTIL_LCD_DisplayStringAt(x_size - 80, 184, (uint8_t *)"Font16", LEFT_MODE);
-    break;
-
-  case 1:
-
-
-    /* Draw misc. Shapes */
-    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_BLACK);
-    UTIL_LCD_DrawRect(20, 100, 60 , 40, UTIL_LCD_COLOR_BLACK);
-    UTIL_LCD_FillRect(100, 100, 60 , 40, UTIL_LCD_COLOR_BLACK);
-
-    UTIL_LCD_DrawCircle(x_size - 120, 120, 20, UTIL_LCD_COLOR_GRAY);
-    UTIL_LCD_FillCircle(x_size - 40, 120, 20, UTIL_LCD_COLOR_GRAY);
-
-    UTIL_LCD_FillPolygon(Points, 8, UTIL_LCD_COLOR_GREEN);
-
-    UTIL_LCD_DrawEllipse(130, 170, 30, 20, UTIL_LCD_COLOR_RED);
-    UTIL_LCD_FillEllipse(200, 170, 30, 20, UTIL_LCD_COLOR_RED);
-
-    UTIL_LCD_DrawHLine(20, y_size - 30, x_size / 5, UTIL_LCD_COLOR_BLACK);
-    UTIL_LCD_DrawLine (100, y_size - 20, 230, y_size- 50, UTIL_LCD_COLOR_BLACK);
-    UTIL_LCD_DrawLine (100, y_size- 50, 230, y_size- 20, UTIL_LCD_COLOR_BLACK);
-
-    UTIL_LCD_DrawPolygon(Points2, 3, UTIL_LCD_COLOR_GREEN);
-    HAL_Delay(2000);
-    break;
-
-  case 2:
-    /* Draw Bitmap */
-    /* Draw Bitmap */
-    UTIL_LCD_DrawBitmap(20, 100, (uint8_t *)stlogo);
-    HAL_Delay(500);
-
-    UTIL_LCD_DrawBitmap(x_size/2 - 40, 100, (uint8_t *)stlogo);
-    HAL_Delay(500);
-
-    UTIL_LCD_DrawBitmap(x_size-100, 100, (uint8_t *)stlogo);
-    HAL_Delay(500);
-
-    UTIL_LCD_DrawBitmap(20, y_size- 80, (uint8_t *)stlogo);
-    HAL_Delay(500);
-
-    UTIL_LCD_DrawBitmap(x_size/2 - 40, y_size- 80, (uint8_t *)stlogo);
-    HAL_Delay(500);
-
-    UTIL_LCD_DrawBitmap(x_size-100, y_size- 80, (uint8_t *)stlogo);
-    HAL_Delay(500);
-    break;
-
-  case 3:
-    UTIL_LCD_SetFont(&Font24);
-    /* Set the LCD Back Color and Text Color*/
-    UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_WHITE);
-    UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_GREEN);
-
-    /*  Set the brightness */
-    for( i = 100; i >= 0; i-=10)
-    {
-      sprintf((char*)text," Brightness  =  %d ",(int)i);
-      UTIL_LCD_DisplayStringAt(0, x_size/2 + 45, (uint8_t *)text, CENTER_MODE);
-      BSP_LCD_SetBrightness(0,i);
-      HAL_Delay(300);
-    }
-
-    for( i = 0; i <= 100; i+=10)
-    {
-      sprintf((char*)text," Brightness  =  %d ",(int)i);
-      UTIL_LCD_DisplayStringAt(0, x_size/2 + 45, (uint8_t *)text, CENTER_MODE);
-      BSP_LCD_SetBrightness(0,i);
-      HAL_Delay(300);
-    }
-    break;
-  }
-}
 
 /* USER CODE END 4 */
 
