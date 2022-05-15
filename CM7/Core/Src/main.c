@@ -482,37 +482,44 @@ Error_Handler();
   Display_DemoDescription();
   HAL_Delay(2000);
 
-  LCD_SetHint();
-  HAL_Delay(2000);
+//  LCD_SetHint();
+//  HAL_Delay(2000);
+//
+//  for(uint32_t feature = 0; feature < 4; feature++)
+//  {
+//	  LCD_Show_Feature(feature);
+//	  HAL_Delay(1000);
+//  }
 
-  for(uint32_t feature = 0; feature < 4; feature++)
-  {
-	  LCD_Show_Feature(feature);
-	  HAL_Delay(1000);
-  }
-
-  SDRAM_demo();
-  HAL_Delay(2000);
-
-  QSPI_demo();
-  HAL_Delay(2000);
-
+//  SDRAM_demo();
+//  HAL_Delay(3000);
+//
+//  QSPI_demo();
+//  HAL_Delay(3000);
+//
   LetsDrawSometging();
 
 //  Touchscreen_demo1();
 
-
+static uint32_t LedTime =0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  BSP_LED_Toggle(LED_GREEN);
-	  BSP_LED_Toggle(LED_ORANGE);
-	  BSP_LED_Toggle(LED_RED);
-	  BSP_LED_Toggle(LED_BLUE);
-	  HAL_Delay(200);
+	  if(LedTime + 400 < HAL_GetTick() )
+	  {
+		  BSP_LED_Toggle(LED_GREEN);
+		  BSP_LED_Toggle(LED_ORANGE);
+		  BSP_LED_Toggle(LED_RED);
+		  BSP_LED_Toggle(LED_BLUE);
+	  }
+
+	  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
+//	  HAL_Delay(30);
+	  UTIL_LCD_Clear(UTIL_LCD_COLOR_BLUE);
+//	  HAL_Delay(30);
 
     /* USER CODE END WHILE */
 
