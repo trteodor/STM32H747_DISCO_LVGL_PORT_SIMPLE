@@ -790,14 +790,17 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
 
   hlcd_dma2d->Instance = DMA2D;
 
-  /*Temporary - wait for previous transmit end..*/
-  while(FlagDmaTransmitEnd == 1)
-  {
-
-  }
-  FlagDmaTransmitEnd = 1;
-  /*Register the callback...*/
-  hlcd_dma2d->XferCpltCallback = DMA2D_TransmitCpltCallBack;
+//  /*Temporary - wait for previous transmit end..*/
+  /************************************************************************************************/
+  /*Can't use it because buffers aren't static in this LCD libraries attached from ST*/
+  /************************************************************************************************/
+//  while(FlagDmaTransmitEnd == 1)
+//  {
+//
+//  }
+//  FlagDmaTransmitEnd = 1;
+//  /*Register the callback...*/
+//  hlcd_dma2d->XferCpltCallback = DMA2D_TransmitCpltCallBack;
 
   if(HAL_DMA2D_Init(hlcd_dma2d) == HAL_OK)
   {
@@ -807,19 +810,19 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
       {
 
         /* Polling For DMA transfer */
-//         (void)HAL_DMA2D_PollForTransfer(hlcd_dma2d, 25);
+         (void)HAL_DMA2D_PollForTransfer(hlcd_dma2d, 25);
       }
     }
   }
 }
 
-void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d)
-{
-  /* Prevent unused argument(s) compilation warning */
-  UNUSED(hdma2d);
-  FlagDmaTransmitEnd = 0;
-
-}
+//void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d)
+//{
+//  /* Prevent unused argument(s) compilation warning */
+//  UNUSED(hdma2d);
+//  FlagDmaTransmitEnd = 0;
+//
+//}
 
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode)
 {

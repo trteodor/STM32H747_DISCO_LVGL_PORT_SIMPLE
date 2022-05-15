@@ -33,6 +33,12 @@
 #include "stlogo.h"
 #include "stdbool.h"
 #include "DisplayOTM8009A.h"
+
+/***************IMPORANT******************************************************************************************/
+/*IN file ltdc.c i overwrite cube because he generate error braces "();"*/
+/***************IMPORANT******************************************************************************************/
+
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -138,10 +144,10 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_FMC_Init();
   MX_DSIHOST_DSI_Init();
   MX_LTDC_Init();
   MX_DMA2D_Init();
+  MX_FMC_Init();
   MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
   /* Configure the Wakeup push-buttgiton in EXTI Mode */
@@ -185,20 +191,20 @@ static uint32_t LedTime =0;
 
 //	  QSPI_TestDist();
 
-//	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
-//	  {
-//		  /*Stop process*/
-//	  }
-//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
-//	  HAL_Delay(30);
-//
-//
-//	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
-//	  {
-//		  /*Stop process*/
-//	  }
-//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
-//	  HAL_Delay(30);
+	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
+	  {
+		  /*Stop process*/
+	  }
+	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
+	  HAL_Delay(30);
+
+
+	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
+	  {
+		  /*Stop process*/
+	  }
+	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
+	  HAL_Delay(30);
 
     /* USER CODE END WHILE */
 
