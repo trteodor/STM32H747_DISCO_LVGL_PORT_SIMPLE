@@ -21,17 +21,70 @@
 #include "ltdc.h"
 
 /* USER CODE BEGIN 0 */
-
+#include "DisplayOTM8009A.h"
 /* USER CODE END 0 */
 
 LTDC_HandleTypeDef hltdc;
 
 /* LTDC init function */
-void MX_LTDC_Initt(void)
+void MX_LTDC_Init(void)
 {
 
   /* USER CODE BEGIN LTDC_Init 0 */
 
+	  hltdc.Instance = LTDC;
+	  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
+	  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
+	  hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
+	  hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
+
+	  hltdc.Init.HorizontalSync     = OTM8009A_480X800_HSYNC - 1;
+	  hltdc.Init.AccumulatedHBP     = OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP - 1;
+	  hltdc.Init.AccumulatedActiveW = OTM8009A_480X800_HSYNC + LCD_DEFAULT_WIDTH + OTM8009A_480X800_HBP - 1;
+	  hltdc.Init.TotalWidth         = OTM8009A_480X800_HSYNC + LCD_DEFAULT_WIDTH + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP - 1;
+	  hltdc.Init.VerticalSync       = OTM8009A_480X800_VSYNC - 1;
+	  hltdc.Init.AccumulatedVBP     = OTM8009A_480X800_VSYNC + OTM8009A_480X800_VBP - 1;
+	  hltdc.Init.AccumulatedActiveH = OTM8009A_480X800_VSYNC + LCD_DEFAULT_HEIGHT + OTM8009A_480X800_VBP - 1;
+	  hltdc.Init.TotalHeigh         = OTM8009A_480X800_VSYNC + LCD_DEFAULT_HEIGHT + OTM8009A_480X800_VBP + OTM8009A_480X800_VFP - 1;
+
+	  hltdc.Init.Backcolor.Blue  = 0x00;
+	  hltdc.Init.Backcolor.Green = 0x00;
+	  hltdc.Init.Backcolor.Red   = 0x00;
+
+	  HAL_LTDC_Init(&hltdc);
+
+	  MX_LTDC_LayerConfig_t Config;
+	  LTDC_LayerCfgTypeDef pLayerCfg;
+
+		Config.X0          = 0;
+		Config.X1          = LCD_DEFAULT_WIDTH;
+		Config.Y0          = 0;
+		Config.Y1          = LCD_DEFAULT_HEIGHT;
+		Config.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
+		Config.Address     = LCD_LAYER_0_ADDRESS;
+
+
+
+	  pLayerCfg.WindowX0 = Config.X0;
+	  pLayerCfg.WindowX1 = Config.X1;
+	  pLayerCfg.WindowY0 = Config.Y0;
+	  pLayerCfg.WindowY1 = Config.Y1;
+	  pLayerCfg.PixelFormat = Config.PixelFormat;
+	  pLayerCfg.Alpha = 255;
+	  pLayerCfg.Alpha0 = 0;
+	  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
+	  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
+	  pLayerCfg.FBStartAdress = Config.Address;
+	  pLayerCfg.ImageWidth = (Config.X1 - Config.X0);
+	  pLayerCfg.ImageHeight = (Config.Y1 - Config.Y0);
+	  pLayerCfg.Backcolor.Blue = 0;
+	  pLayerCfg.Backcolor.Green = 0;
+	  pLayerCfg.Backcolor.Red = 0;
+
+	  HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0);
+
+//#define UseCubeProposeLTDCInit
+#ifdef UseCubeProposeLTDCInit
   /* USER CODE END LTDC_Init 0 */
 
   LTDC_LayerCfgTypeDef pLayerCfg = {0};
@@ -79,48 +132,69 @@ void MX_LTDC_Initt(void)
     Error_Handler();
   }
   /* USER CODE BEGIN LTDC_Init 2 */
-
+#endif
   /* USER CODE END LTDC_Init 2 */
 
 }
 
-//void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
-//{
-//
+void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
+{
+
 //  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
-//  if(ltdcHandle->Instance==LTDC)
-//  {
-//  /* USER CODE BEGIN LTDC_MspInit 0 */
-//
-//  /* USER CODE END LTDC_MspInit 0 */
-//
-//  /** Initializes the peripherals clock
-//  */
-//    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
-//    PeriphClkInitStruct.PLL3.PLL3M = 5;
-//    PeriphClkInitStruct.PLL3.PLL3N = 160;
-//    PeriphClkInitStruct.PLL3.PLL3P = 2;
-//    PeriphClkInitStruct.PLL3.PLL3Q = 2;
-//    PeriphClkInitStruct.PLL3.PLL3R = 21;
-//    PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_2;
-//    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-//    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
-//    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
-//    {
-//      Error_Handler();
-//    }
-//
-//    /* LTDC clock enable */
-//    __HAL_RCC_LTDC_CLK_ENABLE();
-//
-//    /* LTDC interrupt Init */
-//    HAL_NVIC_SetPriority(LTDC_IRQn, 0, 0);
-//    HAL_NVIC_EnableIRQ(LTDC_IRQn);
-//  /* USER CODE BEGIN LTDC_MspInit 1 */
-//
-//  /* USER CODE END LTDC_MspInit 1 */
-//  }
-//}
+  if(ltdcHandle->Instance==LTDC)
+  {
+  /* USER CODE BEGIN LTDC_MspInit 0 */
+	  RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
+
+	  PeriphClkInitStruct.PeriphClockSelection   = RCC_PERIPHCLK_LTDC;
+	  PeriphClkInitStruct.PLL3.PLL3M      = 5U;
+	  PeriphClkInitStruct.PLL3.PLL3N      = 132U;
+	  PeriphClkInitStruct.PLL3.PLL3P      = 2U;
+	  PeriphClkInitStruct.PLL3.PLL3Q      = 2U;
+	  PeriphClkInitStruct.PLL3.PLL3R      = 24U;
+	  PeriphClkInitStruct.PLL3.PLL3RGE    = RCC_PLLCFGR_PLL3RGE_2;
+	  PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+	  PeriphClkInitStruct.PLL3.PLL3FRACN  = 0U;
+
+	  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
+//#define HAL_LTDC_MspInitUseCubeProposal
+#ifdef HAL_LTDC_MspInitUseCubeProposal
+  /* USER CODE END LTDC_MspInit 0 */
+
+  /** Initializes the peripherals clock
+  */
+    PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
+    PeriphClkInitStruct.PLL3.PLL3M = 5;
+    PeriphClkInitStruct.PLL3.PLL3N = 160;
+    PeriphClkInitStruct.PLL3.PLL3P = 2;
+    PeriphClkInitStruct.PLL3.PLL3Q = 2;
+    PeriphClkInitStruct.PLL3.PLL3R = 21;
+    PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_2;
+    PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
+    PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
+    {
+      Error_Handler();
+    }
+
+    /* LTDC clock enable */
+    __HAL_RCC_LTDC_CLK_ENABLE();
+
+    /* LTDC interrupt Init */
+    HAL_NVIC_SetPriority(LTDC_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(LTDC_IRQn);
+  /* USER CODE BEGIN LTDC_MspInit 1 */
+#endif
+    /* LTDC clock enable */
+    __HAL_RCC_LTDC_CLK_ENABLE();
+
+    /* LTDC interrupt Init */
+    HAL_NVIC_SetPriority(LTDC_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(LTDC_IRQn);
+
+  /* USER CODE END LTDC_MspInit 1 */
+  }
+}
 
 void HAL_LTDC_MspDeInit(LTDC_HandleTypeDef* ltdcHandle)
 {

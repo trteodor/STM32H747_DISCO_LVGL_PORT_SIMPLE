@@ -35,7 +35,6 @@ extern "C" {
 
 #include "stm32h747i_discovery.h"
 #include "stm32h747i_discovery_bus.h"
-#include "stm32h747i_discovery_lcd.h"
 #include "stm32h747i_discovery_sdram.h"
 #include "stm32_lcd.h"
 #include <stdio.h>
@@ -223,7 +222,10 @@ void Error_Handler(void);
 #define FMC_D13_Pin GPIO_PIN_8
 #define FMC_D13_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
-
+/*Cube is Weak why don't generate this??*/
+/*And why don't initialize this pin??? So stupid Cube :( */
+#define DSI_PIN_RESET_PORT GPIOG
+#define DSI_PIN_RESET_PIN GPIO_PIN_3
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

@@ -38,7 +38,7 @@ extern LTDC_HandleTypeDef hltdc;
 
 /* USER CODE END Private defines */
 
-void MX_LTDC_Initt(void);
+void MX_LTDC_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 

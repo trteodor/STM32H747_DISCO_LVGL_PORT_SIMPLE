@@ -20,6 +20,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 
+
+#include "DisplayOTM8009A.h"
 /** @addtogroup STM32H7xx_HAL_Examples
   * @{
   */
@@ -200,8 +202,8 @@ static void SDRAM_SetHint(void)
 {
   uint32_t x_size, y_size;
 
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 
   /* Clear the LCD */
   UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
@@ -273,7 +275,8 @@ static void Fill_Buffer(uint32_t *pBuffer, uint32_t uwBufferLength, uint32_t uwO
     pBuffer[tmpIndex] = tmpIndex + uwOffset;
   }
   /* Clean Data Cache to update the content of the SDRAM */
-  SCB_CleanDCache_by_Addr((uint32_t*)pBuffer, uwBufferLength*4);
+  /*TODO: To clarification!!!! This generate sometimes hard fault?? */
+//  SCB_CleanDCache_by_Addr((uint32_t*)pBuffer, uwBufferLength*4);
 }
 
 /**
@@ -286,7 +289,8 @@ static void Fill_Buffer(uint32_t *pBuffer, uint32_t uwBufferLength, uint32_t uwO
 static uint8_t Buffercmp(uint32_t* pBuffer1, uint32_t* pBuffer2, uint16_t BufferLength)
 {
   /* Invalidate Data Cache to get the updated content of the SRAM*/
-  SCB_CleanInvalidateDCache_by_Addr((uint32_t *)pBuffer2, BufferLength*4);
+	  /*TODO: To clarification!!!! This generate sometimes hard fault?? */
+//  SCB_CleanInvalidateDCache_by_Addr((uint32_t *)pBuffer2, BufferLength*4);
 
   while (BufferLength--)
   {

@@ -32,11 +32,11 @@
 
 #include "stlogo.h"
 #include "stdbool.h"
+#include "DisplayOTM8009A.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define DSI_RGB888                 0x00000005U
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -63,7 +63,6 @@ void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 /* USER CODE BEGIN PFP */
 static void LetsDrawSometging(void);
-
 extern void SDRAM_demo (void);
 extern void SDRAM_DMA_demo (void);
 
@@ -75,274 +74,7 @@ void QSPI_TestDist(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void LTDC_MspInit(LTDC_HandleTypeDef *hltdc)
-{
-  if(hltdc->Instance == LTDC)
-  {
-    /** Enable the LTDC clock */
-    __HAL_RCC_LTDC_CLK_ENABLE();
 
-
-    /** Toggle Sw reset of LTDC IP */
-    __HAL_RCC_LTDC_FORCE_RESET();
-    __HAL_RCC_LTDC_RELEASE_RESET();
-  }
-}
-
-void DMA2D_MspInit(DMA2D_HandleTypeDef *hdma2d)
-{
-  if(hdma2d->Instance == DMA2D)
-  {
-    /** Enable the DMA2D clock */
-    __HAL_RCC_DMA2D_CLK_ENABLE();
-
-    /** Toggle Sw reset of DMA2D IP */
-    __HAL_RCC_DMA2D_FORCE_RESET();
-    __HAL_RCC_DMA2D_RELEASE_RESET();
-  }
-}
-
-void DSI_MspInit(DSI_HandleTypeDef *hdsi)
-{
-  if(hdsi->Instance == DSI)
-  {
-    /** Enable DSI Host and wrapper clocks */
-    __HAL_RCC_DSI_CLK_ENABLE();
-
-    /** Soft Reset the DSI Host and wrapper */
-    __HAL_RCC_DSI_FORCE_RESET();
-    __HAL_RCC_DSI_RELEASE_RESET();
-  }
-}
-
-int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
-{
-  int32_t ret = BSP_ERROR_NONE;
-
-  if(Size <= 1U)
-  {
-    if(HAL_DSI_ShortWrite(hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
-    {
-      ret = BSP_ERROR_BUS_FAILURE;
-    }
-  }
-  else
-  {
-    if(HAL_DSI_LongWrite(hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
-    {
-      ret = BSP_ERROR_BUS_FAILURE;
-    }
-  }
-
-  return ret;
-}
-
-int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
-{
-  int32_t ret = BSP_ERROR_NONE;
-
-  if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
-  {
-    ret = BSP_ERROR_BUS_FAILURE;
-  }
-
-  return ret;
-}
-
-LCD_Drv_t                *Lcd_Drv = NULL;
-
-int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
-{
-  int32_t ret;
-  uint32_t id;
-  OTM8009A_IO_t              IOCtx;
-  static OTM8009A_Object_t   OTM8009AObj;
-
-  /* Configure the audio driver */
-  IOCtx.Address     = 0;
-  IOCtx.GetTick     = BSP_GetTick;
-  IOCtx.WriteReg    = DSI_IO_Write;
-  IOCtx.ReadReg     = DSI_IO_Read;
-
-  if(OTM8009A_RegisterBusIO(&OTM8009AObj, &IOCtx) != OTM8009A_OK)
-  {
-    ret = BSP_ERROR_BUS_FAILURE;
-  }
-  else
-  {
-    Lcd_CompObj = &OTM8009AObj;
-
-    if(OTM8009A_ReadID(Lcd_CompObj, &id) != OTM8009A_OK)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-
-    else
-    {
-      Lcd_Drv = (LCD_Drv_t *)(void *) &OTM8009A_LCD_Driver;
-      if(Lcd_Drv->Init(Lcd_CompObj, ColorCoding, Orientation) != OTM8009A_OK)
-      {
-        ret = BSP_ERROR_COMPONENT_FAILURE;
-      }
-      else
-      {
-        ret = BSP_ERROR_NONE;
-      }
-    }
-  }
-  return ret;
-}
-
-int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi )
-{
-	hlcd_dsi = hdsi;
-
-  return BSP_LCD_InitEx(Instance, Orientation, LCD_PIXEL_FORMAT_RGB888, LCD_DEFAULT_WIDTH, LCD_DEFAULT_HEIGHT);
-}
-
-int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
-{
-	int32_t ret = BSP_ERROR_NONE;
-	uint32_t ctrl_pixel_format, ltdc_pixel_format;
-	MX_LTDC_LayerConfig_t config;
-
-	ltdc_pixel_format = LTDC_PIXEL_FORMAT_ARGB8888;
-
-	ctrl_pixel_format = OTM8009A_FORMAT_RGB888;
-	Lcd_Ctx[Instance].BppFactor = 4U;
-    /* Store pixel format, xsize and ysize information */
-    Lcd_Ctx[Instance].PixelFormat = PixelFormat;
-    Lcd_Ctx[Instance].XSize  = Width;
-    Lcd_Ctx[Instance].YSize  = Height;
-    /* Toggle Hardware Reset of the LCD using its XRES signal (active low) */
-
-    GPIO_InitTypeDef  gpio_init_structure;
-
-    __HAL_RCC_GPIOG_CLK_ENABLE(); /*LCD RESET CLK ENABLE*/
-
-    /* Configure the GPIO Reset pin */
-    gpio_init_structure.Pin   = LCD_RESET_PIN;
-    gpio_init_structure.Mode  = GPIO_MODE_OUTPUT_PP;
-    gpio_init_structure.Pull  = GPIO_PULLUP;
-    gpio_init_structure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-    HAL_GPIO_Init(LCD_RESET_GPIO_PORT , &gpio_init_structure);
-
-    /* Activate XRES active low */
-    HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT , LCD_RESET_PIN, GPIO_PIN_RESET);
-    HAL_Delay(20);/* wait 20 ms */
-    HAL_GPIO_WritePin(LCD_RESET_GPIO_PORT , LCD_RESET_PIN, GPIO_PIN_SET);/* Deactivate XRES */
-    HAL_Delay(10);/* Wait for 10ms after releasing XRES before sending commands */
-    /* Initialize LCD special pins GPIOs */
-
-    /* LCD_BL_CTRL GPIO configuration */
-    LCD_BL_CTRL_GPIO_CLK_ENABLE();
-
-    gpio_init_structure.Pin       = LCD_BL_CTRL_PIN;
-    gpio_init_structure.Mode      = GPIO_MODE_OUTPUT_PP;
-    gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-    gpio_init_structure.Pull      = GPIO_NOPULL;
-
-    HAL_GPIO_Init(LCD_BL_CTRL_GPIO_PORT, &gpio_init_structure);
-    /* Assert back-light LCD_BL_CTRL pin */
-    HAL_GPIO_WritePin(LCD_BL_CTRL_GPIO_PORT, LCD_BL_CTRL_PIN, GPIO_PIN_SET);
-
-    /* LCD_TE_CTRL GPIO configuration */
-    LCD_TE_GPIO_CLK_ENABLE();
-
-    gpio_init_structure.Pin       = LCD_TE_PIN;
-    gpio_init_structure.Mode      = GPIO_MODE_INPUT;
-    gpio_init_structure.Speed     = GPIO_SPEED_FREQ_HIGH;
-
-    HAL_GPIO_Init(LCD_TE_GPIO_PORT, &gpio_init_structure);
-    /* Assert back-light LCD_BL_CTRL pin */
-    HAL_GPIO_WritePin(LCD_TE_GPIO_PORT, LCD_TE_PIN, GPIO_PIN_SET);
-
-        /** @brief NVIC configuration for LTDC interrupt that is now enabled */
-    HAL_NVIC_SetPriority(LTDC_IRQn, 0x0F, 0);
-    HAL_NVIC_EnableIRQ(LTDC_IRQn);
-
-    /** @brief NVIC configuration for DMA2D interrupt that is now enabled */
-    HAL_NVIC_SetPriority(DMA2D_IRQn, 0x0F, 0);
-    HAL_NVIC_EnableIRQ(DMA2D_IRQn);
-
-    /** @brief NVIC configuration for DSI interrupt that is now enabled */
-    HAL_NVIC_SetPriority(DSI_IRQn, 0x0F, 0);
-    HAL_NVIC_EnableIRQ(DSI_IRQn);
-
-    /* Initializes peripherals instance value */
-    hlcd_ltdc.Instance = LTDC;
-    hlcd_dma2d.Instance = DMA2D;
-    hlcd_dsi->Instance = DSI;
-
-    /* MSP initialization */
-    LTDC_MspInit(&hlcd_ltdc);
-    DMA2D_MspInit(&hlcd_dma2d);
-    DSI_MspInit(hlcd_dsi);
-    MX_DSIHOST_DSI_Init();
-
-
-    if(MX_LTDC_ClockConfig(&hlcd_ltdc) != HAL_OK)
-    {
-      ret = BSP_ERROR_PERIPH_FAILURE;
-    }
-    else
-    {
-     if(MX_LTDC_Init(&hlcd_ltdc, Width, Height) != HAL_OK)
-     {
-       ret = BSP_ERROR_PERIPH_FAILURE;
-     }
-    }
-
-    if(ret == BSP_ERROR_NONE)
-    {
-      /* Before configuring LTDC layer, ensure SDRAM is initialized */
-#if !defined(DATA_IN_ExtSDRAM)
-      /* Initialize the SDRAM */
-      if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
-      {
-        return BSP_ERROR_PERIPH_FAILURE;
-      }
-#endif /* DATA_IN_ExtSDRAM */
-
-      /* Configure default LTDC Layer 0. This configuration can be override by calling
-      BSP_LCD_ConfigLayer() at application level */
-      config.X0          = 0;
-      config.X1          = Width;
-      config.Y0          = 0;
-      config.Y1          = Height;
-      config.PixelFormat = ltdc_pixel_format;
-      config.Address     = LCD_LAYER_0_ADDRESS;
-      if(MX_LTDC_ConfigLayer(&hlcd_ltdc, 0, &config) != HAL_OK)
-      {
-        ret = BSP_ERROR_PERIPH_FAILURE;
-      }
-      else
-      {
-        /* Enable the DSI host and wrapper after the LTDC initialization
-        To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
-        (void)HAL_DSI_Start(hlcd_dsi);
-
-        /* Enable the DSI BTW for read operations */
-        (void)HAL_DSI_ConfigFlowControl(hlcd_dsi, DSI_FLOW_CONTROL_BTA);
-
-#if (USE_LCD_CTRL_OTM8009A == 1)
-        /* Initialize the OTM8009A LCD Display IC Driver (KoD LCD IC Driver)
-        depending on configuration of DSI */
-        if(OTM8009A_Probe(ctrl_pixel_format, Orientation) != BSP_ERROR_NONE)
-        {
-          ret = BSP_ERROR_UNKNOWN_COMPONENT;
-        }
-        else
-        {
-          ret = BSP_ERROR_NONE;
-        }
-#endif
-      }
-    /* By default the reload is activated and executed immediately */
-    Lcd_Ctx[Instance].ReloadEnable = 1U;
-   }
-  return ret;
-}
 /* USER CODE END 0 */
 
 /**
@@ -406,14 +138,13 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-//  MX_DSIHOST_DSI_Init();
-//  MX_FMC_Init();
-//  MX_LTDC_Initt();
-//  MX_DMA2D_Init();
-//  MX_QUADSPI_Init();
+  //MX_FMC_Init();
+  MX_DSIHOST_DSI_Init();
+  MX_LTDC_Init();
+  MX_DMA2D_Init();
+  MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
-
-  /* Configure the Wakeup push-button in EXTI Mode */
+  /* Configure the Wakeup push-buttgiton in EXTI Mode */
   BSP_PB_Init(BUTTON_WAKEUP, BUTTON_MODE_GPIO);
   BSP_LED_Init(LED1);
   BSP_LED_Init(LED2);
@@ -422,30 +153,15 @@ Error_Handler();
 
   /*##-1- Initialize the LCD #################################################*/
   /* Initialize the LCD */
-  BSP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi);
+  DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
   QSPI_demo();
   HAL_Delay(2000);
+  SDRAM_demo();
+  HAL_Delay(3000);
   LetsDrawSometging();
   HAL_Delay(5000);
-
-//  LCD_SetHint();
-//  HAL_Delay(2000);
-//
-//  for(uint32_t feature = 0; feature < 4; feature++)
-//  {
-//	  LCD_Show_Feature(feature);
-//	  HAL_Delay(1000);
-//  }
-
-//  SDRAM_demo();
-//  HAL_Delay(3000);
-//
-
-//  HAL_Delay(3000);
-//
-
 
 //  Touchscreen_demo1();
 
@@ -590,8 +306,8 @@ static void LetsDrawSometging(void)
 {
   uint32_t x_size;
   uint32_t y_size;
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
   /* Clear the LCD */
   UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
 

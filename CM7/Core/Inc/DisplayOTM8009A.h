@@ -1,66 +1,26 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_lcd.h
-  * @author  MCD Application Team
-  * @brief   This file contains the common defines and functions prototypes for
-  *          the stm32h747i_discovery_lcd.c driver.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+/*
+ * DisplayOTM8009A.h
+ *
+ *  Created on: May 15, 2022
+ *      Author: teodor
+ */
 
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef STM32H747I_DISCO_LCD_H
-#define STM32H747I_DISCO_LCD_H
+#ifndef INC_DISPLAYOTM8009A_H_
+#define INC_DISPLAYOTM8009A_H_
 
-#ifdef __cplusplus
- extern "C" {
-#endif
+int32_t DISP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi, LTDC_HandleTypeDef *hltdc);
+
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 #include "lcd.h"
 
-#if (USE_LCD_CTRL_OTM8009A == 1)
-/* Include OTM8009A LCD Driver IC driver code */
+
 #include "../Components/otm8009a/otm8009a.h"
-#endif
 
-#if (USE_LCD_CTRL_ADV7533 == 1)
-/* Include ADV7533 HDMI Driver IC driver code */
-#include "../Components/adv7533/adv7533.h"
-#endif
-/** @addtogroup BSP
-  * @{
-  */
 
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
-
-/** @addtogroup STM32H747I_DISCO_LCD
-  * @{
-  */
-
-/** @defgroup STM32H747I_DISCO_LCD_Exported_Constants Exported Constants
-  * @{
-  */
 #define LCD_INSTANCES_NBR          1
-/**
-  * @brief  HDMI Format
-  */
-#define HDMI_FORMAT_720_480              0x00U /* 720_480 format choice of HDMI display */
-#define HDMI_FORMAT_720_576              0x01U /* 720_576 format choice of HDMI display */
 
 #define LCD_ORIENTATION_PORTRAIT         0x00U /* Portrait orientation choice of LCD screen               */
 #define LCD_ORIENTATION_LANDSCAPE        0x01U /* Landscape orientation choice of LCD screen              */
@@ -68,9 +28,9 @@
 #define LCD_DEFAULT_WIDTH                800
 #define LCD_DEFAULT_HEIGHT               480
 
-#define BSP_LCD_RELOAD_NONE              0U                            /* No reload executed       */
-#define BSP_LCD_RELOAD_IMMEDIATE         LTDC_RELOAD_IMMEDIATE         /* Immediate Reload         */
-#define BSP_LCD_RELOAD_VERTICAL_BLANKING LTDC_RELOAD_VERTICAL_BLANKING /* Vertical Blanking Reload */
+#define DISP_LCD_RELOAD_NONE              0U                            /* No reload executed       */
+#define DISP_LCD_RELOAD_IMMEDIATE         LTDC_RELOAD_IMMEDIATE         /* Immediate Reload         */
+#define DISP_LCD_RELOAD_VERTICAL_BLANKING LTDC_RELOAD_VERTICAL_BLANKING /* Vertical Blanking Reload */
 /**
   * @brief LCD special pins
   */
@@ -200,7 +160,7 @@ typedef struct
   uint32_t BppFactor;
   uint32_t IsMspCallbacksValid;
   uint32_t ReloadEnable;
-} BSP_LCD_Ctx_t;
+} DISP_LCD_Ctx_t;
 
 typedef struct
 {
@@ -212,35 +172,11 @@ typedef struct
   uint32_t Address;
 }MX_LTDC_LayerConfig_t;
 
-#define BSP_LCD_LayerConfig_t MX_LTDC_LayerConfig_t
 
-#if ((USE_HAL_LTDC_REGISTER_CALLBACKS == 1) || (USE_HAL_DSI_REGISTER_CALLBACKS == 1))
-typedef struct
-{
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 1)
-  pLTDC_CallbackTypeDef            pMspLtdcInitCb;
-  pLTDC_CallbackTypeDef            pMspLtdcDeInitCb;
-#endif /* (USE_HAL_LTDC_REGISTER_CALLBACKS == 1) */
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-  pDSI_CallbackTypeDef  pMspDsiInitCb;
-  pDSI_CallbackTypeDef  pMspDsiDeInitCb;
-#endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 1) */
-
-}BSP_LCD_Cb_t;
-#endif /*((USE_HAL_LTDC_REGISTER_CALLBACKS == 1) || (USE_HAL_DSI_REGISTER_CALLBACKS == 1)) */
-
-/**
-  * @}
-  */
-
-/** @addtogroup STM32H747I_DISCO_LCD_Exported_Variables
-  * @{
-  */
 extern DSI_HandleTypeDef   *hlcd_dsi;
 extern DMA2D_HandleTypeDef hlcd_dma2d;
-extern LTDC_HandleTypeDef  hlcd_ltdc;
-extern BSP_LCD_Ctx_t       Lcd_Ctx[];
+extern LTDC_HandleTypeDef  *hlcd_ltdc;
+extern DISP_LCD_Ctx_t       Lcd_Ctx[];
 extern void               *Lcd_CompObj;
 /**
   * @}
@@ -249,76 +185,49 @@ extern void               *Lcd_CompObj;
   * @{
   */
 /* Initialization APIs */
-int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi );
-int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
+int32_t DISP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi, LTDC_HandleTypeDef *hltdc);
+int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
 #if (USE_LCD_CTRL_ADV7533 > 0)
-int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format);
+int32_t DISP_LCD_InitHDMI(uint32_t Instance, uint32_t Format);
 #endif /* (USE_LCD_CTRL_ADV7533 > 0) */
-int32_t BSP_LCD_DeInit(uint32_t Instance);
+int32_t DISP_LCD_DeInit(uint32_t Instance);
 
-/* Register Callbacks APIs */
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-int32_t BSP_LCD_RegisterDefaultMspCallbacks (uint32_t Instance);
-int32_t BSP_LCD_RegisterMspCallbacks (uint32_t Instance, BSP_LCD_Cb_t *CallBacks);
-#endif /*(USE_HAL_DSI_REGISTER_CALLBACKS == 1) */
 
 /* LCD specific APIs: Layer control & LCD HW reset */
-int32_t BSP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType);
-int32_t BSP_LCD_ConfigLayer(uint32_t Instance, uint32_t LayerIndex, BSP_LCD_LayerConfig_t *Config);
-int32_t BSP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, FunctionalState State);
-int32_t BSP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t Transparency);
-int32_t BSP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_t Address);
-int32_t BSP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
-int32_t BSP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t Color);
-int32_t BSP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex);
-void    BSP_LCD_Reset(uint32_t Instance);
+int32_t DISP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType);
+int32_t DISP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, FunctionalState State);
+int32_t DISP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t Transparency);
+int32_t DISP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_t Address);
+int32_t DISP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height);
+int32_t DISP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t Color);
+int32_t DISP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex);
+void    DISP_LCD_Reset(uint32_t Instance);
 
 /* LCD generic APIs: Display control */
-int32_t BSP_LCD_DisplayOn(uint32_t Instance);
-int32_t BSP_LCD_DisplayOff(uint32_t Instance);
-int32_t BSP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness);
-int32_t BSP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness);
-int32_t BSP_LCD_GetXSize(uint32_t Instance, uint32_t *XSize);
-int32_t BSP_LCD_GetYSize(uint32_t Instance, uint32_t *YSize);
+int32_t DISP_LCD_DisplayOn(uint32_t Instance);
+int32_t DISP_LCD_DisplayOff(uint32_t Instance);
+int32_t DISP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness);
+int32_t DISP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness);
+int32_t DISP_LCD_GetXSize(uint32_t Instance, uint32_t *XSize);
+int32_t DISP_LCD_GetYSize(uint32_t Instance, uint32_t *YSize);
 
 /* LCD generic APIs: Draw operations. This list of APIs is required for
    lcd gfx utilities */
-int32_t BSP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex);
-int32_t BSP_LCD_DrawBitmap(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pBmp);
-int32_t BSP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color);
-int32_t BSP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color);
-int32_t BSP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t Color);
-int32_t BSP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t *Color);
-int32_t BSP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Color);
+int32_t DISP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex);
+int32_t DISP_LCD_DrawBitmap(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pBmp);
+int32_t DISP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color);
+int32_t DISP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color);
+int32_t DISP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t Color);
+int32_t DISP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t *Color);
+int32_t DISP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Color);
 
 /* LCD MX APIs */
 HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t LayerIndex, MX_LTDC_LayerConfig_t *Config);
 HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc);
-HAL_StatusTypeDef MX_LTDC_Init(LTDC_HandleTypeDef *hltdc, uint32_t Width, uint32_t Height);
 HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc);
 void MX_DSIHOST_DSI_Init(void);
-int32_t BSP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height);
-int32_t BSP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat);
-/**
-  * @}
-  */
+int32_t DISP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height);
+int32_t DISP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat);
 
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* STM32H747I_DISCO_LCD_H */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+#endif /* INC_DISPLAYOTM8009A_H_ */

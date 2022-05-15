@@ -63,7 +63,7 @@ void MX_QUADSPI_Init(void)
 //  if(qspiHandle->Instance==QUADSPI)
 //  {
 //  /* USER CODE BEGIN QUADSPI_MspInit 0 */
-//
+////
 //  /* USER CODE END QUADSPI_MspInit 0 */
 //
 //  /** Initializes the peripherals clock
@@ -145,7 +145,7 @@ void MX_QUADSPI_Init(void)
 //    HAL_GPIO_Init(QSPI_BK1_IO0_GPIO_Port, &GPIO_InitStruct);
 //
 //  /* USER CODE BEGIN QUADSPI_MspInit 1 */
-//
+////
 //  /* USER CODE END QUADSPI_MspInit 1 */
 //  }
 //}
