@@ -22,7 +22,13 @@
 #include "fmc.h"
 
 /* USER CODE BEGIN 0 */
+#define BUFFER_SIZE            ((uint32_t)0x0100)
+#define WRITE_READ_ADDR        ((uint32_t)0x1000)
+//uint32_t sdram_aTxBuffer[BUFFER_SIZE];
+//uint32_t sdram_aRxBuffer[BUFFER_SIZE];
 
+/* DMA transfer complete flag */
+//__IO uint32_t uwMDMA_Transfer_Complete = 0;
 /* USER CODE END 0 */
 
 SDRAM_HandleTypeDef hsdram1;
@@ -45,23 +51,23 @@ void MX_FMC_Init(void)
   hsdram1.Instance = FMC_SDRAM_DEVICE;
   /* hsdram1.Init */
   hsdram1.Init.SDBank = FMC_SDRAM_BANK2;
-  hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_8;
-  hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_13;
+  hsdram1.Init.ColumnBitsNumber = FMC_SDRAM_COLUMN_BITS_NUM_9;
+  hsdram1.Init.RowBitsNumber = FMC_SDRAM_ROW_BITS_NUM_12;
   hsdram1.Init.MemoryDataWidth = FMC_SDRAM_MEM_BUS_WIDTH_32;
-  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_2;
-  hsdram1.Init.CASLatency = FMC_SDRAM_CAS_LATENCY_1;
+  hsdram1.Init.InternalBankNumber = FMC_SDRAM_INTERN_BANKS_NUM_4;
+  hsdram1.Init.CASLatency = FMC_SDRAM_CAS_LATENCY_3;
   hsdram1.Init.WriteProtection = FMC_SDRAM_WRITE_PROTECTION_DISABLE;
-  hsdram1.Init.SDClockPeriod = FMC_SDRAM_CLOCK_DISABLE;
-  hsdram1.Init.ReadBurst = FMC_SDRAM_RBURST_DISABLE;
+  hsdram1.Init.SDClockPeriod = FMC_SDRAM_CLOCK_PERIOD_2;
+  hsdram1.Init.ReadBurst = FMC_SDRAM_RBURST_ENABLE;
   hsdram1.Init.ReadPipeDelay = FMC_SDRAM_RPIPE_DELAY_0;
   /* SdramTiming */
-  SdramTiming.LoadToActiveDelay = 16;
-  SdramTiming.ExitSelfRefreshDelay = 16;
-  SdramTiming.SelfRefreshTime = 16;
-  SdramTiming.RowCycleDelay = 16;
-  SdramTiming.WriteRecoveryTime = 16;
-  SdramTiming.RPDelay = 16;
-  SdramTiming.RCDDelay = 16;
+  SdramTiming.LoadToActiveDelay = 2;
+  SdramTiming.ExitSelfRefreshDelay = 7;
+  SdramTiming.SelfRefreshTime = 4;
+  SdramTiming.RowCycleDelay = 7;
+  SdramTiming.WriteRecoveryTime = 3;
+  SdramTiming.RPDelay = 2;
+  SdramTiming.RCDDelay = 2;
 
   if (HAL_SDRAM_Init(&hsdram1, &SdramTiming) != HAL_OK)
   {
@@ -69,6 +75,27 @@ void MX_FMC_Init(void)
   }
 
   /* USER CODE BEGIN FMC_Init 2 */
+
+  static IS42S32800J_Context_t pRegMode;
+
+
+  /* External memory mode register configuration */
+  pRegMode.TargetBank      = FMC_SDRAM_CMD_TARGET_BANK2;
+  pRegMode.RefreshMode     = IS42S32800J_AUTOREFRESH_MODE_CMD;
+  pRegMode.RefreshRate     = REFRESH_COUNT;
+  pRegMode.BurstLength     = IS42S32800J_BURST_LENGTH_1;
+  pRegMode.BurstType       = IS42S32800J_BURST_TYPE_SEQUENTIAL;
+  pRegMode.CASLatency      = IS42S32800J_CAS_LATENCY_3;
+  pRegMode.OperationMode   = IS42S32800J_OPERATING_MODE_STANDARD;
+  pRegMode.WriteBurstMode  = IS42S32800J_WRITEBURST_MODE_SINGLE;
+
+  /* SDRAM initialization sequence */
+  if(IS42S32800J_Init(&hsdram1, &pRegMode) != IS42S32800J_OK)
+  {
+
+  }
+
+
 
   /* USER CODE END FMC_Init 2 */
 }
@@ -121,6 +148,7 @@ static void HAL_FMC_MspInit(void){
   PF2   ------> FMC_A2
   PF1   ------> FMC_A1
   PF0   ------> FMC_A0
+  PG5   ------> FMC_BA1
   PF3   ------> FMC_A3
   PG4   ------> FMC_BA0
   PG2   ------> FMC_A12
@@ -190,8 +218,8 @@ static void HAL_FMC_MspInit(void){
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
   /* GPIO_InitStruct */
-  GPIO_InitStruct.Pin = FMC_SDCAS_Pin|FMC_SDCLK_Pin|FMC_BA0_Pin|FMC_A12_Pin
-                          |FMC_A10_Pin|FMC_A11_Pin;
+  GPIO_InitStruct.Pin = FMC_SDCAS_Pin|FMC_SDCLK_Pin|GPIO_PIN_5|FMC_BA0_Pin
+                          |FMC_A12_Pin|FMC_A10_Pin|FMC_A11_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
@@ -274,6 +302,7 @@ static void HAL_FMC_MspDeInit(void){
   PF2   ------> FMC_A2
   PF1   ------> FMC_A1
   PF0   ------> FMC_A0
+  PG5   ------> FMC_BA1
   PF3   ------> FMC_A3
   PG4   ------> FMC_BA0
   PG2   ------> FMC_A12
@@ -322,8 +351,8 @@ static void HAL_FMC_MspDeInit(void){
                           |FMC_D18_Pin|FMC_D19_Pin|FMC_D17_Pin|FMC_D20_Pin
                           |FMC_SDNE1_Pin|FMC_D16_Pin|FMC_SDCKE1_Pin);
 
-  HAL_GPIO_DeInit(GPIOG, FMC_SDCAS_Pin|FMC_SDCLK_Pin|FMC_BA0_Pin|FMC_A12_Pin
-                          |FMC_A10_Pin|FMC_A11_Pin);
+  HAL_GPIO_DeInit(GPIOG, FMC_SDCAS_Pin|FMC_SDCLK_Pin|GPIO_PIN_5|FMC_BA0_Pin
+                          |FMC_A12_Pin|FMC_A10_Pin|FMC_A11_Pin);
 
   HAL_GPIO_DeInit(GPIOD, FMC_D2_Pin|FMC_D3_Pin|FMC_D1_Pin|FMC_D0_Pin
                           |FMC_D15_Pin|FMC_D14_Pin|FMC_D13_Pin);

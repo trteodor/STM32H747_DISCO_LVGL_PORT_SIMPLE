@@ -13,9 +13,6 @@
 #include "gpio.h"
 #include "fmc.h"
 
-/*Temporary use BSP*/
-#include "stm32h747i_discovery_sdram.h"
-
 
 
 #include "DisplayOTM8009A.h"
@@ -237,8 +234,6 @@ int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelF
 	int32_t ret = BSP_ERROR_NONE;
 
 	ConfigAndSetNecessaryGPIO();
-	/*Lets use temporary BSP function*/
-	BSP_SDRAM_Init(0);
 
 
 	(void)HAL_DSI_Start(hlcd_dsi);

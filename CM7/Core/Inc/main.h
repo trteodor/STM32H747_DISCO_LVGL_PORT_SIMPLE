@@ -35,13 +35,16 @@ extern "C" {
 
 #include "stm32h747i_discovery.h"
 #include "stm32h747i_discovery_bus.h"
-#include "stm32h747i_discovery_sdram.h"
 #include "stm32_lcd.h"
 #include <stdio.h>
 #include "string.h"
 #include "stm32h747i_discovery_qspi.h"
 #include "stm32h747i_discovery_ts.h"
+#include "stm32h747i_discovery_errno.h"
 #include "DisplayOTM8009A.h"
+#include "../Components/is42s32800j/is42s32800j.h"
+#include "mdma.h"
+#include "fmc.h"
 /**
   * @brief  SDRAM Write read buffer start address after CAM Frame buffer
   * Assuming Camera frame buffer is of size 800x480 and format ARGB8888 (32 bits per pixel).

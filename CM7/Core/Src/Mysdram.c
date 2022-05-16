@@ -35,6 +35,20 @@
 #define BUFFER_SIZE            ((uint32_t)0x0100)
 #define WRITE_READ_ADDR        ((uint32_t)0x1000)
 
+
+
+#define SDRAM_INSTANCES_NBR       1U
+#define SDRAM_DEVICE_ADDR         0xD0000000U
+#define SDRAM_DEVICE_SIZE         0x2000000U
+
+/* MDMA definitions for SDRAM DMA transfer */
+#define SDRAM_MDMAx_CLK_ENABLE             __HAL_RCC_MDMA_CLK_ENABLE
+#define SDRAM_MDMAx_CLK_DISABLE            __HAL_RCC_MDMA_CLK_DISABLE
+#define SDRAM_MDMAx_CHANNEL                MDMA_Channel0
+#define SDRAM_MDMAx_IRQn                   MDMA_IRQn
+#define SDRAM_MDMA_IRQHandler              MDMA_IRQHandler
+
+
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 uint32_t sdram_aTxBuffer[BUFFER_SIZE];
@@ -58,21 +72,13 @@ void SDRAM_demo (void)
 {
   SDRAM_SetHint();
 
-  /* SDRAM device configuration */
-  if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
-  {
-    UTIL_LCD_DisplayStringAt(20, 115, (uint8_t *)"SDRAM Initialization : FAILED.", LEFT_MODE);
-    UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
-  }
-  else
-  {
-    UTIL_LCD_DisplayStringAt(20, 100, (uint8_t *)"SDRAM Initialization : OK.", LEFT_MODE);
-  }
+   UTIL_LCD_DisplayStringAt(20, 100, (uint8_t *)"SDRAM Initialization : OK.", LEFT_MODE);
+
   /* Fill the buffer to write */
   Fill_Buffer(sdram_aTxBuffer, BUFFER_SIZE, 0xA244250F);
 
   /* Write data to the SDRAM memory */
-  if(HAL_SDRAM_Write_32b(&hsdram[0], (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aTxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Write_32b(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aTxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 115, (uint8_t *)"SDRAM WRITE : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -83,7 +89,7 @@ void SDRAM_demo (void)
   }
 
   /* Read back data from the SDRAM memory */
-  if(HAL_SDRAM_Read_32b(&hsdram[0], (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aRxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Read_32b(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aRxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM READ : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 145, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -103,15 +109,6 @@ void SDRAM_demo (void)
     UTIL_LCD_DisplayStringAt(20, 145, (uint8_t *)"SDRAM Test : OK.", LEFT_MODE);
   }
 
-//  ButtonState = 0;
-//  while (1)
-//  {
-//    if(CheckForUserInput() > 0)
-//    {
-//      ButtonState = 0;
-//      return;
-//    }
-//  }
 }
 
 /**
@@ -124,28 +121,19 @@ void SDRAM_DMA_demo (void)
 
   SDRAM_DMA_SetHint();
 
-//  SdramTest = 1;
-  BSP_SDRAM_DeInit(0);
-  /* SDRAM device configuration */
-  if(BSP_SDRAM_Init(0) != BSP_ERROR_NONE)
-  {
-    BSP_LCD_DisplayOn(0);
-    UTIL_LCD_DisplayStringAt(20, 115, (uint8_t *)"SDRAM Initialization : FAILED.", LEFT_MODE);
-    UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
-  }
-  else
-  {
-    BSP_LCD_DisplayOn(0);
-    UTIL_LCD_DisplayStringAt(20, 100, (uint8_t *)"SDRAM Initialization : OK.", LEFT_MODE);
-  }
+  /*Let's write only for demo purposes the XferCpltCallback Directly... */
+  __HAL_LINKDMA(&hsdram1, hmdma, hmdma_mdma_channel40_sw_0);   /*If Use mdma... to learn in future :) i dk why it's necessary now but without it don't working corr*/
+  hmdma_mdma_channel40_sw_0.XferCpltCallback = HAL_SDRAM_DMA_XferCpltCallback;
+
+  UTIL_LCD_DisplayStringAt(20, 100, (uint8_t *)"SDRAM Initialization : OK.", LEFT_MODE);
+
   /* Fill the buffer to write */
   Fill_Buffer(sdram_aTxBuffer, BUFFER_SIZE, 0xA244250F);
-  BSP_LCD_DisplayOn(0);
+
   /* Write data to the SDRAM memory */
   uwMDMA_Transfer_Complete = 0;
-  BSP_LED_On(LED1);
 
-  if(HAL_SDRAM_Write_DMA(&hsdram[0], (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aTxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Write_DMA(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aTxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 115, (uint8_t *)"SDRAM WRITE : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -160,7 +148,7 @@ void SDRAM_DMA_demo (void)
 
   /* Read back data from the SDRAM memory */
   uwMDMA_Transfer_Complete = 0;
-  if(HAL_SDRAM_Read_DMA(&hsdram[0], (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aRxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Read_DMA(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aRxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM READ : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 145, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -182,16 +170,6 @@ void SDRAM_DMA_demo (void)
   {
     UTIL_LCD_DisplayStringAt(20, 145, (uint8_t *)"SDRAM Test : OK.", LEFT_MODE);
   }
-
-//  while (1)
-//  {
-//    if(CheckForUserInput() > 0)
-//    {
-//      ButtonState = 0;
-//      SdramTest = 0;
-//      return;
-//    }
-//  }
 }
 /**
   * @brief  Display SDRAM Demo Hint
@@ -235,8 +213,8 @@ static void SDRAM_DMA_SetHint(void)
 {
   uint32_t x_size, y_size;
 
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 
   /* Clear the LCD */
   UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);

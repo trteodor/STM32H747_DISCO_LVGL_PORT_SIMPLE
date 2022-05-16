@@ -186,7 +186,7 @@
 #define  USE_HAL_FMAC_REGISTER_CALLBACKS    0U /* FMAC register callback disabled  */
 #define  USE_HAL_NAND_REGISTER_CALLBACKS    0U /* NAND register callback disabled    */
 #define  USE_HAL_NOR_REGISTER_CALLBACKS     0U /* NOR register callback disabled     */
-#define  USE_HAL_SDRAM_REGISTER_CALLBACKS   0U /* SDRAM register callback disabled   */
+#define  USE_HAL_SDRAM_REGISTER_CALLBACKS   1U /* SDRAM register callback enabled   */
 #define  USE_HAL_SRAM_REGISTER_CALLBACKS    0U /* SRAM register callback disabled    */
 #define  USE_HAL_HASH_REGISTER_CALLBACKS    0U /* HASH register callback disabled    */
 #define  USE_HAL_HCD_REGISTER_CALLBACKS     0U /* HCD register callback disabled     */

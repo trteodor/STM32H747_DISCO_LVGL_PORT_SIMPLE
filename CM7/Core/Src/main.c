@@ -22,6 +22,7 @@
 #include "dma2d.h"
 #include "dsihost.h"
 #include "ltdc.h"
+#include "mdma.h"
 #include "quadspi.h"
 #include "usart.h"
 #include "gpio.h"
@@ -138,7 +139,9 @@ Error_Handler();
 /* USER CODE END Boot_Mode_Sequence_2 */
 
   /* USER CODE BEGIN SysInit */
-
+//the order of calls is important ...
+/*CubeMX is stupid with it...*/
+/*Sometimes you as user have check it!!*/
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -147,8 +150,9 @@ Error_Handler();
   MX_DSIHOST_DSI_Init();
   MX_FMC_Init();
   MX_LTDC_Init();
-  MX_DMA2D_Init();
   MX_QUADSPI_Init();
+  MX_MDMA_Init();
+  MX_DMA2D_Init();
   /* USER CODE BEGIN 2 */
   /* Configure the Wakeup push-buttgiton in EXTI Mode */
   BSP_PB_Init(BUTTON_WAKEUP, BUTTON_MODE_GPIO);
@@ -164,7 +168,8 @@ Error_Handler();
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
   QSPI_demo();
   HAL_Delay(2000);
-  SDRAM_demo();
+//  SDRAM_demo();
+  SDRAM_DMA_demo();
   HAL_Delay(3000);
   LetsDrawSometging();
   HAL_Delay(5000);
