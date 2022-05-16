@@ -145,9 +145,9 @@ Error_Handler();
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_DSIHOST_DSI_Init();
+  MX_FMC_Init();
   MX_LTDC_Init();
   MX_DMA2D_Init();
-  MX_FMC_Init();
   MX_QUADSPI_Init();
   /* USER CODE BEGIN 2 */
   /* Configure the Wakeup push-buttgiton in EXTI Mode */

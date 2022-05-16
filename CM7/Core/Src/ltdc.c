@@ -88,32 +88,17 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
   RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
   if(ltdcHandle->Instance==LTDC)
   {
-  /* USER CODE BEGIN LTDC_MspInit 0 */
-	  RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 
-	  PeriphClkInitStruct.PeriphClockSelection   = RCC_PERIPHCLK_LTDC;
-	  PeriphClkInitStruct.PLL3.PLL3M      = 5U;
-	  PeriphClkInitStruct.PLL3.PLL3N      = 132U;
-	  PeriphClkInitStruct.PLL3.PLL3P      = 2U;
-	  PeriphClkInitStruct.PLL3.PLL3Q      = 2U;
-	  PeriphClkInitStruct.PLL3.PLL3R      = 24U;
-	  PeriphClkInitStruct.PLL3.PLL3RGE    = RCC_PLLCFGR_PLL3RGE_2;
-	  PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-	  PeriphClkInitStruct.PLL3.PLL3FRACN  = 0U;
-
-	  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct);
-//#define HAL_LTDC_MspInitUseCubeProposal
-#ifdef HAL_LTDC_MspInitUseCubeProposal
   /* USER CODE END LTDC_MspInit 0 */
 
   /** Initializes the peripherals clock
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_LTDC;
     PeriphClkInitStruct.PLL3.PLL3M = 5;
-    PeriphClkInitStruct.PLL3.PLL3N = 160;
+    PeriphClkInitStruct.PLL3.PLL3N = 132;
     PeriphClkInitStruct.PLL3.PLL3P = 2;
     PeriphClkInitStruct.PLL3.PLL3Q = 2;
-    PeriphClkInitStruct.PLL3.PLL3R = 21;
+    PeriphClkInitStruct.PLL3.PLL3R = 24;
     PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_2;
     PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
     PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
@@ -129,13 +114,6 @@ void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
     HAL_NVIC_SetPriority(LTDC_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(LTDC_IRQn);
   /* USER CODE BEGIN LTDC_MspInit 1 */
-#endif
-    /* LTDC clock enable */
-    __HAL_RCC_LTDC_CLK_ENABLE();
-
-    /* LTDC interrupt Init */
-    HAL_NVIC_SetPriority(LTDC_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(LTDC_IRQn);
 
   /* USER CODE END LTDC_MspInit 1 */
   }
