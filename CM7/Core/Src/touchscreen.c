@@ -102,8 +102,8 @@ void Touchscreen_demo1(void)
   uint32_t ts_status = BSP_ERROR_NONE;
   uint32_t x_size, y_size;
 
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 //  ButtonState = 0;
 
   hTS->Width = x_size;
@@ -421,8 +421,8 @@ static void Touchscreen_SetHint_Demo(TouchScreenDemoTypeDef demoIndex)
 {
   uint32_t x_size, y_size;
 
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 
   if(demoIndex <= TOUCHSCREEN_DEMO_MAX)
   {

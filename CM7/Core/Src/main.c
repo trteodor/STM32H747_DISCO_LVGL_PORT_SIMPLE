@@ -166,15 +166,15 @@ Error_Handler();
   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-  QSPI_demo();
-  HAL_Delay(2000);
-//  SDRAM_demo();
-  SDRAM_DMA_demo();
-  HAL_Delay(3000);
-  LetsDrawSometging();
-  HAL_Delay(5000);
+//  QSPI_demo();
+//  HAL_Delay(2000);
+////  SDRAM_demo();
+//  SDRAM_DMA_demo();
+//  HAL_Delay(3000);
+//  LetsDrawSometging();
+//  HAL_Delay(5000);
 
-//  Touchscreen_demo1();
+  Touchscreen_demo1();
 
 static uint32_t LedTime =0;
   /* USER CODE END 2 */
