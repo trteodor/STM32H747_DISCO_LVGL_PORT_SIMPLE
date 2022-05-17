@@ -1,27 +1,10 @@
-/**
-  ******************************************************************************
-  * @file    BSP/CM7/Src/sdram.c
-  * @author  MCD Application Team
-  * @brief   This example code shows how to use the SDRAM Driver
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+
 
 /* Includes ------------------------------------------------------------------*/
+#include <Display_OTM8009A.h>
 #include "main.h"
 
 
-#include "DisplayOTM8009A.h"
 /** @addtogroup STM32H7xx_HAL_Examples
   * @{
   */
@@ -78,7 +61,7 @@ void SDRAM_demo (void)
   Fill_Buffer(sdram_aTxBuffer, BUFFER_SIZE, 0xA244250F);
 
   /* Write data to the SDRAM memory */
-  if(HAL_SDRAM_Write_32b(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aTxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Write_32b(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aTxBuffer, BUFFER_SIZE) != DRV_ERR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 115, (uint8_t *)"SDRAM WRITE : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -89,7 +72,7 @@ void SDRAM_demo (void)
   }
 
   /* Read back data from the SDRAM memory */
-  if(HAL_SDRAM_Read_32b(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aRxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Read_32b(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), (uint32_t*)sdram_aRxBuffer, BUFFER_SIZE) != DRV_ERR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM READ : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 145, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -133,7 +116,7 @@ void SDRAM_DMA_demo (void)
   /* Write data to the SDRAM memory */
   uwMDMA_Transfer_Complete = 0;
 
-  if(HAL_SDRAM_Write_DMA(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aTxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Write_DMA(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aTxBuffer, BUFFER_SIZE) != DRV_ERR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 115, (uint8_t *)"SDRAM WRITE : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -148,7 +131,7 @@ void SDRAM_DMA_demo (void)
 
   /* Read back data from the SDRAM memory */
   uwMDMA_Transfer_Complete = 0;
-  if(HAL_SDRAM_Read_DMA(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aRxBuffer, BUFFER_SIZE) != BSP_ERROR_NONE)
+  if(HAL_SDRAM_Read_DMA(&hsdram1, (uint32_t *)(SDRAM_DEVICE_ADDR + WRITE_READ_ADDR), sdram_aRxBuffer, BUFFER_SIZE) != DRV_ERR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 130, (uint8_t *)"SDRAM READ : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 145, (uint8_t *)"SDRAM Test Aborted.", LEFT_MODE);
@@ -306,11 +289,3 @@ void HAL_SDRAM_DMA_XferErrorCallback(MDMA_HandleTypeDef *hmdma)
   UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_RED);
   UTIL_LCD_DisplayStringAt(20, 215, (uint8_t *)"MDMA ERROR", LEFT_MODE);
 }
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

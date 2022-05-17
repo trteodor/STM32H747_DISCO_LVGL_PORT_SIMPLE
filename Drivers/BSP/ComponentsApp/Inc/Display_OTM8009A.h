@@ -8,17 +8,15 @@
 #ifndef INC_DISPLAYOTM8009A_H_
 #define INC_DISPLAYOTM8009A_H_
 
-int32_t DISP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi, LTDC_HandleTypeDef *hltdc);
-
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h747i_discovery_conf.h"
-#include "stm32h747i_discovery_errno.h"
+#include "main.h"
 #include "lcd.h"
-
-
 #include "../Components/otm8009a/otm8009a.h"
 
+
+#define LCD_LAYER_0_ADDRESS                 0xD0000000U
+#define LCD_LAYER_1_ADDRESS                 0xD0200000U
 
 #define LCD_INSTANCES_NBR          1
 
@@ -187,11 +185,7 @@ extern void               *Lcd_CompObj;
 /* Initialization APIs */
 int32_t DISP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef *hdsi, LTDC_HandleTypeDef *hltdc);
 int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
-#if (USE_LCD_CTRL_ADV7533 > 0)
-int32_t DISP_LCD_InitHDMI(uint32_t Instance, uint32_t Format);
-#endif /* (USE_LCD_CTRL_ADV7533 > 0) */
 int32_t DISP_LCD_DeInit(uint32_t Instance);
-
 
 /* LCD specific APIs: Layer control & LCD HW reset */
 int32_t DISP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType);

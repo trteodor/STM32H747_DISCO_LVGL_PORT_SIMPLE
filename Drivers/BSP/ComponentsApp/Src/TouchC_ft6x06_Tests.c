@@ -1,21 +1,3 @@
-/**
-  ******************************************************************************
-  * @file    BSP/CM7/Src/touchscreen.c
-  * @author  MCD Application Team
-  * @brief   This example code shows how to use the touchscreen driver.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -80,14 +62,20 @@ UTIL_LCD_COLOR_BLACK, UTIL_LCD_COLOR_BROWN, UTIL_LCD_COLOR_ORANGE };
 
 /* Private variables ---------------------------------------------------------*/
 /* Static variable holding the current touch color index : used to change color at each touch */
-TS_Init_t *hTS;
+TS_Init_t hTS;
+
+//TS_Init_t shTs;
+__IO uint32_t ButtonState = 0;
+__IO uint32_t TSInterruptTest=0;
+__IO uint32_t InterruptTsFlag = 0;
+
 TS_Gesture_Config_t GestureConf;
 //extern __IO uint32_t ButtonState;
 /* Private function prototypes -----------------------------------------------*/
 static void     Touchscreen_SetHint_Demo(TouchScreenDemoTypeDef demoIndex);
+static void TS_Update(void);
 #if (USE_TS_MULTI_TOUCH == 1)
 static uint32_t Touchscreen_Handle_NewTouch(void);
-static void TS_Update(void);
 #endif /* USE_TS_MULTI_TOUCH */
 
 /* Private functions ---------------------------------------------------------*/
@@ -100,22 +88,22 @@ void Touchscreen_demo1(void)
 {
   uint16_t x1, y1;
   uint8_t state = 0;
-  uint32_t ts_status = BSP_ERROR_NONE;
+  uint32_t ts_status = DRV_ERR_NONE;
   uint32_t x_size, y_size;
 
   DISP_LCD_GetXSize(0, &x_size);
   DISP_LCD_GetYSize(0, &y_size);
 //  ButtonState = 0;
 
-  hTS->Width = x_size;
-  hTS->Height = y_size;
-  hTS->Orientation = TS_SWAP_XY | TS_SWAP_Y;
-  hTS->Accuracy = 0;
+  hTS.Width = x_size;
+  hTS.Height = y_size;
+  hTS.Orientation = TS_SWAP_XY | TS_SWAP_Y;
+  hTS.Accuracy = 0;
 
   /* Touchscreen initialization */
-  ts_status = BSP_TS_Init(0, hTS);
+  ts_status = BSP_TS_Init(0, &hTS);
 
-  if(ts_status == BSP_ERROR_NONE)
+  if(ts_status == DRV_ERR_NONE)
   {
     /* Display touch screen demo description */
     Touchscreen_SetHint_Demo(TOUCHSCREEN_DEMO_1);
@@ -183,14 +171,10 @@ void Touchscreen_demo1(void)
         }
 
       }
-//      if(CheckForUserInput() > 0)
-//      {
-//
-//        BSP_TS_DeInit(0);
-//
-//        ButtonState = 0;
-//        return;
-//      }
+      if(HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin) == GPIO_PIN_SET)
+      {
+      	return;
+      }
 
       HAL_Delay(20);
     }
@@ -205,16 +189,16 @@ void Touchscreen_demo1(void)
   */
 void Touchscreen_demo2(void)
 {
-  uint32_t ts_status = BSP_ERROR_NONE;
+  uint32_t ts_status = DRV_ERR_NONE;
   uint32_t x_size, y_size;
 
   DISP_LCD_GetXSize(0, &x_size);
   DISP_LCD_GetYSize(0, &y_size);
 
-  hTS->Width = x_size;
-  hTS->Height = y_size;
-  hTS->Orientation = TS_SWAP_XY | TS_SWAP_Y;
-  hTS->Accuracy = 5;
+  hTS.Width = x_size;
+  hTS.Height = y_size;
+  hTS.Orientation = TS_SWAP_XY | TS_SWAP_Y;
+  hTS.Accuracy = 5;
 
   GestureConf.Radian = 0x0A;
   GestureConf.OffsetLeftRight = 0x19;
@@ -224,67 +208,80 @@ void Touchscreen_demo2(void)
   GestureConf.DistanceZoom = 0x32;
 
   /* Touchscreen initialization */
-  ts_status = BSP_TS_Init(0, hTS);
+  ts_status = BSP_TS_Init(0, &hTS);
   ts_status = BSP_TS_GestureConfig(0, &GestureConf);
 
-  if(ts_status == BSP_ERROR_NONE)
+  if(ts_status == DRV_ERR_NONE)
   {
     /* Display touch screen demo2 description */
     Touchscreen_SetHint_Demo(TOUCHSCREEN_DEMO_2);
-  } /* of if(status == BSP_ERROR_NONE) */
+  } /* of if(status == DRV_ERR_NONE) */
 
   while (1)
   {
     Touchscreen_Handle_NewTouch();
 
+    if(HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin) == GPIO_PIN_SET)
+    {
+    	return;
+    }
+
     HAL_Delay(100);
   }
 }
 
-
-void BSP_TS_Callback(uint32_t Instance)
+/*Touch screen interrupt mode test*/
+void Touchscreen_demo3(void)
 {
-  TS_Update();
-}
+  ButtonState = 0;
+  TSInterruptTest = 1;
+  uint32_t x_size, y_size;
 
-static void TS_Update(void)
-{
-  uint16_t i, j;
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 
-  BSP_TS_GetState(0, &TS_State);
-  if(TS_State.TouchDetected)
+  hTS.Width = x_size;
+  hTS.Height = y_size;
+  hTS.Orientation = TS_SWAP_XY | TS_SWAP_Y;
+  hTS.Accuracy = 5;
+
+  GestureConf.Radian = 0x0A;
+  GestureConf.OffsetLeftRight = 0x19;
+  GestureConf.OffsetUpDown = 0x19;
+  GestureConf.DistanceLeftRight = 0x19;
+  GestureConf.DistanceUpDown = 0x19;
+  GestureConf.DistanceZoom = 0x32;
+
+  /* Touchscreen initialization */
+  BSP_TS_Init(0, &hTS);
+  BSP_TS_GestureConfig(0, &GestureConf);
+
+  BSP_TS_Init(0, &hTS);
+  BSP_TS_EnableIT(0);
+  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
+  UTIL_LCD_SetFont(&Font12);
+  UTIL_LCD_DisplayStringAt(0, 30, (uint8_t *)"Touch screen to mark touched point", CENTER_MODE);
+
+
+  while (1)
   {
-    /* One or dual touch have been detected          */
-    /* Only take into account the first touch so far */
-
-    /* Get X and Y position of the first touch post calibrated */
-    x_new_pos = TS_State.TouchX;
-    y_new_pos = TS_State.TouchY;
-
-    for(i = 0; i < hTS->Width/40; i++)
-    {
-      for(j = 0; j < hTS->Height/40; j++)
-      {
-        if(((x_new_pos > 40*i) && (x_new_pos < 40*(i+1))) && ((y_new_pos > 40*j) && (y_new_pos < 40*(j+1))))
-        {
-          UTIL_LCD_FillRect(x_previous_pos, y_previous_pos,40,40, UTIL_LCD_COLOR_WHITE);
-          UTIL_LCD_DrawRect(x_previous_pos, y_previous_pos,40,40, UTIL_LCD_COLOR_BLACK);
-
-          UTIL_LCD_FillRect(40*i, 40*j,40,40, colors[(touchscreen_color_idx++ % 24)]);
-
-          x_previous_pos = 40*i;
-          y_previous_pos = 40*j;
-          break;
-        }
-      }
-    }
+	  if(InterruptTsFlag == 1)
+	  {
+		  InterruptTsFlag = 0;
+		  TS_Update();
+	  }
+	    if(HAL_GPIO_ReadPin(BUTTON_GPIO_Port, BUTTON_Pin) == GPIO_PIN_SET)
+	    {
+	        TSInterruptTest = 0;
+	    	return;
+	    }
   }
 }
 
 /**
   * @brief  Touchscreen_Handle_NewTouch: factorization of touch management
   * @param  None
-  * @retval BSP_ERROR_NONE
+  * @retval DRV_ERR_NONE
   */
 static uint32_t Touchscreen_Handle_NewTouch(void)
 {
@@ -302,7 +299,7 @@ static uint32_t Touchscreen_Handle_NewTouch(void)
   UTIL_LCD_COLOR_LIGHTYELLOW, UTIL_LCD_COLOR_DARKBLUE, UTIL_LCD_COLOR_DARKGREEN, UTIL_LCD_COLOR_DARKRED, UTIL_LCD_COLOR_DARKCYAN,
   UTIL_LCD_COLOR_DARKMAGENTA, UTIL_LCD_COLOR_DARKYELLOW, UTIL_LCD_COLOR_LIGHTGRAY, UTIL_LCD_COLOR_GRAY, UTIL_LCD_COLOR_DARKGRAY,
   UTIL_LCD_COLOR_BLACK, UTIL_LCD_COLOR_BROWN, UTIL_LCD_COLOR_ORANGE };
-  uint32_t ts_status = BSP_ERROR_NONE;
+  uint32_t ts_status = DRV_ERR_NONE;
   uint8_t lcd_string[TOUCH_INFO_STRING_SIZE] = "";
   uint32_t x_size, y_size;
 
@@ -624,12 +621,37 @@ uint8_t TouchScreen_GetTouchPosition(void)
   } /* of if(TS_State.TouchDetected) */
   return circleNr;
 }
-/**
-  * @}
-  */
 
-/**
-  * @}
-  */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+static void TS_Update(void)
+{
+  BSP_TS_GetState(0, &TS_State);
+  if(TS_State.TouchDetected)
+  {
+    /* One or dual touch have been detected          */
+    /* Only take into account the first touch so far */
+
+    /* Get X and Y position of the first touch post calibrated */
+    x_new_pos = TS_State.TouchX;
+    y_new_pos = TS_State.TouchY;
+
+	if(x_new_pos )
+	{
+	  UTIL_LCD_FillRect(x_new_pos, y_new_pos,10,10, UTIL_LCD_COLOR_CYAN);
+
+	  x_previous_pos = x_new_pos;
+	  y_previous_pos = y_new_pos;
+	}
+  }
+}
+
+/*Touch Screen interrupt handler*/
+void Touch_HandlerIRQ()
+{
+	  if(TSInterruptTest == 1)
+	  {
+		  InterruptTsFlag = 1;
+	  }
+}
+
+

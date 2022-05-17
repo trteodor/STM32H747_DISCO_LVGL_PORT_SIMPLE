@@ -71,8 +71,6 @@ void Error_Handler(void);
 #define SAI1_FS_A_GPIO_Port GPIOE
 #define SAI1_SD_B_Pin GPIO_PIN_3
 #define SAI1_SD_B_GPIO_Port GPIOE
-#define B2_Pin GPIO_PIN_13
-#define B2_GPIO_Port GPIOC
 #define SAI1_SD_A_Pin GPIO_PIN_6
 #define SAI1_SD_A_GPIO_Port GPIOE
 #define CEC_CK_MCO1_Pin GPIO_PIN_8

@@ -45,7 +45,6 @@ int32_t TS_GetTick(void);
 static int32_t I2C4_WriteReg(uint16_t DevAddr, uint16_t MemAddSize, uint16_t Reg, uint8_t *pData, uint16_t Length);
 static int32_t I2C4_ReadReg(uint16_t DevAddr, uint16_t MemAddSize, uint16_t Reg, uint8_t *pData, uint16_t Length);
 static int32_t FT6X06_Probe(uint32_t Instance);
-static void TS_EXTI_Callback(void);
 static EXTI_HandleTypeDef hts_exti[TS_INSTANCES_NBR] = {0};
 static TS_Drv_t           *Ts_Drv = NULL;
 
@@ -89,13 +88,12 @@ int32_t BSP_TS_GetCapabilities(uint32_t Instance, TS_Capabilities_t *Capabilitie
 
 int32_t BSP_TS_EnableIT(uint32_t Instance)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
   GPIO_InitTypeDef gpio_init_structure;
   static const uint32_t TS_EXTI_LINE[TS_INSTANCES_NBR] = {TS_INT_LINE};
-  static BSP_EXTI_LineCallback TsCallback[TS_INSTANCES_NBR] = {TS_EXTI_Callback};
   if(Instance >=TS_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -112,15 +110,14 @@ int32_t BSP_TS_EnableIT(uint32_t Instance)
 
     if(Ts_Drv->EnableIT(Ts_CompObj[Instance]) < 0)
     {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
+      ret = DRV_ERROR_COMPONENT_FAILURE;
     }
     else
     {
-      (void)HAL_EXTI_GetHandle(&hts_exti[Instance], TS_EXTI_LINE[Instance]);
-      (void)HAL_EXTI_RegisterCallback(&hts_exti[Instance],  HAL_EXTI_COMMON_CB_ID, TsCallback[Instance]);
-      HAL_NVIC_SetPriority((IRQn_Type)(TS_INT_EXTI_IRQn), BSP_TS_IT_PRIORITY, 0x00);
+
+      HAL_NVIC_SetPriority((IRQn_Type)(TS_INT_EXTI_IRQn), 0x05, 0x00);
       HAL_NVIC_EnableIRQ((IRQn_Type)(TS_INT_EXTI_IRQn));
-      ret = BSP_ERROR_NONE;
+      ret = DRV_ERR_NONE;
     }
 
 
@@ -128,14 +125,9 @@ int32_t BSP_TS_EnableIT(uint32_t Instance)
   return ret;
 }
 
-__weak void BSP_TS_Callback(uint32_t Instance)
-{
-  UNUSED(Instance);
-}
-
 int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
   UNUSED(ret);
   uint32_t x_oriented, y_oriented;
   uint32_t x_diff, y_diff;
@@ -146,7 +138,7 @@ int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State)
     /* Get each touch coordinates */
     if(Ts_Drv->GetState(Ts_CompObj[Instance], &state) < 0)
     {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
+      ret = DRV_ERROR_COMPONENT_FAILURE;
     }/* Check and update the number of touches active detected */
     else if(state.TouchDetected != 0U)
     {
@@ -295,16 +287,16 @@ int32_t BSP_TS_GestureConfig(uint32_t Instance, TS_Gesture_Config_t *GestureConf
 
 int32_t BSP_TS_GetGestureId(uint32_t Instance, uint32_t *GestureId)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
   uint8_t tmp = 0;
 
   if(Instance >=TS_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }/* Get gesture Id */
   else if(Ts_Drv->GetGesture(Ts_CompObj[Instance], &tmp)  < 0)
   {
-    ret = BSP_ERROR_COMPONENT_FAILURE;
+    ret = DRV_ERROR_COMPONENT_FAILURE;
   }
   else
   {
@@ -337,7 +329,7 @@ int32_t BSP_TS_GetGestureId(uint32_t Instance, uint32_t *GestureId)
       break;
     }
 
-    ret = BSP_ERROR_NONE;
+    ret = DRV_ERR_NONE;
   }
 
   return ret;
@@ -347,13 +339,13 @@ int32_t BSP_TS_GetGestureId(uint32_t Instance, uint32_t *GestureId)
 int32_t BSP_TS_Set_Orientation(uint32_t Instance, uint32_t Orientation)
 {
   Ts_Ctx[Instance].Orientation = Orientation;
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation)
 {
   *Orientation = Ts_Ctx[Instance].Orientation;
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 void BSP_TS_IRQHandler(uint32_t Instance)
@@ -383,15 +375,15 @@ static int32_t FT6X06_Probe(uint32_t Instance)
 
     if(FT6X06_RegisterBusIO (&FT6X06Obj, &IOCtx) != FT6X06_OK)
     {
-      ret = BSP_ERROR_BUS_FAILURE;
+      ret = DRV_ERROR_BUS_FAILURE;
     }
     else if(FT6X06_ReadID(&FT6X06Obj, &id) != FT6X06_OK)
     {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
+      ret = DRV_ERROR_COMPONENT_FAILURE;
     }
     else if(id != FT6X06_ID)
     {
-      ret = BSP_ERROR_UNKNOWN_COMPONENT;
+      ret = DRV_ERROR_UNKNOWN_COMPONENT;
     }
     else
     {
@@ -402,23 +394,17 @@ static int32_t FT6X06_Probe(uint32_t Instance)
 
       if(Ts_Drv->Init(Ts_CompObj[Instance]) != FT6X06_OK)
       {
-        ret = BSP_ERROR_COMPONENT_FAILURE;
+        ret = DRV_ERROR_COMPONENT_FAILURE;
       }
       else
       {
-        ret = BSP_ERROR_NONE;
+        ret = DRV_ERR_NONE;
         break;
       }
     }
   }
 
   return ret;
-}
-
-static void TS_EXTI_Callback(void)
-{
-  BSP_TS_Callback(0);
-
 }
 
 int32_t TS_GetTick(void)
@@ -436,7 +422,7 @@ int32_t TS_GetTick(void)
 
 int32_t BSP_I2C4_Init(void)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   hbus_i2c = &hi2c4;
 
@@ -459,17 +445,17 @@ int32_t BSP_I2C4_WriteReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16
 
   if(I2C4_WriteReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
   {
-    ret = BSP_ERROR_NONE;
+    ret = DRV_ERR_NONE;
   }
   else
   {
     if( HAL_I2C_GetError(hbus_i2c) == HAL_I2C_ERROR_AF)
     {
-      ret = BSP_ERROR_BUS_ACKNOWLEDGE_FAILURE;
+    	ret =  DRV_ERROR_PERIPH_FAILURE;
     }
     else
     {
-      ret =  BSP_ERROR_PERIPH_FAILURE;
+      ret =  DRV_ERROR_PERIPH_FAILURE;
     }
   }
 
@@ -482,17 +468,17 @@ int32_t BSP_I2C4_ReadReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_
 
   if(I2C4_ReadReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
   {
-    ret = BSP_ERROR_NONE;
+    ret = DRV_ERR_NONE;
   }
   else
   {
     if( HAL_I2C_GetError(hbus_i2c) == HAL_I2C_ERROR_AF)
     {
-      ret = BSP_ERROR_BUS_ACKNOWLEDGE_FAILURE;
+    	ret =  DRV_ERROR_PERIPH_FAILURE;
     }
     else
     {
-      ret =  BSP_ERROR_PERIPH_FAILURE;
+    	ret =  DRV_ERROR_PERIPH_FAILURE;
     }
   }
   return ret;
@@ -502,30 +488,30 @@ static int32_t I2C4_WriteReg(uint16_t DevAddr, uint16_t Reg, uint16_t MemAddSize
 {
   if(HAL_I2C_Mem_Write(hbus_i2c, DevAddr, Reg, MemAddSize, pData, Length, 1000) == HAL_OK)
   {
-    return BSP_ERROR_NONE;
+    return DRV_ERR_NONE;
   }
 
-  return BSP_ERROR_BUS_FAILURE;
+  return DRV_ERROR_BUS_FAILURE;
 }
 
 static int32_t I2C4_ReadReg(uint16_t DevAddr, uint16_t Reg, uint16_t MemAddSize, uint8_t *pData, uint16_t Length)
 {
   if (HAL_I2C_Mem_Read(hbus_i2c, DevAddr, Reg, MemAddSize, pData, Length, 1000) == HAL_OK)
   {
-    return BSP_ERROR_NONE;
+    return DRV_ERR_NONE;
   }
 
-  return BSP_ERROR_BUS_FAILURE;
+  return DRV_ERROR_BUS_FAILURE;
 }
 
 
 int32_t BSP_I2C4_DeInit(void)
 {
-  int32_t ret  = BSP_ERROR_NONE;
+  int32_t ret  = DRV_ERR_NONE;
 
     if (HAL_I2C_DeInit(hbus_i2c) != HAL_OK)
     {
-      ret = BSP_ERROR_BUS_FAILURE;
+      ret = DRV_ERROR_BUS_FAILURE;
     }
 
   return ret;

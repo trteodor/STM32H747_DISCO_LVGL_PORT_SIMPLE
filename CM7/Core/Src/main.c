@@ -34,7 +34,6 @@
 
 #include "stlogo.h"
 #include "stdbool.h"
-#include "DisplayOTM8009A.h"
 
 /***************IMPORANT******************************************************************************************/
 /*IN file ltdc.c i overwrite cube because he generate error braces "();"*/
@@ -142,6 +141,9 @@ Error_Handler();
   /* USER CODE BEGIN SysInit */
 //the order of calls is important ...
 /*CubeMX is stupid with it...*/
+
+/*In CubeMX I only set peripherials...
+ * */
 /*Sometimes you as user have check it!!*/
   /* USER CODE END SysInit */
 
@@ -156,36 +158,19 @@ Error_Handler();
   MX_DMA2D_Init();
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
-  /* Configure the Wakeup push-buttgiton in EXTI Mode */
-  BSP_PB_Init(BUTTON_WAKEUP, BUTTON_MODE_GPIO);
-  BSP_LED_Init(LED1);
-  BSP_LED_Init(LED2);
-  BSP_LED_Init(LED3);
-  BSP_LED_Init(LED4);
 
-  /*##-1- Initialize the LCD #################################################*/
   /* Initialize the LCD */
   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
+  /*Registers Utils to easy draw on display..*/
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-  QSPI_demo();
-  HAL_Delay(2000);
-////  SDRAM_demo();
-//  SDRAM_DMA_demo();
-//  HAL_Delay(3000);
-  LetsDrawSometging();
-//#define  CIRCLE_RADIUS        40
-//#define  LINE_LENGHT          30
-/* Private macro -------------------------------------------------------------*/
-//#define  CIRCLE_XPOS(i)       ((i * 800) / 5)
-//#define  CIRCLE_YPOS(i)       (480 - CIRCLE_RADIUS - 60)
+  /**/
+  QSPI_demo(); /*TODO: Some demonsation with DMA/MDMA Should Be Created else... */
+  HAL_Delay(1000);
+  SDRAM_DMA_demo();
+  HAL_Delay(1000);
+  Touchscreen_demo3();
 
-//  UTIL_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS, UTIL_LCD_COLOR_BLUE);
-//  HAL_Delay(5000);
-
-  Touchscreen_demo2();
-
-static uint32_t LedTime =0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -193,30 +178,8 @@ static uint32_t LedTime =0;
   while (1)
   {
 
-	  if(LedTime + 400 < HAL_GetTick() )
-	  {
-		  LedTime = HAL_GetTick();
-
-		  BSP_LED_Toggle(LED_GREEN);
-		  BSP_LED_Toggle(LED_ORANGE);
-		  BSP_LED_Toggle(LED_RED);
-		  BSP_LED_Toggle(LED_BLUE);
-	  }
-
-//	  QSPI_TestDist();
-
-	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
-	  {
-		  /*Stop process*/
-	  }
 	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
 	  HAL_Delay(30);
-
-
-	  while(HAL_GPIO_ReadPin(BUTTON_WAKEUP_GPIO_PORT, BUTTON_WAKEUP_PIN) == true)
-	  {
-		  /*Stop process*/
-	  }
 	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
 	  HAL_Delay(30);
 

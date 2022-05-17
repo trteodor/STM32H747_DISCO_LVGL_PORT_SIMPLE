@@ -2,8 +2,6 @@
 #define STM32H747I_DISCO_QSPI_H
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h747i_discovery_conf.h"
-#include "stm32h747i_discovery_errno.h"
 #include "../Components/mt25tl01g/mt25tl01g.h"
 
 #define BSP_QSPI_Info_t                 MT25TL01G_Info_t
@@ -154,4 +152,3 @@ HAL_StatusTypeDef MX_QSPI_Init(QSPI_HandleTypeDef *BSP_hqspi, MX_QSPI_Init_t *Co
 
 #endif /*STM32H747I_DISCO_QSPI_H */
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

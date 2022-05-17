@@ -33,18 +33,25 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "stm32h747i_discovery.h"
+
 #include "stm32_lcd.h"
 #include <stdio.h>
 #include "string.h"
-#include "stm32h747i_discovery_errno.h"
-#include "DisplayOTM8009A.h"
-#include "../Components/is42s32800j/is42s32800j.h"
 #include "mdma.h"
 #include "fmc.h"
 #include "i2c.h"
 #include "quadspi.h"
-#include "ExtFlash_qspi.h"
+#include <FlashQspi_mt25tl01g.h>
+#include <Display_OTM8009A.h>
+#include "../Components/is42s32800j/is42s32800j.h"
+#include "dma2d.h"
+#include "dsihost.h"
+#include "ltdc.h"
+#include "quadspi.h"
+#include "usart.h"
+#include "gpio.h"
+#include "fmc.h"
+#include "DRVs_ErrorCodes.h"
 /**
   * @brief  SDRAM Write read buffer start address after CAM Frame buffer
   * Assuming Camera frame buffer is of size 800x480 and format ARGB8888 (32 bits per pixel).
@@ -120,6 +127,8 @@ void Error_Handler(void);
 #define FMC_D21_GPIO_Port GPIOH
 #define FMC_D30_Pin GPIO_PIN_9
 #define FMC_D30_GPIO_Port GPIOI
+#define BUTTON_Pin GPIO_PIN_13
+#define BUTTON_GPIO_Port GPIOC
 #define FMC_D3_Pin GPIO_PIN_1
 #define FMC_D3_GPIO_Port GPIOD
 #define CEC_CK_MCO1_Pin GPIO_PIN_8
@@ -136,6 +145,12 @@ void Error_Handler(void);
 #define FMC_A0_GPIO_Port GPIOF
 #define QSPI_BK1_NCS_Pin GPIO_PIN_6
 #define QSPI_BK1_NCS_GPIO_Port GPIOG
+#define LED1_Pin GPIO_PIN_12
+#define LED1_GPIO_Port GPIOI
+#define LED2_Pin GPIO_PIN_13
+#define LED2_GPIO_Port GPIOI
+#define LED3_Pin GPIO_PIN_14
+#define LED3_GPIO_Port GPIOI
 #define FMC_A3_Pin GPIO_PIN_3
 #define FMC_A3_GPIO_Port GPIOF
 #define FMC_BA0_Pin GPIO_PIN_4
@@ -164,6 +179,8 @@ void Error_Handler(void);
 #define QSPI_BK2_IO1_GPIO_Port GPIOH
 #define FMC_SDNWE_Pin GPIO_PIN_5
 #define FMC_SDNWE_GPIO_Port GPIOH
+#define LED4_Pin GPIO_PIN_15
+#define LED4_GPIO_Port GPIOI
 #define FMC_A7_Pin GPIO_PIN_13
 #define FMC_A7_GPIO_Port GPIOF
 #define FMC_A8_Pin GPIO_PIN_14

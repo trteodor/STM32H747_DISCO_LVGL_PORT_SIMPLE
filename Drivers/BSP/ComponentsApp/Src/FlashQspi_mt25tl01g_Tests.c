@@ -1,21 +1,3 @@
-/**
-  ******************************************************************************
-  * @file    BSP/CM7/Src/qspi.c
-  * @author  MCD Application Team
-  * @brief   This example code shows how to use the QSPI Driver
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -56,7 +38,7 @@ extern UART_HandleTypeDef huart1;
 void QSPI_TestDist(void)
 {
 
-    if(BSP_QSPI_EraseBlock(0,WRITE_READ_ADDR,BSP_QSPI_ERASE_8K) != BSP_ERROR_NONE)
+    if(BSP_QSPI_EraseBlock(0,WRITE_READ_ADDR,BSP_QSPI_ERASE_8K) != DRV_ERR_NONE)
     {
     	char tempbuf [] = "ERASE FAIL\n\r";
     	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
@@ -70,7 +52,7 @@ void QSPI_TestDist(void)
     Fill_Buffer(qspi_aTxBuffer, BUFFER_SIZE, 0xD20F);
 
     /* Write data to the QSPI memory */
-    if(BSP_QSPI_Write(0,qspi_aTxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != BSP_ERROR_NONE)
+    if(BSP_QSPI_Write(0,qspi_aTxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != DRV_ERR_NONE)
     {
     	char tempbuf [] = "BSP_QSPI_Write FAIL\n\r";
     	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
@@ -80,7 +62,7 @@ void QSPI_TestDist(void)
     	char tempbuf [] = "BSP_QSPI_Write OK\n\r";
     	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
 
-      if(BSP_QSPI_Read(0,qspi_aRxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != BSP_ERROR_NONE)
+      if(BSP_QSPI_Read(0,qspi_aRxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != DRV_ERR_NONE)
       {
     	  char tempbuf [] = "READ FAIL\n\r";
     	  HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
@@ -101,7 +83,7 @@ void QSPI_TestDist(void)
         	char tempbuf [] = "COMPARE BUFF PASS\n\r";
         	HAL_UART_Transmit(&huart1, (uint8_t*)tempbuf, sizeof(tempbuf), 100);
 //          /*##-6-Memory Mapped Mode ###############################################*/
-//         if(BSP_QSPI_EnableMemoryMappedMode(0)!=BSP_ERROR_NONE)
+//         if(BSP_QSPI_EnableMemoryMappedMode(0)!=DRV_ERR_NONE)
 //         {
 //           HAL_UART_Transmit(&huart1, (uint8_t*)"QSPI Memory Mapped Mode FAIL \n\r", 40, 100);
 //         }
@@ -132,7 +114,7 @@ void QSPI_demo (void)
   init.DualFlashMode= MT25TL01G_DUALFLASH_ENABLE;
   status = BSP_QSPI_Init(0,&init);
 
-  if (status != BSP_ERROR_NONE)
+  if (status != DRV_ERR_NONE)
   {
     UTIL_LCD_DisplayStringAt(20, 100, (uint8_t*)"QSPI Initialization : FAILED.", LEFT_MODE);
     UTIL_LCD_DisplayStringAt(20, 115, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
@@ -170,7 +152,7 @@ void QSPI_demo (void)
       UTIL_LCD_DisplayStringAt(20, 115, (uint8_t*)"QSPI GET INFO : OK.   ", LEFT_MODE);
 
       /*##-3- Erase QSPI memory ################################################*/
-      if(BSP_QSPI_EraseBlock(0,WRITE_READ_ADDR,BSP_QSPI_ERASE_8K) != BSP_ERROR_NONE)
+      if(BSP_QSPI_EraseBlock(0,WRITE_READ_ADDR,BSP_QSPI_ERASE_8K) != DRV_ERR_NONE)
       {
         UTIL_LCD_DisplayStringAt(20, 130, (uint8_t*)"QSPI ERASE : FAILED.", LEFT_MODE);
         UTIL_LCD_DisplayStringAt(20, 145, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
@@ -184,7 +166,7 @@ void QSPI_demo (void)
         Fill_Buffer(qspi_aTxBuffer, BUFFER_SIZE, 0xD20F);
 
         /* Write data to the QSPI memory */
-        if(BSP_QSPI_Write(0,qspi_aTxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != BSP_ERROR_NONE)
+        if(BSP_QSPI_Write(0,qspi_aTxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != DRV_ERR_NONE)
         {
           UTIL_LCD_DisplayStringAt(20, 145, (uint8_t*)"QSPI WRITE : FAILED.", LEFT_MODE);
           UTIL_LCD_DisplayStringAt(20, 160, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
@@ -194,7 +176,7 @@ void QSPI_demo (void)
           UTIL_LCD_DisplayStringAt(20, 145, (uint8_t*)"QSPI WRITE : OK.     ", LEFT_MODE);
 
           /* Read back data from the QSPI memory */
-          if(BSP_QSPI_Read(0,qspi_aRxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != BSP_ERROR_NONE)
+          if(BSP_QSPI_Read(0,qspi_aRxBuffer, WRITE_READ_ADDR, BUFFER_SIZE) != DRV_ERR_NONE)
           {
             UTIL_LCD_DisplayStringAt(20, 160, (uint8_t*)"QSPI READ : FAILED.", LEFT_MODE);
             UTIL_LCD_DisplayStringAt(20, 175, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
@@ -213,7 +195,7 @@ void QSPI_demo (void)
             {
               UTIL_LCD_DisplayStringAt(20, 175, (uint8_t*)"QSPI COMPARE : OK.     ", LEFT_MODE);
               /*##-6-Memory Mapped Mode ###############################################*/
-//             if(BSP_QSPI_EnableMemoryMappedMode(0)!=BSP_ERROR_NONE)
+//             if(BSP_QSPI_EnableMemoryMappedMode(0)!=DRV_ERR_NONE)
 //             {
 //               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Memory Mapped Mode : FAILED.     ", LEFT_MODE);
 //               UTIL_LCD_DisplayStringAt(20, 190, (uint8_t*)"QSPI Test Aborted.", LEFT_MODE);
@@ -312,11 +294,4 @@ static uint8_t Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint32_t BufferLe
 
   return 0;
 }
-/**
-* @}
-*/
 
-/**
-* @}
-*/
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

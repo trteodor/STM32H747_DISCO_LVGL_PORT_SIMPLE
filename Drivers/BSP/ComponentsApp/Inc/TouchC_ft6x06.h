@@ -9,9 +9,6 @@
 #define INC_TOUCHC_FT6X06_H_
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32h747i_discovery_conf.h"
-#include "stm32h747i_discovery_errno.h"
-
 /* Include TouchScreen component driver */
 #include "../Components/ft6x06/ft6x06.h"
 
@@ -185,9 +182,6 @@ int32_t BSP_TS_GetCapabilities(uint32_t Instance, TS_Capabilities_t *Capabilitie
 void    BSP_TS_Callback(uint32_t Instance);
 void    BSP_TS_IRQHandler(uint32_t Instance);
 
-
-
-extern I2C_HandleTypeDef *hbus_i2c4;
 
 int32_t BSP_I2C4_Init(void);
 int32_t BSP_I2C4_DeInit(void);

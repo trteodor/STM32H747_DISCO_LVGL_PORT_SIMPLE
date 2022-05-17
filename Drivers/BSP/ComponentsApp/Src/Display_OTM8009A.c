@@ -4,18 +4,8 @@
  *  Created on: May 15, 2022
  *      Author: teodor
  */
+#include <Display_OTM8009A.h>
 #include "main.h"
-#include "dma2d.h"
-#include "dsihost.h"
-#include "ltdc.h"
-#include "quadspi.h"
-#include "usart.h"
-#include "gpio.h"
-#include "fmc.h"
-
-
-
-#include "DisplayOTM8009A.h"
 
 /**
  * VARIABLE SECTION START
@@ -91,20 +81,20 @@ int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelF
 
 int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Size <= 1U)
   {
     if(HAL_DSI_ShortWrite(hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
     {
-      ret = BSP_ERROR_BUS_FAILURE;
+      ret = DRV_ERROR_BUS_FAILURE;
     }
   }
   else
   {
     if(HAL_DSI_LongWrite(hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
     {
-      ret = BSP_ERROR_BUS_FAILURE;
+      ret = DRV_ERROR_BUS_FAILURE;
     }
   }
 
@@ -113,11 +103,11 @@ int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t
 
 int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
   {
-    ret = BSP_ERROR_BUS_FAILURE;
+    ret = DRV_ERROR_BUS_FAILURE;
   }
 
   return ret;
@@ -140,7 +130,7 @@ int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
 
   if(OTM8009A_RegisterBusIO(&OTM8009AObj, &IOCtx) != OTM8009A_OK)
   {
-    ret = BSP_ERROR_BUS_FAILURE;
+    ret = DRV_ERROR_BUS_FAILURE;
   }
   else
   {
@@ -148,7 +138,7 @@ int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
 
     if(OTM8009A_ReadID(Lcd_CompObj, &id) != OTM8009A_OK)
     {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
+      ret = DRV_ERROR_COMPONENT_FAILURE;
     }
 
     else
@@ -156,11 +146,11 @@ int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
       Lcd_Drv = (LCD_Drv_t *)(void *) &OTM8009A_LCD_Driver;
       if(Lcd_Drv->Init(Lcd_CompObj, ColorCoding, Orientation) != OTM8009A_OK)
       {
-        ret = BSP_ERROR_COMPONENT_FAILURE;
+        ret = DRV_ERROR_COMPONENT_FAILURE;
       }
       else
       {
-        ret = BSP_ERROR_NONE;
+        ret = DRV_ERR_NONE;
       }
     }
   }
@@ -234,7 +224,7 @@ int32_t DISP_LCD_Init(uint32_t Instance, uint32_t Orientation,DSI_HandleTypeDef 
 
 int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height)
 {
-	int32_t ret = BSP_ERROR_NONE;
+	int32_t ret = DRV_ERR_NONE;
 
 	ConfigAndSetNecessaryGPIO();
 
@@ -266,11 +256,11 @@ int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelF
 
 int32_t DISP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -282,11 +272,11 @@ int32_t DISP_LCD_SetActiveLayer(uint32_t Instance, uint32_t LayerIndex)
 
 int32_t DISP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -299,11 +289,11 @@ int32_t DISP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat)
 
 int32_t DISP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else if(ReloadType == DISP_LCD_RELOAD_NONE)
   {
@@ -311,7 +301,7 @@ int32_t DISP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType)
   }
   else if(HAL_LTDC_Reload (hlcd_ltdc, ReloadType) != HAL_OK)
   {
-    ret = BSP_ERROR_PERIPH_FAILURE;
+    ret = DRV_ERROR_PERIPH_FAILURE;
   }
   else
   {
@@ -323,11 +313,11 @@ int32_t DISP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType)
 
 int32_t DISP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, FunctionalState State)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -351,11 +341,11 @@ int32_t DISP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, Functio
 
 int32_t DISP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t Transparency)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -374,11 +364,11 @@ int32_t DISP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t
 
 int32_t DISP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_t Address)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -397,11 +387,11 @@ int32_t DISP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_
 
 int32_t DISP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -427,11 +417,11 @@ int32_t DISP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t
 
 int32_t DISP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t Color)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -453,11 +443,11 @@ int32_t DISP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t
 
 int32_t DISP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
@@ -478,11 +468,11 @@ int32_t DISP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex)
 
 int32_t DISP_LCD_GetXSize(uint32_t Instance, uint32_t *XSize)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else if(Lcd_Drv->GetXSize != NULL)
   {
@@ -494,11 +484,11 @@ int32_t DISP_LCD_GetXSize(uint32_t Instance, uint32_t *XSize)
 
 int32_t DISP_LCD_GetYSize(uint32_t Instance, uint32_t *YSize)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else if(Lcd_Drv->GetYSize != NULL)
   {
@@ -514,17 +504,17 @@ int32_t DISP_LCD_DisplayOn(uint32_t Instance)
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
-    if(Lcd_Drv->DisplayOn(Lcd_CompObj) != BSP_ERROR_NONE)
+    if(Lcd_Drv->DisplayOn(Lcd_CompObj) != DRV_ERR_NONE)
     {
-      ret = BSP_ERROR_PERIPH_FAILURE;
+      ret = DRV_ERROR_PERIPH_FAILURE;
     }
     else
     {
-      ret = BSP_ERROR_NONE;
+      ret = DRV_ERR_NONE;
     }
   }
 
@@ -537,17 +527,17 @@ int32_t DISP_LCD_DisplayOff(uint32_t Instance)
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
-    if(Lcd_Drv->DisplayOff(Lcd_CompObj) != BSP_ERROR_NONE)
+    if(Lcd_Drv->DisplayOff(Lcd_CompObj) != DRV_ERR_NONE)
     {
-      ret = BSP_ERROR_PERIPH_FAILURE;
+      ret = DRV_ERROR_PERIPH_FAILURE;
     }
     else
     {
-      ret = BSP_ERROR_NONE;
+      ret = DRV_ERR_NONE;
     }
   }
 
@@ -556,17 +546,17 @@ int32_t DISP_LCD_DisplayOff(uint32_t Instance)
 
 int32_t DISP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
-    if(Lcd_Drv->SetBrightness(Lcd_CompObj, Brightness) != BSP_ERROR_NONE)
+    if(Lcd_Drv->SetBrightness(Lcd_CompObj, Brightness) != DRV_ERR_NONE)
     {
-      ret = BSP_ERROR_PERIPH_FAILURE;
+      ret = DRV_ERROR_PERIPH_FAILURE;
     }
   }
 
@@ -575,17 +565,17 @@ int32_t DISP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness)
 
 int32_t DISP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Instance >= LCD_INSTANCES_NBR)
   {
-    ret = BSP_ERROR_WRONG_PARAM;
+    ret = DRV_ERROR_WRONG_PARAM;
   }
   else
   {
-    if(Lcd_Drv->GetBrightness(Lcd_CompObj, Brightness) != BSP_ERROR_NONE)
+    if(Lcd_Drv->GetBrightness(Lcd_CompObj, Brightness) != DRV_ERR_NONE)
     {
-      ret = BSP_ERROR_PERIPH_FAILURE;
+      ret = DRV_ERROR_PERIPH_FAILURE;
     }
   }
 
@@ -594,7 +584,7 @@ int32_t DISP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness)
 
 int32_t DISP_LCD_DrawBitmap(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pBmp)
 {
-  int32_t ret = BSP_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
   uint32_t index, width, height, bit_pixel;
   uint32_t Address;
   uint32_t input_color_mode;
@@ -680,7 +670,7 @@ int32_t DISP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, ui
     }
   }
 #endif
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 int32_t DISP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color)
@@ -697,7 +687,7 @@ int32_t DISP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint
   }
   LL_FillBuffer(Instance, (uint32_t *)Xaddress, Length, 1, 0, Color);
 
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 int32_t DISP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Length, uint32_t Color)
@@ -714,7 +704,7 @@ int32_t DISP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint
   }
  LL_FillBuffer(Instance, (uint32_t *)Xaddress, 1, Length, (Lcd_Ctx[Instance].XSize - 1U), Color);
 
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 int32_t DISP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t Color)
@@ -727,7 +717,7 @@ int32_t DISP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
   /* Fill the rectangle */
  LL_FillBuffer(Instance, (uint32_t *)Xaddress, Width, Height, (Lcd_Ctx[Instance].XSize - Width), Color);
 
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 int32_t DISP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t *Color)
@@ -743,7 +733,7 @@ int32_t DISP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint
     *Color = *(__IO uint16_t*) (hlcd_ltdc->LayerCfg[Lcd_Ctx[Instance].ActiveLayer].FBStartAdress + (2U*(Ypos*Lcd_Ctx[Instance].XSize + Xpos)));
   }
 
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 int32_t DISP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Color)
@@ -759,7 +749,7 @@ int32_t DISP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uin
     *(__IO uint16_t*) (hlcd_ltdc->LayerCfg[Lcd_Ctx[Instance].ActiveLayer].FBStartAdress + (2U*(Ypos*Lcd_Ctx[Instance].XSize + Xpos))) = Color;
   }
 
-  return BSP_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 static volatile int FlagDmaTransmitEnd = 0;
