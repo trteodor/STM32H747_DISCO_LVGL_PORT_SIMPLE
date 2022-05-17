@@ -12,27 +12,14 @@
 #include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 
-#include "../Components/Common/ts.h"
 /* Include TouchScreen component driver */
 #include "../Components/ft6x06/ft6x06.h"
 
-/** @addtogroup BSP
-  * @{
-  */
 
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
+#define FT6X06_AUTO_CALIBRATION_ENABLED      0U
+#define FT6X06_MAX_X_LENGTH                  800U
+#define FT6X06_MAX_Y_LENGTH                  480U
 
-/** @addtogroup STM32H747I_DISCO_TS
-  * @{
-  */
-
- /** @defgroup STM32H747I_DISCO_TS_Exported_Constants Exported Constants
-   * @{
-   */
-/** @brief With FT6206 : maximum 2 touches detected simultaneously
-  */
 #define TS_INSTANCES_NBR            1U
 
 #ifndef USE_TS_MULTI_TOUCH
@@ -88,13 +75,26 @@
 #define GESTURE_ID_ZOOM_OUT     0x06U /*!< Gesture Zoom Out */
 #define GESTURE_ID_NB_MAX       0x07U /*!< max number of gesture id */
 #endif /* (USE_TS_GESTURE == 1) */
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_TS_Exported_Types  Exported Types
-  * @{
-  */
+
+typedef struct
+{
+  int32_t ( *Init                 ) (void *);
+  int32_t ( *DeInit               ) (void *);
+  int32_t ( *GestureConfig        ) (void *, void*);
+  int32_t ( *ReadID               ) (void *, uint32_t *);
+  int32_t ( *GetState             ) (void *, void*);
+  int32_t ( *GetMultiTouchState   ) (void *, void*);
+  int32_t ( *GetGesture           ) (void *, void*);
+  int32_t ( *GetCapabilities      ) (void *, void*);
+  int32_t ( *EnableIT             ) (void *);
+  int32_t ( *DisableIT            ) (void *);
+  int32_t ( *ClearIT              ) (void *);
+  int32_t ( *ITStatus             ) (void *);
+}TS_Drv_t;
+
+
+
 typedef struct
 {
   uint32_t   Width;                  /* Screen Width */
@@ -153,11 +153,6 @@ typedef struct
   uint32_t  DistanceZoom;
 }TS_Gesture_Config_t;
 
-/**
- *  @brief TS_TouchEventTypeDef
- *  Define Possible touch events kind as returned values
- *  by touch screen IC Driver.
- */
 typedef enum
 {
   TOUCH_EVENT_NO_EVT        = 0x00, /*!< Touch Event : undetermined */
@@ -168,22 +163,10 @@ typedef enum
 } TS_TouchEventTypeDef;
 #endif /* (USE_TS_GESTURE == 1) */
 
-/**
-  * @}
-  */
 
-/** @addtogroup STM32H747I_DISCO_TS_Exported_Variables
-  * @{
-  */
 extern TS_Ctx_t            Ts_Ctx[];
 extern void               *Ts_CompObj[TS_INSTANCES_NBR];
-/**
-  * @}
-  */
 
-/** @addtogroup STM32H747I_DISCO_TS_Exported_Functions
-  * @{
-  */
 int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init);
 int32_t BSP_TS_DeInit(uint32_t Instance);
 int32_t BSP_TS_EnableIT(uint32_t Instance);
@@ -201,5 +184,35 @@ int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation);
 int32_t BSP_TS_GetCapabilities(uint32_t Instance, TS_Capabilities_t *Capabilities);
 void    BSP_TS_Callback(uint32_t Instance);
 void    BSP_TS_IRQHandler(uint32_t Instance);
+
+
+
+extern I2C_HandleTypeDef *hbus_i2c4;
+
+int32_t BSP_I2C4_Init(void);
+int32_t BSP_I2C4_DeInit(void);
+int32_t BSP_I2C4_WriteReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
+int32_t BSP_I2C4_ReadReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
+int32_t BSP_I2C4_WriteReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
+int32_t BSP_I2C4_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length);
+int32_t BSP_I2C4_IsReady(uint16_t DevAddr, uint32_t Trials);
+int32_t BSP_GetTick(void);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #endif /* INC_TOUCHC_FT6X06_H_ */

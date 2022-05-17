@@ -1,94 +1,8 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_qspi.c
-  * @author  MCD Application Team
-  * @brief   This file includes a standard driver for the MT25TL01G QSPI
-  *          memory mounted on STM32H747I-DISCO board.
-    @verbatim
-  How To use this driver:
-  -----------------------
-   - This driver is used to drive the MT25TL01G QSPI external
-       memory mounted on STM32H747I-DISCO board.
+#include <ExtFlash_qspi.h>
 
-   - This driver need a specific component driver (MT25TL01G) to be included with.
-
-  Driver description:
-  -------------------
-   - Initialization steps:
-       + Initialize the QPSI external memory using the BSP_QSPI_Init() function. This
-            function includes the MSP layer hardware resources initialization and the
-            QSPI interface with the external memory.
-         STR and DTR transfer rates are supported.
-         SPI, SPI 2-IO, SPI-4IO and QPI modes are supported
-
-   - QSPI memory operations
-       + QSPI memory can be accessed with read/write operations once it is
-            initialized.
-            Read/write operation can be performed with AHB access using the functions
-            BSP_QSPI_Read()/BSP_QSPI_Write().
-       + The function BSP_QSPI_GetInfo() returns the configuration of the QSPI memory.
-            (see the QSPI memory data sheet)
-       + Perform erase block operation using the function BSP_QSPI_EraseBlock() and by
-            specifying the block address. You can perform an erase operation of the whole
-            chip by calling the function BSP_QSPI_EraseChip().
-       + The function BSP_QSPI_GetStatus() returns the current status of the QSPI memory.
-            (see the QSPI memory data sheet)
-       + The function BSP_QSPI_EnableMemoryMappedMode enables the QSPI memory mapped mode
-       + The function BSP_QSPI_DisableMemoryMappedMode disables the QSPI memory mapped mode
-       + The function BSP_QSPI_ConfigFlash() allow to configure the QSPI mode and transfer rate
-
-  Note:
-  --------
-    Regarding the "Instance" parameter, needed for all functions, it is used to select
-    an QSPI instance. On the STM32H747I_DISCO board, there's one instance. Then, this
-    parameter should be 0.
-
-  @endverbatim
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-
-/* Includes ------------------------------------------------------------------*/
-#include "stm32h747i_discovery_qspi.h"
-
-/** @addtogroup BSP
-  * @{
-  */
-
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
-
-/** @defgroup STM32H747I_DISCO_QSPI QSPI
-  * @{
-  */
-
-/* Private variables ---------------------------------------------------------*/
-
-/** @defgroup STM32H747I_DISCO_QSPI_Exported_Variables Exported Variables
-  * @{
-  */
 QSPI_HandleTypeDef BSP_hqspi;
 BSP_QSPI_Ctx_t     QSPI_Ctx[QSPI_INSTANCES_NUMBER];
-/**
-  * @}
-  */
 
-/* Private functions ---------------------------------------------------------*/
-
-/** @defgroup STM32H747I_DISCO_QSPI_Private_Functions Private Functions
-  * @{
-  */
 static void QSPI_MspInit(QSPI_HandleTypeDef *BSP_hqspi);
 static void QSPI_MspDeInit(QSPI_HandleTypeDef *hSspi);
 static int32_t QSPI_ResetMemory(uint32_t Instance);
@@ -1044,21 +958,4 @@ static int32_t QSPI_DummyCyclesCfg(uint32_t Instance)
   /* Return BSP status */
   return ret;
 }
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 

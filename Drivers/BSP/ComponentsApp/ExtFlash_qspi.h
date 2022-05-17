@@ -1,50 +1,11 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_qspi.h
-  * @author  MCD Application Team
-  * @brief   This file contains the common defines and functions prototypes for
-  *          the stm32h747i_discovery_qspi.c driver.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2018 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
-/* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef STM32H747I_DISCO_QSPI_H
 #define STM32H747I_DISCO_QSPI_H
-
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h747i_discovery_conf.h"
 #include "stm32h747i_discovery_errno.h"
 #include "../Components/mt25tl01g/mt25tl01g.h"
 
-/** @addtogroup BSP
-  * @{
-  */
-
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
-
-/** @addtogroup STM32H747I_DISCO_QSPI
-  * @{
-  */
-/* Exported types ------------------------------------------------------------*/
-/** @defgroup STM32H747I_DISCO_QSPI_Exported_Types Exported Types
-  * @{
-  */
 #define BSP_QSPI_Info_t                 MT25TL01G_Info_t
 #define BSP_QSPI_Interface_t            MT25TL01G_Interface_t
 #define BSP_QSPI_Transfer_t             MT25TL01G_Transfer_t
@@ -90,23 +51,7 @@ typedef struct
   uint32_t SampleShifting;
   uint32_t DualFlashMode;
 }MX_QSPI_Init_t;
-#if (USE_HAL_QSPI_REGISTER_CALLBACKS == 1)
-typedef struct
-{
- void(*pMspInitCb)(pQSPI_CallbackTypeDef);
- void(*pMspDeInitCb)(pQSPI_CallbackTypeDef);
-}BSP_QSPI_Cb_t;
-#endif /* (USE_HAL_QSPI_REGISTER_CALLBACKS == 1) */
 
-/**
-  * @}
-  */
-
-/* Exported constants --------------------------------------------------------*/
-/** @defgroup STM32H747I_DISCO_QSPI_Exported_Constants Exported Constants
-  * @{
-  */
-/* QSPI instances number */
 #define QSPI_INSTANCES_NUMBER         1U
 
 /* Definition for QSPI modes */
@@ -187,29 +132,11 @@ typedef struct
 /* QSPI Base Address */
 #define QSPI_BASE_ADDRESS          0x90000000
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32H747I_DISCO_QSPI_Exported_Variables
-  * @{
-  */
 extern QSPI_HandleTypeDef BSP_hqspi;
 extern BSP_QSPI_Ctx_t     QSPI_Ctx[];
-/**
-  * @}
-  */
 
-/* Exported functions --------------------------------------------------------*/
-/** @addtogroup STM32H747I_DISCO_QSPI_Exported_Functions
-  * @{
-  */
 int32_t BSP_QSPI_Init(uint32_t Instance, BSP_QSPI_Init_t *Init);
 int32_t BSP_QSPI_DeInit(uint32_t Instance);
-#if (USE_HAL_QSPI_REGISTER_CALLBACKS == 1)
-int32_t BSP_QSPI_RegisterMspCallbacks (uint32_t Instance, BSP_QSPI_Cb_t *CallBacks);
-int32_t BSP_QSPI_RegisterDefaultMspCallbacks (uint32_t Instance);
-#endif /* (USE_HAL_QSPI_REGISTER_CALLBACKS == 1) */
 int32_t BSP_QSPI_Read(uint32_t Instance, uint8_t *pData, uint32_t ReadAddr, uint32_t Size);
 int32_t BSP_QSPI_Write(uint32_t Instance, uint8_t *pData, uint32_t WriteAddr, uint32_t Size);
 int32_t BSP_QSPI_EraseBlock(uint32_t Instance, uint32_t BlockAddress, BSP_QSPI_Erase_t BlockSize);
@@ -224,25 +151,6 @@ int32_t BSP_QSPI_ConfigFlash(uint32_t Instance, BSP_QSPI_Interface_t Mode, BSP_Q
 /* These functions can be modified in case the current settings
    need to be changed for specific application needs */
 HAL_StatusTypeDef MX_QSPI_Init(QSPI_HandleTypeDef *BSP_hqspi, MX_QSPI_Init_t *Config);
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-#ifdef __cplusplus
-}
-#endif
 
 #endif /*STM32H747I_DISCO_QSPI_H */
 

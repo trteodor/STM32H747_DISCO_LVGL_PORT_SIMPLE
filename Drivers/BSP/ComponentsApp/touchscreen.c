@@ -19,6 +19,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "TouchC_ft6x06.h"
 
 /** @addtogroup STM32H7xx_HAL_Examples
   * @{
@@ -207,8 +208,8 @@ void Touchscreen_demo2(void)
   uint32_t ts_status = BSP_ERROR_NONE;
   uint32_t x_size, y_size;
 
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 
   hTS->Width = x_size;
   hTS->Height = y_size;
@@ -232,18 +233,12 @@ void Touchscreen_demo2(void)
     Touchscreen_SetHint_Demo(TOUCHSCREEN_DEMO_2);
   } /* of if(status == BSP_ERROR_NONE) */
 
-//  while (1)
-//  {
-//    Touchscreen_Handle_NewTouch();
-//
-//    if(CheckForUserInput() > 0)
-//    {
-//      ButtonState = 0;
-//
-//      return;
-//    }
-//    HAL_Delay(100);
-//  }
+  while (1)
+  {
+    Touchscreen_Handle_NewTouch();
+
+    HAL_Delay(100);
+  }
 }
 
 
@@ -311,8 +306,8 @@ static uint32_t Touchscreen_Handle_NewTouch(void)
   uint8_t lcd_string[TOUCH_INFO_STRING_SIZE] = "";
   uint32_t x_size, y_size;
 
-  BSP_LCD_GetXSize(0, &x_size);
-  BSP_LCD_GetYSize(0, &y_size);
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
 
   /* Check in polling mode in touch screen the touch status and coordinates */
   /* of touches if touch occurred                                           */

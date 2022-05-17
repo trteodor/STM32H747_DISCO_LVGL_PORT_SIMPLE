@@ -201,7 +201,7 @@ int32_t ft6x06_gest_id(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : TD_STATUS
 * Address       : 0X02
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 *******************************************************************************/
 #define   FT6X06_TD_STATUS_BIT_MASK        0x0FU
@@ -409,7 +409,7 @@ int32_t ft6x06_th_diff(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : CTRL
 * Address       : 0X86
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x01
 *******************************************************************************/
@@ -420,7 +420,7 @@ int32_t ft6x06_ctrl(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : TIMEENTERMONITOR
 * Address       : 0X87
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x0A
 *******************************************************************************/
@@ -431,7 +431,7 @@ int32_t ft6x06_time_enter_monitor(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : PERIODACTIVE
 * Address       : 0X88
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : None
 *******************************************************************************/
@@ -442,7 +442,7 @@ int32_t ft6x06_period_active(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : PERIODMONITOR
 * Address       : 0X89
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x28
 *******************************************************************************/
@@ -453,7 +453,7 @@ int32_t ft6x06_period_monitor(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : RADIAN_VALUE
 * Address       : 0X91
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x0A
 *******************************************************************************/
@@ -464,7 +464,7 @@ int32_t ft6x06_radian_value(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : OFFSET_LEFT_RIGHT
 * Address       : 0X92
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x19
 *******************************************************************************/
@@ -475,7 +475,7 @@ int32_t ft6x06_offset_left_right(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : OFFSET_UP_DOWN
 * Address       : 0X93
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x19
 *******************************************************************************/
@@ -486,18 +486,18 @@ int32_t ft6x06_offset_up_down(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : DISTANCE_LEFT_RIGHT
 * Address       : 0X94
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x19
 *******************************************************************************/
 #define   FT6X06_DISTANCE_LR_BIT_MASK           0xFFU
 #define   FT6X06_DISTANCE_LR_BIT_POSITION       0U
 int32_t  ft6x06_disatnce_left_right(ft6x06_ctx_t *ctx, uint8_t value);
-        
+
 /*******************************************************************************
 * Register      : DISTANCE_UP_DOWN
 * Address       : 0X95
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x19
 *******************************************************************************/
@@ -508,7 +508,7 @@ int32_t ft6x06_distance_up_down(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : DISTANCE_ZOOM
 * Address       : 0X96
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x32
 *******************************************************************************/
@@ -519,7 +519,7 @@ int32_t ft6x06_distance_zoom(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : LIB_VER_H
 * Address       : 0XA1
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 * Default value : None
 *******************************************************************************/
@@ -530,7 +530,7 @@ int32_t ft6x06_lib_ver_high(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : LIB_VER_L
 * Address       : 0XA2
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 * Default value : None
 *******************************************************************************/
@@ -541,7 +541,7 @@ int32_t ft6x06_lib_ver_low(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : CIPHER
 * Address       : 0XA3
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 * Default value : 0x06
 *******************************************************************************/
@@ -552,7 +552,7 @@ int32_t ft6x06_cipher(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : G_MODE
 * Address       : 0XA4
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x01
 *******************************************************************************/
@@ -563,7 +563,7 @@ int32_t ft6x06_g_mode(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : PWR_MODE
 * Address       : 0XA5
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x00
 *******************************************************************************/
@@ -574,7 +574,7 @@ int32_t ft6x06_pwr_mode(ft6x06_ctx_t *ctx, uint8_t value);
 /*******************************************************************************
 * Register      : FIRMID
 * Address       : 0XA6
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 * Default value : None
 *******************************************************************************/
@@ -585,7 +585,7 @@ int32_t ft6x06_firm_id(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : FOCALTECH_ID
 * Address       : 0XA8
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 * Default value : 0x11
 *******************************************************************************/
@@ -596,7 +596,7 @@ int32_t ft6x06_chip_id(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : RELEASE_CODE_ID
 * Address       : 0XAF
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : R
 * Default value : 0x001
 *******************************************************************************/
@@ -607,7 +607,7 @@ int32_t ft6x06_release_code_id(ft6x06_ctx_t *ctx, uint8_t *value);
 /*******************************************************************************
 * Register      : STATE
 * Address       : 0XBC
-* Bit Group Name: 
+* Bit Group Name:
 * Permission    : RW
 * Default value : 0x01
 *******************************************************************************/

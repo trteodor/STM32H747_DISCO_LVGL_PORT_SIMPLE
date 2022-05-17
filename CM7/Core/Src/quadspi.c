@@ -41,8 +41,8 @@ void MX_QUADSPI_Init(void)
   hqspi.Init.ClockPrescaler = 3;
   hqspi.Init.FifoThreshold = 1;
   hqspi.Init.SampleShifting = QSPI_SAMPLE_SHIFTING_NONE;
-  hqspi.Init.FlashSize = 1;
-  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_1_CYCLE;
+  hqspi.Init.FlashSize = 26;
+  hqspi.Init.ChipSelectHighTime = QSPI_CS_HIGH_TIME_4_CYCLE;
   hqspi.Init.ClockMode = QSPI_CLOCK_MODE_0;
   hqspi.Init.DualFlash = QSPI_DUALFLASH_ENABLE;
   if (HAL_QSPI_Init(&hqspi) != HAL_OK)
@@ -63,7 +63,7 @@ void HAL_QSPI_MspInit(QSPI_HandleTypeDef* qspiHandle)
   if(qspiHandle->Instance==QUADSPI)
   {
   /* USER CODE BEGIN QUADSPI_MspInit 0 */
-////
+
   /* USER CODE END QUADSPI_MspInit 0 */
 
   /** Initializes the peripherals clock
@@ -144,8 +144,11 @@ void HAL_QSPI_MspInit(QSPI_HandleTypeDef* qspiHandle)
     GPIO_InitStruct.Alternate = GPIO_AF9_QUADSPI;
     HAL_GPIO_Init(QSPI_BK1_IO0_GPIO_Port, &GPIO_InitStruct);
 
+    /* QUADSPI interrupt Init */
+    HAL_NVIC_SetPriority(QUADSPI_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(QUADSPI_IRQn);
   /* USER CODE BEGIN QUADSPI_MspInit 1 */
-////
+//////
   /* USER CODE END QUADSPI_MspInit 1 */
   }
 }
@@ -183,6 +186,8 @@ void HAL_QSPI_MspDeInit(QSPI_HandleTypeDef* qspiHandle)
 
     HAL_GPIO_DeInit(QSPI_BK1_IO0_GPIO_Port, QSPI_BK1_IO0_Pin);
 
+    /* QUADSPI interrupt Deinit */
+    HAL_NVIC_DisableIRQ(QUADSPI_IRQn);
   /* USER CODE BEGIN QUADSPI_MspDeInit 1 */
 
   /* USER CODE END QUADSPI_MspDeInit 1 */

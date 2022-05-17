@@ -21,6 +21,7 @@
 #include "main.h"
 #include "dma2d.h"
 #include "dsihost.h"
+#include "i2c.h"
 #include "ltdc.h"
 #include "mdma.h"
 #include "quadspi.h"
@@ -153,6 +154,7 @@ Error_Handler();
   MX_QUADSPI_Init();
   MX_MDMA_Init();
   MX_DMA2D_Init();
+  MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
   /* Configure the Wakeup push-buttgiton in EXTI Mode */
   BSP_PB_Init(BUTTON_WAKEUP, BUTTON_MODE_GPIO);
@@ -166,15 +168,22 @@ Error_Handler();
   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-//  QSPI_demo();
-//  HAL_Delay(2000);
+  QSPI_demo();
+  HAL_Delay(2000);
 ////  SDRAM_demo();
 //  SDRAM_DMA_demo();
 //  HAL_Delay(3000);
-//  LetsDrawSometging();
+  LetsDrawSometging();
+//#define  CIRCLE_RADIUS        40
+//#define  LINE_LENGHT          30
+/* Private macro -------------------------------------------------------------*/
+//#define  CIRCLE_XPOS(i)       ((i * 800) / 5)
+//#define  CIRCLE_YPOS(i)       (480 - CIRCLE_RADIUS - 60)
+
+//  UTIL_LCD_FillCircle(CIRCLE_XPOS(1), CIRCLE_YPOS(1), CIRCLE_RADIUS, UTIL_LCD_COLOR_BLUE);
 //  HAL_Delay(5000);
 
-  Touchscreen_demo1();
+  Touchscreen_demo2();
 
 static uint32_t LedTime =0;
   /* USER CODE END 2 */

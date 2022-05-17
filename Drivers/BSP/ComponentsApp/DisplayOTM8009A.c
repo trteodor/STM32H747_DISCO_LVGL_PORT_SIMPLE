@@ -82,7 +82,10 @@ static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDs
  *INIT SECTION START
  **************************************************************************************************************************
  */
-
+int32_t DISP_GetTick(void)
+{
+  return (int32_t)HAL_GetTick();
+}
 
 int32_t DISP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
 
@@ -131,7 +134,7 @@ int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
 
   /* Configure the audio driver */
   IOCtx.Address     = 0;
-  IOCtx.GetTick     = BSP_GetTick;
+  IOCtx.GetTick     = DISP_GetTick;
   IOCtx.WriteReg    = DSI_IO_Write;
   IOCtx.ReadReg     = DSI_IO_Read;
 
@@ -788,14 +791,12 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
 //  /*Temporary - wait for previous transmit end..*/
   /************************************************************************************************/
   /*Can't use it because buffers aren't static in this LCD libraries attached from ST*/
+  /*I have to wait... on transmission end*/
   /************************************************************************************************/
-//  while(FlagDmaTransmitEnd == 1)
-//  {
-//
-//  }
-//  FlagDmaTransmitEnd = 1;
-//  /*Register the callback...*/
-//  hlcd_dma2d->XferCpltCallback = DMA2D_TransmitCpltCallBack;
+
+  /*Register the callback...*/
+  hlcd_dma2d->XferCpltCallback = DMA2D_TransmitCpltCallBack;
+  FlagDmaTransmitEnd = 1;
 
   if(HAL_DMA2D_Init(hlcd_dma2d) == HAL_OK)
   {
@@ -805,19 +806,25 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
       {
 
         /* Polling For DMA transfer */
-         (void)HAL_DMA2D_PollForTransfer(hlcd_dma2d, 25);
+//         (void)HAL_DMA2D_PollForTransfer(hlcd_dma2d, 25);
+
+         while(FlagDmaTransmitEnd == 1)
+         {
+
+         }
+
       }
     }
   }
 }
 
-//void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d)
-//{
-//  /* Prevent unused argument(s) compilation warning */
-//  UNUSED(hdma2d);
-//  FlagDmaTransmitEnd = 0;
-//
-//}
+void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d)
+{
+  /* Prevent unused argument(s) compilation warning */
+  UNUSED(hdma2d);
+  FlagDmaTransmitEnd = 0;
+
+}
 
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode)
 {

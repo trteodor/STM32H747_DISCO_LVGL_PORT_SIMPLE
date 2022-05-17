@@ -1,153 +1,70 @@
-/**
-  ******************************************************************************
-  * @file    stm32h747i_discovery_ts.c
-  * @author  MCD Application Team
-  * @brief   This file provides a set of functions needed to manage the Touch
-  *          Screen on STM32H747I_DISCO board.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; Copyright (c) 2019 STMicroelectronics.
-  * All rights reserved.</center></h2>
-  *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
-  *
-  ******************************************************************************
-  */
+/*
+ * TouchC_ft6x06.c
+ *
+ *  Created on: May 16, 2022
+ *      Author: teodor
+ */
 
-/* File Info : -----------------------------------------------------------------
-                                   User NOTES
-1. How To use this driver:
---------------------------
-   - This driver is used to drive the FT6X06 touch screen module
-     mounted over TFT-LCD on the STM32H747I_DISCO board.
-
-2. Driver description:
----------------------
-  + Initialization steps:
-     o Initialize the TS module using the BSP_TS_Init() function. This
-       function includes the MSP layer hardware resources initialization and the
-       communication layer configuration to start the TS use. The LCD size properties
-       (x and y) are passed as parameters.
-     o If TS interrupt mode is desired, you must configure the TS interrupt mode
-       by calling the function BSP_TS_ITConfig(). The TS interrupt mode is generated
-       as an external interrupt whenever a touch is detected.
-       The interrupt mode internally uses the IO functionalities driver driven by
-       the IO expander, to configure the IT line.
-
-  + Touch screen use
-     o The touch screen state is captured whenever the function BSP_TS_GetState() is
-       used. This function returns information about the last LCD touch occurred
-       in the TS_State_t structure.
-     o The IT is handled using the corresponding external interrupt IRQ handler,
-       the user IT callback treatment is implemented on the same external interrupt
-       callback.
-
-------------------------------------------------------------------------------*/
-
-/* Includes ------------------------------------------------------------------*/
-#include "stm32h747i_discovery_ts.h"
-#include "stm32h747i_discovery_bus.h"
+#include "TouchC_ft6x06.h"
+#include "main.h"
 
 
-/** @addtogroup BSP
-  * @{
-  */
+typedef struct
+{
+  uint32_t freq;       /* Frequency in Hz */
+  uint32_t freq_min;   /* Minimum frequency in Hz */
+  uint32_t freq_max;   /* Maximum frequency in Hz */
+  uint32_t hddat_min;  /* Minimum data hold time in ns */
+  uint32_t vddat_max;  /* Maximum data valid time in ns */
+  uint32_t sudat_min;  /* Minimum data setup time in ns */
+  uint32_t lscl_min;   /* Minimum low period of the SCL clock in ns */
+  uint32_t hscl_min;   /* Minimum high period of SCL clock in ns */
+  uint32_t trise;      /* Rise time in ns */
+  uint32_t tfall;      /* Fall time in ns */
+  uint32_t dnf;        /* Digital noise filter coefficient */
+} I2C_Charac_t;
 
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
+typedef struct
+{
+  uint32_t presc;      /* Timing prescaler */
+  uint32_t tscldel;    /* SCL delay */
+  uint32_t tsdadel;    /* SDA delay */
+  uint32_t sclh;       /* SCL high period */
+  uint32_t scll;       /* SCL low period */
+} I2C_Timings_t;
 
-/** @defgroup STM32H747I_DISCO_TS TS
-  * @{
-  */
 
-/** @defgroup STM32H747I_DISCO_TS_Private_Types_Definitions Private Types Definitions
-  * @{
-  */
+I2C_HandleTypeDef *hbus_i2c;
+TS_Ctx_t           Ts_Ctx[TS_INSTANCES_NBR] = {0};
 typedef void (* BSP_EXTI_LineCallback) (void);
-/**
-  * @}
-  */
+void               *Ts_CompObj[TS_INSTANCES_NBR] = {0};
 
-/** @defgroup STM32H747I_DISCO_TS_Private_Macros Private Macros
-  * @{
-  */
-#define TS_MIN(a,b) ((a > b) ? b : a)
-/**
-  * @}
-  */
-/** @defgroup STM32H747I_DISCO_TS_Private_Function_Prototypes Private Function Prototypes
-  * @{
-  */
+
+int32_t BSP_I2C4_DeInit(void);
+int32_t TS_GetTick(void);
+static int32_t I2C4_WriteReg(uint16_t DevAddr, uint16_t MemAddSize, uint16_t Reg, uint8_t *pData, uint16_t Length);
+static int32_t I2C4_ReadReg(uint16_t DevAddr, uint16_t MemAddSize, uint16_t Reg, uint8_t *pData, uint16_t Length);
 static int32_t FT6X06_Probe(uint32_t Instance);
 static void TS_EXTI_Callback(void);
-/**
-  * @}
-  */
-
-/** @defgroup STM32H747I_DISCO_TS_Privates_Variables Privates Variables
-  * @{
-  */
 static EXTI_HandleTypeDef hts_exti[TS_INSTANCES_NBR] = {0};
 static TS_Drv_t           *Ts_Drv = NULL;
 
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_TS_Exported_Variables Exported Variables
-  * @{
-  */
-TS_Ctx_t           Ts_Ctx[TS_INSTANCES_NBR] = {0};
-void               *Ts_CompObj[TS_INSTANCES_NBR] = {0};
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_TS_Exported_Functions Exported Functions
-  * @{
-  */
-/**
-  * @brief  Initializes and configures the touch screen functionalities and
-  *         configures all necessary hardware resources (GPIOs, I2C, clocks..).
-  * @param  Instance TS instance. Could be only 0.
-  * @param  TS_Init  TS Init structure
-  * @retval BSP status
-  */
 int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init)
 {
-  int32_t ret = BSP_ERROR_NONE;
 
-  if((Instance >=TS_INSTANCES_NBR) || (TS_Init->Width == 0U) ||( TS_Init->Width > TS_MAX_WIDTH) ||\
-                         (TS_Init->Height == 0U) ||( TS_Init->Height > TS_MAX_HEIGHT) ||\
-                         (TS_Init->Accuracy > TS_MIN((TS_Init->Width), (TS_Init->Height))))
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    if(FT6X06_Probe(Instance) != BSP_ERROR_NONE)
-    {
-      ret = BSP_ERROR_NO_INIT;
-    }
-    else
-    {
+    FT6X06_Probe(Instance);
+
       TS_Capabilities_t Capabilities;
       Ts_Ctx[Instance].Width             = TS_Init->Width;
       Ts_Ctx[Instance].Height            = TS_Init->Height;
       Ts_Ctx[Instance].Orientation       = TS_Init->Orientation;
       Ts_Ctx[Instance].Accuracy          = TS_Init->Accuracy;
 
-      if (Ts_Drv->GetCapabilities(Ts_CompObj[Instance], &Capabilities) < 0)
-      {
-        ret = BSP_ERROR_COMPONENT_FAILURE;
-      }
-      else
-      {
+      Ts_Drv->GetCapabilities(Ts_CompObj[Instance], &Capabilities);
+
+
         /* Store maximum X and Y on context */
         Ts_Ctx[Instance].MaxX = Capabilities.MaxXl;
         Ts_Ctx[Instance].MaxY = Capabilities.MaxYl;
@@ -157,69 +74,19 @@ int32_t BSP_TS_Init(uint32_t Instance, TS_Init_t *TS_Init)
           Ts_Ctx[Instance].PreviousX[i] = TS_Init->Width + TS_Init->Accuracy + 1U;
           Ts_Ctx[Instance].PreviousY[i] = TS_Init->Height + TS_Init->Accuracy + 1U;
         }
-      }
-    }
-  }
 
-  return ret;
+ return 0;
 }
 
-/**
-  * @brief  De-Initializes the touch screen functionalities
-  * @param  Instance TS instance. Could be only 0.
-  * @retval BSP status
-  */
-int32_t BSP_TS_DeInit(uint32_t Instance)
-{
-  int32_t ret = BSP_ERROR_NONE;
 
-  if(Instance >=TS_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    if(Ts_Drv->DeInit(Ts_CompObj[Instance]) < 0)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-    else
-    {
-      ret = BSP_ERROR_NONE;
-    }
-  }
-
-  return ret;
-}
-
-/**
-  * @brief  Get Touch Screen instance capabilities
-  * @param  Instance Touch Screen instance
-  * @param  Capabilities pointer to Touch Screen capabilities
-  * @retval BSP status
-  */
 int32_t BSP_TS_GetCapabilities(uint32_t Instance, TS_Capabilities_t *Capabilities)
 {
-  int32_t ret = BSP_ERROR_NONE;
 
-  if(Instance >=TS_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    (void)Ts_Drv->GetCapabilities(Ts_CompObj[Instance], Capabilities);
-    ret = BSP_ERROR_NONE;
-  }
+ (void)Ts_Drv->GetCapabilities(Ts_CompObj[Instance], Capabilities);
 
-  return ret;
+  return 0;
 }
 
-/**
-  * @brief  Configures and enables the touch screen interrupts.
-  * @param  Instance TS instance. Could be only 0.
-  * @retval BSP status
-  */
 int32_t BSP_TS_EnableIT(uint32_t Instance)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -261,74 +128,19 @@ int32_t BSP_TS_EnableIT(uint32_t Instance)
   return ret;
 }
 
-/**
-  * @brief  Disables the touch screen interrupts.
-  * @param  Instance TS instance. Could be only 0.
-  * @retval BSP status
-  */
-int32_t BSP_TS_DisableIT(uint32_t Instance)
-{
-  int32_t ret = BSP_ERROR_NONE;
-
-  GPIO_InitTypeDef gpio_init_structure;
-
-
-  if(Instance >=TS_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    gpio_init_structure.Pin = TS_INT_PIN;
-    HAL_GPIO_DeInit(TS_INT_GPIO_PORT,gpio_init_structure.Pin);
-    HAL_NVIC_DisableIRQ((IRQn_Type)(TS_INT_EXTI_IRQn));
-    if(Ts_Drv->DisableIT(Ts_CompObj[Instance]) != FT6X06_OK)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-    else
-    {
-      ret = BSP_ERROR_NONE;
-    }
-
-
-  }
-
-  return ret;
-}
-
-/**
-  * @brief  BSP TS Callback.
-  * @param  Instance  TS instance. Could be only 0.
-  * @retval None.
-  */
 __weak void BSP_TS_Callback(uint32_t Instance)
 {
-  /* Prevent unused argument(s) compilation warning */
   UNUSED(Instance);
-
-  /* This function should be implemented by the user application.
-     It is called into this driver when an event on TS touch detection */
 }
 
-/**
-  * @brief  Returns positions of a single touch screen.
-  * @param  Instance  TS instance. Could be only 0.
-  * @param  TS_State  Pointer to touch screen current state structure
-  * @retval BSP status
-  */
 int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State)
 {
   int32_t ret = BSP_ERROR_NONE;
+  UNUSED(ret);
   uint32_t x_oriented, y_oriented;
   uint32_t x_diff, y_diff;
 
-  if(Instance >= TS_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
+
     FT6X06_State_t state;
 
     /* Get each touch coordinates */
@@ -391,35 +203,22 @@ int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State)
       TS_State->TouchX = Ts_Ctx[Instance].PreviousX[0];
       TS_State->TouchY = Ts_Ctx[Instance].PreviousY[0];
     }
-  }
 
-  return ret;
+  return 0;
 }
 
 #if (USE_TS_MULTI_TOUCH > 0)
-/**
-  * @brief  Returns positions of multi touch screen.
-  * @param  Instance  TS instance. Could be only 0.
-  * @param  TS_State  Pointer to touch screen current state structure
-  * @retval BSP status
-  */
 int32_t BSP_TS_Get_MultiTouchState(uint32_t Instance, TS_MultiTouch_State_t *TS_State)
 {
-  int32_t ret = BSP_ERROR_NONE;
   uint32_t x_oriented[2], y_oriented[2];
   uint32_t x_diff, y_diff;
   uint32_t index;
-  if(Instance >= TS_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
+
     TS_MultiTouch_State_t state;
     /* Get each touch coordinates */
     if(Ts_Drv->GetMultiTouchState(Ts_CompObj[Instance], &state) < 0)
     {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
+
     }/* Check and update the number of touches active detected */
     else if(state.TouchDetected != 0U)
     {
@@ -481,44 +280,19 @@ int32_t BSP_TS_Get_MultiTouchState(uint32_t Instance, TS_MultiTouch_State_t *TS_
         TS_State->TouchY[index] = Ts_Ctx[Instance].PreviousY[index];
       }
     }
-  }
 
-  return ret;
+  return 0;
 }
 #endif /* USE_TS_MULTI_TOUCH > 1 */
 
 #if (USE_TS_GESTURE > 0)
-/**
-  * @brief  Update gesture Id following a touch detected.
-  * @param  Instance      TS instance. Could be only 0.
-  * @param  GestureConfig Pointer to gesture configuration structure
-  * @retval BSP status
-  */
+
 int32_t BSP_TS_GestureConfig(uint32_t Instance, TS_Gesture_Config_t *GestureConfig)
 {
-  int32_t ret = BSP_ERROR_NONE;
-
-  if(Instance >=TS_INSTANCES_NBR)
-  {
-    ret = BSP_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    if(Ts_Drv->GestureConfig(Ts_CompObj[Instance], GestureConfig) < 0)
-    {
-      ret = BSP_ERROR_COMPONENT_FAILURE;
-    }
-  }
-
-  return ret;
+	Ts_Drv->GestureConfig(Ts_CompObj[Instance], GestureConfig);
+	return 0;
 }
 
-/**
-  * @brief  Update gesture Id following a touch detected.
-  * @param  Instance   TS instance. Could be only 0.
-  * @param  GestureId  Pointer to gesture ID
-  * @retval BSP status
-  */
 int32_t BSP_TS_GetGestureId(uint32_t Instance, uint32_t *GestureId)
 {
   int32_t ret = BSP_ERROR_NONE;
@@ -570,52 +344,23 @@ int32_t BSP_TS_GetGestureId(uint32_t Instance, uint32_t *GestureId)
 }
 #endif /* USE_TS_GESTURE > 0 */
 
-/**
-  * @brief  Set TS orientation
-  * @param  Instance TS instance. Could be only 0.
-  * @param  Orientation Orientation to be set
-  * @retval BSP status
-  */
 int32_t BSP_TS_Set_Orientation(uint32_t Instance, uint32_t Orientation)
 {
   Ts_Ctx[Instance].Orientation = Orientation;
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  Get TS orientation
-  * @param  Instance TS instance. Could be only 0.
-  * @param  Orientation Current Orientation to be returned
-  * @retval BSP status
-  */
 int32_t BSP_TS_Get_Orientation(uint32_t Instance, uint32_t *Orientation)
 {
   *Orientation = Ts_Ctx[Instance].Orientation;
   return BSP_ERROR_NONE;
 }
 
-/**
-  * @brief  This function handles TS interrupt request.
-  * @param  Instance TS instance
-  * @retval None
-  */
 void BSP_TS_IRQHandler(uint32_t Instance)
 {
   HAL_EXTI_IRQHandler(&hts_exti[Instance]);
 }
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_TS_Private_Functions Private Functions
-  * @{
-  */
-
-/**
-  * @brief  Register Bus IOs if component ID is OK
-  * @param  Instance TS instance. Could be only 0.
-  * @retval BSP status
-  */
 static int32_t FT6X06_Probe(uint32_t Instance)
 {
   int32_t ret;
@@ -630,7 +375,7 @@ static int32_t FT6X06_Probe(uint32_t Instance)
   IOCtx.DeInit      = BSP_I2C4_DeInit;
   IOCtx.ReadReg     = BSP_I2C4_ReadReg;
   IOCtx.WriteReg    = BSP_I2C4_WriteReg;
-  IOCtx.GetTick     = BSP_GetTick;
+  IOCtx.GetTick     = TS_GetTick;
 
   for(i = 0; i < 2UL; i++)
   {
@@ -669,30 +414,127 @@ static int32_t FT6X06_Probe(uint32_t Instance)
 
   return ret;
 }
-/**
-  * @brief  TS EXTI touch detection callbacks.
-  * @retval None
-  */
+
 static void TS_EXTI_Callback(void)
 {
   BSP_TS_Callback(0);
 
 }
 
-/**
-  * @}
-  */
+int32_t TS_GetTick(void)
+{
+  return (int32_t)HAL_GetTick();
+}
 
-/**
-  * @}
-  */
+/*
+ ****************************************************
+ ****************************************************
+ ****************************************************
+ ****************************************************
+ I2C4 Section
+ */
 
-/**
-  * @}
-  */
+int32_t BSP_I2C4_Init(void)
+{
+  int32_t ret = BSP_ERROR_NONE;
 
-/**
-  * @}
-  */
+  hbus_i2c = &hi2c4;
 
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
+  hbus_i2c->Instance = I2C4;
+
+
+    if (HAL_I2C_GetState(hbus_i2c) == HAL_I2C_STATE_RESET)
+    {
+
+        MX_I2C4_Init();
+    }
+
+
+  return ret;
+}
+
+int32_t BSP_I2C4_WriteReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length)
+{
+  int32_t ret;
+
+  if(I2C4_WriteReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
+  {
+    ret = BSP_ERROR_NONE;
+  }
+  else
+  {
+    if( HAL_I2C_GetError(hbus_i2c) == HAL_I2C_ERROR_AF)
+    {
+      ret = BSP_ERROR_BUS_ACKNOWLEDGE_FAILURE;
+    }
+    else
+    {
+      ret =  BSP_ERROR_PERIPH_FAILURE;
+    }
+  }
+
+  return ret;
+}
+
+int32_t BSP_I2C4_ReadReg(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint16_t Length)
+{
+  int32_t ret;
+
+  if(I2C4_ReadReg(DevAddr, Reg, I2C_MEMADD_SIZE_8BIT, pData, Length) == 0)
+  {
+    ret = BSP_ERROR_NONE;
+  }
+  else
+  {
+    if( HAL_I2C_GetError(hbus_i2c) == HAL_I2C_ERROR_AF)
+    {
+      ret = BSP_ERROR_BUS_ACKNOWLEDGE_FAILURE;
+    }
+    else
+    {
+      ret =  BSP_ERROR_PERIPH_FAILURE;
+    }
+  }
+  return ret;
+}
+
+static int32_t I2C4_WriteReg(uint16_t DevAddr, uint16_t Reg, uint16_t MemAddSize, uint8_t *pData, uint16_t Length)
+{
+  if(HAL_I2C_Mem_Write(hbus_i2c, DevAddr, Reg, MemAddSize, pData, Length, 1000) == HAL_OK)
+  {
+    return BSP_ERROR_NONE;
+  }
+
+  return BSP_ERROR_BUS_FAILURE;
+}
+
+static int32_t I2C4_ReadReg(uint16_t DevAddr, uint16_t Reg, uint16_t MemAddSize, uint8_t *pData, uint16_t Length)
+{
+  if (HAL_I2C_Mem_Read(hbus_i2c, DevAddr, Reg, MemAddSize, pData, Length, 1000) == HAL_OK)
+  {
+    return BSP_ERROR_NONE;
+  }
+
+  return BSP_ERROR_BUS_FAILURE;
+}
+
+
+int32_t BSP_I2C4_DeInit(void)
+{
+  int32_t ret  = BSP_ERROR_NONE;
+
+    if (HAL_I2C_DeInit(hbus_i2c) != HAL_OK)
+    {
+      ret = BSP_ERROR_BUS_FAILURE;
+    }
+
+  return ret;
+}
+
+
+
+
+
+
+
+

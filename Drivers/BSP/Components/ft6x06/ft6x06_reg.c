@@ -70,17 +70,17 @@ int32_t  ft6x06_dev_mode_w(ft6x06_ctx_t *ctx, uint8_t value)
 {
   int32_t ret;
   uint8_t tmp;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_DEV_MODE_REG, &tmp, 1);
-  
+
   if(ret == 0)
   {
     tmp &= ~FT6X06_DEV_MODE_BIT_MASK;
     tmp |= value << FT6X06_DEV_MODE_BIT_POSITION;
-    
+
     ret = ft6x06_write_reg(ctx, FT6X06_DEV_MODE_REG, &tmp, 1);
   }
-  
+
   return ret;
 }
 
@@ -94,15 +94,15 @@ int32_t  ft6x06_dev_mode_w(ft6x06_ctx_t *ctx, uint8_t value)
 int32_t  ft6x06_dev_mode_r(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_DEV_MODE_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_DEV_MODE_BIT_MASK; 
+    *value &= FT6X06_DEV_MODE_BIT_MASK;
     *value = *value >> FT6X06_DEV_MODE_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -128,15 +128,15 @@ int32_t  ft6x06_gest_id(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_td_status(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_TD_STAT_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_TD_STATUS_BIT_MASK; 
-    *value = *value >> FT6X06_TD_STATUS_BIT_POSITION; 
+    *value &= FT6X06_TD_STATUS_BIT_MASK;
+    *value = *value >> FT6X06_TD_STATUS_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -150,15 +150,15 @@ int32_t  ft6x06_td_status(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p1_xh_ef(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P1_XH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P1_XH_EF_BIT_MASK; 
-    *value = *value >> FT6X06_P1_XH_EF_BIT_POSITION; 
+    *value &= FT6X06_P1_XH_EF_BIT_MASK;
+    *value = *value >> FT6X06_P1_XH_EF_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -172,15 +172,15 @@ int32_t  ft6x06_p1_xh_ef(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p1_xh_tp(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P1_XH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P1_XH_TP_BIT_MASK; 
-    *value = *value >> FT6X06_P1_XH_TP_BIT_POSITION; 
+    *value &= FT6X06_P1_XH_TP_BIT_MASK;
+    *value = *value >> FT6X06_P1_XH_TP_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -206,15 +206,15 @@ int32_t  ft6x06_p1_xl_tp(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p1_yh_tid(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P1_YH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P1_YH_TID_BIT_MASK; 
-    *value = *value >> FT6X06_P1_YH_TID_BIT_POSITION; 
+    *value &= FT6X06_P1_YH_TID_BIT_MASK;
+    *value = *value >> FT6X06_P1_YH_TID_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -228,15 +228,15 @@ int32_t  ft6x06_p1_yh_tid(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p1_yh_tp(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P1_YH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P1_YH_TP_BIT_MASK; 
-    *value = *value >> FT6X06_P1_YH_TP_BIT_POSITION; 
+    *value &= FT6X06_P1_YH_TP_BIT_MASK;
+    *value = *value >> FT6X06_P1_YH_TP_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -274,14 +274,14 @@ int32_t  ft6x06_p1_weight(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p1_misc(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
-  ret = ft6x06_read_reg(ctx, FT6X06_P1_MISC_REG, (uint8_t *)value, 1);  
+
+  ret = ft6x06_read_reg(ctx, FT6X06_P1_MISC_REG, (uint8_t *)value, 1);
   if(ret == 0)
   {
-    *value &= FT6X06_P1_MISC_BIT_MASK; 
-    *value = *value >> FT6X06_P1_MISC_BIT_POSITION; 
+    *value &= FT6X06_P1_MISC_BIT_MASK;
+    *value = *value >> FT6X06_P1_MISC_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -295,15 +295,15 @@ int32_t  ft6x06_p1_misc(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p2_xh_ef(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P2_XH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P2_XH_EF_BIT_MASK; 
-    *value = *value >> FT6X06_P2_XH_EF_BIT_POSITION; 
+    *value &= FT6X06_P2_XH_EF_BIT_MASK;
+    *value = *value >> FT6X06_P2_XH_EF_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -317,15 +317,15 @@ int32_t  ft6x06_p2_xh_ef(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p2_xh_tp(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P2_XH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P2_XH_TP_BIT_MASK; 
-    *value = *value >> FT6X06_P2_XH_TP_BIT_POSITION; 
+    *value &= FT6X06_P2_XH_TP_BIT_MASK;
+    *value = *value >> FT6X06_P2_XH_TP_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -351,15 +351,15 @@ int32_t  ft6x06_p2_xl_tp(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p2_yh_tid(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P2_YH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P2_YH_TID_BIT_MASK; 
-    *value = *value >> FT6X06_P2_YH_TID_BIT_POSITION; 
+    *value &= FT6X06_P2_YH_TID_BIT_MASK;
+    *value = *value >> FT6X06_P2_YH_TID_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -373,15 +373,15 @@ int32_t  ft6x06_p2_yh_tid(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p2_yh_tp(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P2_YH_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P2_YH_TP_BIT_MASK; 
-    *value = *value >> FT6X06_P2_YH_TP_BIT_POSITION; 
+    *value &= FT6X06_P2_YH_TP_BIT_MASK;
+    *value = *value >> FT6X06_P2_YH_TP_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -419,15 +419,15 @@ int32_t  ft6x06_p2_weight(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_p2_misc(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_P2_MISC_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_P2_MISC_BIT_MASK; 
-    *value = *value >> FT6X06_P2_MISC_BIT_POSITION; 
+    *value &= FT6X06_P2_MISC_BIT_MASK;
+    *value = *value >> FT6X06_P2_MISC_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
@@ -457,7 +457,7 @@ int32_t  ft6x06_th_diff(ft6x06_ctx_t *ctx, uint8_t value)
 
 /*******************************************************************************
 * Function Name  : FT6X06_CTRL
-* Description    : Control the Switch between Active and Monitoring Mode 
+* Description    : Control the Switch between Active and Monitoring Mode
 * Input          : uint8_t
 * Output         : None
 * Return         : Status [FT6X06_ERROR, FT6X06_OK]
@@ -469,7 +469,7 @@ int32_t  ft6x06_ctrl(ft6x06_ctx_t *ctx, uint8_t value)
 
 /*******************************************************************************
 * Function Name  : ft6x06_time_enter_monitor
-* Description    : Set the time period of switching from Active mode to Monitor 
+* Description    : Set the time period of switching from Active mode to Monitor
 *                  mode when there is no touching.
 * Input          : uint8_t
 * Output         : None
@@ -506,7 +506,7 @@ int32_t  ft6x06_period_monitor(ft6x06_ctx_t *ctx, uint8_t value)
 
 /*******************************************************************************
 * Function Name  : ft6x06_radian_value
-* Description    : Set the value of the minimum allowed angle while Rotating 
+* Description    : Set the value of the minimum allowed angle while Rotating
 *                  gesture mode
 * Input          : uint8_t
 * Output         : None
@@ -634,7 +634,7 @@ int32_t  ft6x06_g_mode(ft6x06_ctx_t *ctx, uint8_t value)
 *******************************************************************************/
 int32_t  ft6x06_pwr_mode(ft6x06_ctx_t *ctx, uint8_t value)
 {
-  return ft6x06_write_reg(ctx, FT6X06_PWR_MODE_REG, &value, 1); 
+  return ft6x06_write_reg(ctx, FT6X06_PWR_MODE_REG, &value, 1);
 }
 
 /*******************************************************************************
@@ -659,15 +659,15 @@ int32_t  ft6x06_firm_id(ft6x06_ctx_t *ctx, uint8_t *value)
 int32_t  ft6x06_chip_id(ft6x06_ctx_t *ctx, uint8_t *value)
 {
   int32_t ret;
-  
+
   ret = ft6x06_read_reg(ctx, FT6X06_CHIP_ID_REG, (uint8_t *)value, 1);
-  
+
   if(ret == 0)
   {
-    *value &= FT6X06_CHIP_ID_BIT_MASK; 
-    *value = *value >> FT6X06_CHIP_ID_BIT_POSITION; 
+    *value &= FT6X06_CHIP_ID_BIT_MASK;
+    *value = *value >> FT6X06_CHIP_ID_BIT_POSITION;
   }
-  
+
   return ret;
 }
 
