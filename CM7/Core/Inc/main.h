@@ -43,6 +43,7 @@ extern "C" {
 #include "mdma.h"
 #include "fmc.h"
 #include "i2c.h"
+#include "quadspi.h"
 #include "ExtFlash_qspi.h"
 /**
   * @brief  SDRAM Write read buffer start address after CAM Frame buffer

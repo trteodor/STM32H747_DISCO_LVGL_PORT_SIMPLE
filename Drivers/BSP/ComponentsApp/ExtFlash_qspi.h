@@ -132,7 +132,7 @@ typedef struct
 /* QSPI Base Address */
 #define QSPI_BASE_ADDRESS          0x90000000
 
-extern QSPI_HandleTypeDef BSP_hqspi;
+extern QSPI_HandleTypeDef *BSP_hqspi;
 extern BSP_QSPI_Ctx_t     QSPI_Ctx[];
 
 int32_t BSP_QSPI_Init(uint32_t Instance, BSP_QSPI_Init_t *Init);
