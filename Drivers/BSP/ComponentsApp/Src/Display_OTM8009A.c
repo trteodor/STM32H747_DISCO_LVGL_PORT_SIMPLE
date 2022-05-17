@@ -59,7 +59,8 @@ DISP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
 
 static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color);
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode);
-
+int32_t DISP_LCD_LL_FlushBufferDMA2D(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t *Colormap, void(*DMAtrEndCb)(void));
+static void LL_DMAFlushBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color,void(*DMAtrEndCb)(void));
 
 #define CONVERTRGB5652ARGB8888(Color)((((((((Color) >> (11U)) & 0x1FU) * 527U) + 23U) >> (6U)) << (16U)) |\
                                      (((((((Color) >> (5U)) & 0x3FU) * 259U) + 33U) >> (6U)) << (8U)) |\
@@ -815,6 +816,52 @@ void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d)
   FlagDmaTransmitEnd = 0;
 
 }
+
+
+
+
+int32_t DISP_LCD_LL_FlushBufferDMA2D(uint32_t Instance,
+									uint32_t Xpos,
+									uint32_t Ypos,
+									uint32_t Width,
+									uint32_t Height,
+									uint32_t *Colormap,
+									void(*DMAtrEndCb)(void)
+									)
+{
+  uint32_t  Xaddress;
+
+  Xaddress = (hlcd_ltdc->LayerCfg[Lcd_Ctx[Instance].ActiveLayer].FBStartAdress) + (Lcd_Ctx[Instance].BppFactor*(Lcd_Ctx[Instance].XSize*Ypos + Xpos));
+
+  /* Flush the buffer using dma */
+  LL_DMAFlushBuffer(Instance, (uint32_t *)Xaddress, Width, Height, (Lcd_Ctx[Instance].XSize - Width), (uint32_t)Colormap,DMAtrEndCb);
+
+  return DRV_ERR_NONE;
+}
+
+static void LL_DMAFlushBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color,void(*DMAtrEndCb)(void))
+{
+  /* Register to memory mode with ARGB8888 as color Mode */
+  hlcd_dma2d->Init.Mode         = DMA2D_M2M;
+  hlcd_dma2d->Init.ColorMode    = DMA2D_OUTPUT_ARGB8888;
+  hlcd_dma2d->Init.OutputOffset = OffLine;
+
+  hlcd_dma2d->Instance = DMA2D;
+
+  hlcd_dma2d->XferCpltCallback = (void*)DMAtrEndCb;
+
+  if(HAL_DMA2D_Init(hlcd_dma2d) == HAL_OK)
+  {
+    if(HAL_DMA2D_ConfigLayer(hlcd_dma2d, 1) == HAL_OK)
+    {
+      if (HAL_DMA2D_Start_IT(hlcd_dma2d, Color, (uint32_t)pDst, xSize, ySize) == HAL_OK)
+      {
+
+      }
+    }
+  }
+}
+
 
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode)
 {

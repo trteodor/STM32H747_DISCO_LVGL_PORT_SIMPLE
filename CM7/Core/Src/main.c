@@ -35,6 +35,8 @@
 #include "stlogo.h"
 #include "stdbool.h"
 
+#include "lvglAppMain.h"
+
 /***************IMPORANT******************************************************************************************/
 /*IN file ltdc.c i overwrite cube because he generate error braces "();"*/
 /***************IMPORANT******************************************************************************************/
@@ -164,24 +166,34 @@ Error_Handler();
   /*Registers Utils to easy draw on display..*/
   UTIL_LCD_SetFuncDriver(&LCD_Driver);
   UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
+  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTMAGENTA);
+  HAL_Delay(200);
   /**/
-  QSPI_demo(); /*TODO: Some demonsation with DMA/MDMA Should Be Created else... */
-  HAL_Delay(1000);
-  SDRAM_DMA_demo();
-  HAL_Delay(1000);
-  Touchscreen_demo3();
+//  QSPI_demo(); /*TODO: Some demonsation with DMA/MDMA Should Be Created else... */
+//  HAL_Delay(1000);
+//  SDRAM_DMA_demo();
+//  HAL_Delay(1000);
 
+  LvglInitApp();
+
+  static uint32_t SavedLvglTime =0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if(HAL_GetTick() -SavedLvglTime > 5)
+	  {
+		  SavedLvglTime = HAL_GetTick();
 
-	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
-	  HAL_Delay(30);
-	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
-	  HAL_Delay(30);
+		  LvglProcesTask();
+	  }
+
+//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
+//	  HAL_Delay(30);
+//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
+//	  HAL_Delay(30);
 
     /* USER CODE END WHILE */
 

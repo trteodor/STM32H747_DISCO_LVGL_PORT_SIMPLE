@@ -222,6 +222,6 @@ HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc);
 void MX_DSIHOST_DSI_Init(void);
 int32_t DISP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height);
 int32_t DISP_LCD_GetPixelFormat(uint32_t Instance, uint32_t *PixelFormat);
-
+int32_t DISP_LCD_LL_FlushBufferDMA2D(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Width, uint32_t Height, uint32_t *Colormap, void(*DMAtrEndCb)(void));
 
 #endif /* INC_DISPLAYOTM8009A_H_ */
