@@ -7,8 +7,6 @@
 QSPI_HandleTypeDef *BSP_hqspi;
 BSP_QSPI_Ctx_t     QSPI_Ctx[QSPI_INSTANCES_NUMBER];
 
-static void QSPI_MspInit(QSPI_HandleTypeDef *BSP_hqspi);
-static void QSPI_MspDeInit(QSPI_HandleTypeDef *hSspi);
 static int32_t QSPI_ResetMemory(uint32_t Instance);
 static int32_t QSPI_DummyCyclesCfg(uint32_t Instance);
 
@@ -150,10 +148,6 @@ int32_t BSP_QSPI_DeInit(uint32_t Instance)
       QSPI_Ctx[Instance].InterfaceMode = BSP_QSPI_SPI_MODE;
       QSPI_Ctx[Instance].TransferRate  = BSP_QSPI_STR_TRANSFER;
       QSPI_Ctx[Instance].DualFlashMode = QSPI_DUALFLASH_ENABLE;
-
-#if (USE_HAL_QSPI_REGISTER_CALLBACKS == 0)
-      QSPI_MspDeInit(BSP_hqspi);
-#endif /* (USE_HAL_QSPI_REGISTER_CALLBACKS == 0) */
 
       /* Call the DeInit function to reset the driver */
       if (HAL_QSPI_DeInit(BSP_hqspi) != HAL_OK)

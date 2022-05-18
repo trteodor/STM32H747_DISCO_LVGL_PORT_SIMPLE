@@ -176,6 +176,7 @@ extern DMA2D_HandleTypeDef *hlcd_dma2d;
 extern LTDC_HandleTypeDef  *hlcd_ltdc;
 extern DISP_LCD_Ctx_t       Lcd_Ctx[];
 extern void               *Lcd_CompObj;
+extern OTM8009A_Object_t   OTM8009AObj;
 /**
   * @}
   */

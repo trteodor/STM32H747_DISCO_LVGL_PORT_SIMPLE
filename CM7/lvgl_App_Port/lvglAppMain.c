@@ -22,7 +22,11 @@ void BuffTransmitCpltCb(void);
 static lv_color_t buf_1[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
 static lv_color_t buf_2[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ; //__attribute__ ((section (".LvBufferSection")))
 #endif
+
+
 static lv_disp_drv_t disp_drv;
+static lv_indev_drv_t indev_drv;
+
 
 /*Drivers and all necessary peripherials are initialized in main.c file*/
 
@@ -45,8 +49,69 @@ void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * co
 
 void BuffTransmitCpltCb(void)
 {
+	if(lv_disp_flush_is_last(&LastDriver))
+		{
+		HAL_DSI_Refresh(&hdsi);
+		}
 	lv_disp_flush_ready(LastDriver);
 }
+
+void TouchCntrlFt6x06_Read(lv_indev_drv_t * drv, lv_indev_data_t*data)
+{
+	static TouchStateFt6x06_t PreviousTouchState;
+
+	/*BSP_TS_GetIT_State_OTM8009a function automatically Touch IRQ Flag*/
+	if(BSP_TS_GetIT_State_OTM8009a() == Touch_IRQ_FlagSet_ft6x06 || PreviousTouchState == Touch_Touched_ft6x06 )
+	{
+		int16_t readX,readY;
+
+		if(BSP_TS_GetTouchPointAndState(&readX,  &readY) == Touch_Touched_ft6x06)
+		{
+			 data->state = LV_INDEV_STATE_PRESSED;
+			 data->point.x = readX;
+			 data->point.y = readY;
+			 PreviousTouchState = Touch_Touched_ft6x06;
+		}
+		else
+		{
+			 data->state = LV_INDEV_STATE_RELEASED;
+			 data->point.x = readX;
+			 data->point.y = readY;
+			 PreviousTouchState = Touch_Released_ft6x06;
+		}
+	}
+	else
+	{
+	    data->state = LV_INDEV_STATE_RELEASED;
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -62,14 +127,16 @@ void LvglInitApp(void)
       lv_disp_drv_register(&disp_drv); /*Register the driver and save the created display objects*/
 
 
-//      lv_indev_drv_t indev_drv;
-//      lv_indev_drv_init(&indev_drv);
-//      indev_drv.type =LV_INDEV_TYPE_POINTER;
-//      indev_drv.read_cb = TouchCntrlFt6x06_Read;
-//      lv_indev_drv_register(&indev_drv);
-//      HAL_Delay(10);
 
-      lv_example_get_started_1();
+      lv_indev_drv_init(&indev_drv);
+      indev_drv.type =LV_INDEV_TYPE_POINTER;
+      indev_drv.read_cb = TouchCntrlFt6x06_Read;
+      lv_indev_drv_register(&indev_drv);
+      HAL_Delay(10);
+
+//      lv_example_get_started_1();
+      ui_init();
+//      lv_example_chart_5();
 }
 
 

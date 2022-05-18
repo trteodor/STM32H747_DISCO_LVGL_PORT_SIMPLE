@@ -55,7 +55,7 @@ DSI_HandleTypeDef   *hlcd_dsi = NULL;
 DMA2D_HandleTypeDef *hlcd_dma2d;
 LTDC_HandleTypeDef  *hlcd_ltdc = NULL;
 DISP_LCD_Ctx_t       Lcd_Ctx[LCD_INSTANCES_NBR];
-
+OTM8009A_Object_t   OTM8009AObj;
 
 static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t Color);
 static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDst, uint32_t xSize, uint32_t ColorMode);

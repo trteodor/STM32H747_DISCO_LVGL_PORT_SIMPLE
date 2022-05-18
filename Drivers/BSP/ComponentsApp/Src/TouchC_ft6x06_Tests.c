@@ -52,7 +52,7 @@ char * ts_gesture_id_string_tab[7] = { "No Gesture",
 uint32_t TouchScreenDemo = 0;
 uint16_t x_new_pos = 0, x_previous_pos = 0;
 uint16_t y_new_pos = 0, y_previous_pos = 0;
-TS_State_t  TS_State = {0};
+
 TS_MultiTouch_State_t  TS_MTState = {0};
 uint32_t colors[24] = {UTIL_LCD_COLOR_BLUE, UTIL_LCD_COLOR_GREEN, UTIL_LCD_COLOR_RED, UTIL_LCD_COLOR_CYAN, UTIL_LCD_COLOR_MAGENTA, UTIL_LCD_COLOR_YELLOW,
 UTIL_LCD_COLOR_LIGHTBLUE, UTIL_LCD_COLOR_LIGHTGREEN, UTIL_LCD_COLOR_LIGHTRED, UTIL_LCD_COLOR_WHITE, UTIL_LCD_COLOR_LIGHTMAGENTA,
@@ -62,14 +62,15 @@ UTIL_LCD_COLOR_BLACK, UTIL_LCD_COLOR_BROWN, UTIL_LCD_COLOR_ORANGE };
 
 /* Private variables ---------------------------------------------------------*/
 /* Static variable holding the current touch color index : used to change color at each touch */
-TS_Init_t hTS;
 
-//TS_Init_t shTs;
 __IO uint32_t ButtonState = 0;
 __IO uint32_t TSInterruptTest=0;
-__IO uint32_t InterruptTsFlag = 0;
+extern __IO uint32_t InterruptTsFlag;
+extern TS_Init_t hTS;
+extern TS_State_t  TS_State;
 
-TS_Gesture_Config_t GestureConf;
+
+extern TS_Gesture_Config_t GestureConf;
 //extern __IO uint32_t ButtonState;
 /* Private function prototypes -----------------------------------------------*/
 static void     Touchscreen_SetHint_Demo(TouchScreenDemoTypeDef demoIndex);
@@ -84,6 +85,11 @@ static uint32_t Touchscreen_Handle_NewTouch(void);
   * @param  None
   * @retval None
   */
+
+
+
+
+
 void Touchscreen_demo1(void)
 {
   uint16_t x1, y1;
@@ -234,7 +240,6 @@ void Touchscreen_demo2(void)
 void Touchscreen_demo3(void)
 {
   ButtonState = 0;
-  TSInterruptTest = 1;
   uint32_t x_size, y_size;
 
   DISP_LCD_GetXSize(0, &x_size);
@@ -645,13 +650,5 @@ static void TS_Update(void)
   }
 }
 
-/*Touch Screen interrupt handler*/
-void Touch_HandlerIRQ()
-{
-	  if(TSInterruptTest == 1)
-	  {
-		  InterruptTsFlag = 1;
-	  }
-}
 
 
