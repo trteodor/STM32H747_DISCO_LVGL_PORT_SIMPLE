@@ -1,0 +1,1 @@
+Low Quality Port LVGL v8.2 on STM32H747 Disco compatibile with SquareLine. But i dk, how to remove tearing effect. Can someone help me? 

@@ -162,12 +162,17 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
 
   /* Initialize the LCD */
-  DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
+   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
+  /* Initialize the Touch Screen Controller in interrupt mode to handle Touch Points correctly with used screen */
+   BSP_TS_InitIT_OTM8009a();
+
+//  UTIL_LCD_SetFuncDriver(&LCD_Driver);
+//  UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
+//  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTMAGENTA);
+//  HAL_Delay(30);
+
   /*Registers Utils to easy draw on display..*/
-  UTIL_LCD_SetFuncDriver(&LCD_Driver);
-  UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTMAGENTA);
-  HAL_Delay(200);
+
   /**/
 //  QSPI_demo(); /*TODO: Some demonsation with DMA/MDMA Should Be Created else... */
 //  HAL_Delay(1000);
@@ -183,7 +188,7 @@ Error_Handler();
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(HAL_GetTick() -SavedLvglTime > 5)
+	  if(HAL_GetTick() -SavedLvglTime >= 5)
 	  {
 		  SavedLvglTime = HAL_GetTick();
 

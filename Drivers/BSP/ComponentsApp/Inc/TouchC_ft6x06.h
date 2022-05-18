@@ -161,6 +161,19 @@ typedef enum
 #endif /* (USE_TS_GESTURE == 1) */
 
 
+typedef enum
+{
+	Touch_Released_ft6x06 = 0,
+	Touch_Touched_ft6x06 = 1
+}TouchStateFt6x06_t;
+
+typedef enum
+{
+	Touch_IRQ_FlagReset_ft6x06 = 0,
+	Touch_IRQ_FlagSet_ft6x06 = 1
+}TouchIRQ_StateFt6x06_t;
+
+
 extern TS_Ctx_t            Ts_Ctx[];
 extern void               *Ts_CompObj[TS_INSTANCES_NBR];
 
@@ -192,6 +205,10 @@ int32_t BSP_I2C4_ReadReg16(uint16_t DevAddr, uint16_t Reg, uint8_t *pData, uint1
 int32_t BSP_I2C4_IsReady(uint16_t DevAddr, uint32_t Trials);
 int32_t BSP_GetTick(void);
 
+
+TouchStateFt6x06_t BSP_TS_GetTouchPointAndState(int16_t *Xread, int16_t *Yread);
+TouchIRQ_StateFt6x06_t BSP_TS_GetIT_State_OTM8009a(void);
+void BSP_TS_InitIT_OTM8009a(void);
 
 
 

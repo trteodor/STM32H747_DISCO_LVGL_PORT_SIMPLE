@@ -8,6 +8,10 @@
 #include "TouchC_ft6x06.h"
 #include "main.h"
 
+TS_Init_t hTS;
+__IO uint32_t InterruptTsFlag = 0;
+TS_Gesture_Config_t GestureConf;
+TS_State_t  TS_State = {0};
 
 typedef struct
 {
@@ -36,8 +40,8 @@ typedef struct
 
 I2C_HandleTypeDef *hbus_i2c;
 TS_Ctx_t           Ts_Ctx[TS_INSTANCES_NBR] = {0};
-typedef void (* BSP_EXTI_LineCallback) (void);
 void               *Ts_CompObj[TS_INSTANCES_NBR] = {0};
+
 
 
 int32_t BSP_I2C4_DeInit(void);
@@ -45,8 +49,69 @@ int32_t TS_GetTick(void);
 static int32_t I2C4_WriteReg(uint16_t DevAddr, uint16_t MemAddSize, uint16_t Reg, uint8_t *pData, uint16_t Length);
 static int32_t I2C4_ReadReg(uint16_t DevAddr, uint16_t MemAddSize, uint16_t Reg, uint8_t *pData, uint16_t Length);
 static int32_t FT6X06_Probe(uint32_t Instance);
+TouchStateFt6x06_t BSP_TS_GetTouchPointAndState(int16_t *Xread, int16_t *Yread);
+TouchIRQ_StateFt6x06_t BSP_TS_GetIT_State_OTM8009a(void);
+void BSP_TS_InitIT_OTM8009a(void);
+
 static EXTI_HandleTypeDef hts_exti[TS_INSTANCES_NBR] = {0};
 static TS_Drv_t           *Ts_Drv = NULL;
+
+
+void BSP_TS_InitIT_OTM8009a(void) /*Gestures are not supported yet*/
+{
+    uint32_t x_size, y_size;
+
+  DISP_LCD_GetXSize(0, &x_size);
+  DISP_LCD_GetYSize(0, &y_size);
+
+  hTS.Width = x_size;
+  hTS.Height = y_size;
+  hTS.Orientation = TS_SWAP_XY | TS_SWAP_Y;
+  hTS.Accuracy = 5;
+
+//  GestureConf.Radian = 0x0A;
+//  GestureConf.OffsetLeftRight = 0x19;
+//  GestureConf.OffsetUpDown = 0x19;
+//  GestureConf.DistanceLeftRight = 0x19;
+//  GestureConf.DistanceUpDown = 0x19;
+//  GestureConf.DistanceZoom = 0x32;
+
+  /* Touchscreen initialization */
+  BSP_TS_Init(0, &hTS);
+//  BSP_TS_GestureConfig(0, &GestureConf);
+
+  BSP_TS_Init(0, &hTS);
+  BSP_TS_EnableIT(0);
+}
+
+/*
+ * @brief BSP_TS_GetIT_State_OTM8009a(void)
+ * /*IRQ TouchCntrl flag read and reset function
+ */
+
+TouchIRQ_StateFt6x06_t BSP_TS_GetIT_State_OTM8009a(void)
+{
+	if(InterruptTsFlag == Touch_IRQ_FlagSet_ft6x06 )
+	{
+		InterruptTsFlag = Touch_IRQ_FlagReset_ft6x06; /*After read reset the flag...*/
+		return Touch_Touched_ft6x06;
+	}
+	return Touch_IRQ_FlagReset_ft6x06;
+}
+
+
+TouchStateFt6x06_t BSP_TS_GetTouchPointAndState(int16_t *Xread, int16_t *Yread)
+{
+	  BSP_TS_GetState(0, &TS_State);
+
+	  if(TS_State.TouchDetected)
+	  {
+		*Xread = TS_State.TouchX;
+		*Yread = TS_State.TouchY;
+		return Touch_Touched_ft6x06;
+	  }
+	  return Touch_Released_ft6x06;
+}
 
 
 
@@ -90,7 +155,7 @@ int32_t BSP_TS_EnableIT(uint32_t Instance)
 {
   int32_t ret = DRV_ERR_NONE;
   GPIO_InitTypeDef gpio_init_structure;
-  static const uint32_t TS_EXTI_LINE[TS_INSTANCES_NBR] = {TS_INT_LINE};
+//  static const uint32_t TS_EXTI_LINE[TS_INSTANCES_NBR] = {TS_INT_LINE};
   if(Instance >=TS_INSTANCES_NBR)
   {
     ret = DRV_ERROR_WRONG_PARAM;
@@ -196,7 +261,7 @@ int32_t BSP_TS_GetState(uint32_t Instance, TS_State_t *TS_State)
       TS_State->TouchY = Ts_Ctx[Instance].PreviousY[0];
     }
 
-  return 0;
+  return ret;
 }
 
 #if (USE_TS_MULTI_TOUCH > 0)
@@ -517,7 +582,11 @@ int32_t BSP_I2C4_DeInit(void)
   return ret;
 }
 
-
+/*Touch Screen interrupt handler*/
+void Touch_HandlerIRQ()
+{
+		  InterruptTsFlag = 1;
+}
 
 
 
