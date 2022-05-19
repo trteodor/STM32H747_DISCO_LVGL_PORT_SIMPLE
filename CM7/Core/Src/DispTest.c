@@ -116,7 +116,10 @@ const LCD_UTILS_Drv_t LCD_UTIL_Driver =
 
 
 
-
+static int32_t DISP_GetTick(void)
+{
+  return (int32_t)HAL_GetTick();
+}
 
 
 
@@ -164,7 +167,7 @@ void LCD_OTM8009a_InitFull(void)
 	   Lcd_Ctx[0].YSize = 480;
 
 	   /* Initialize the LCD   */
-	   if( LCD_Init() != DRV_ERROR_NONE)
+	   if( LCD_Init() != DRV_ERR_NONE)
 	   {
 	     Error_Handler();
 	   }
@@ -218,7 +221,7 @@ int32_t LCD_GetXSize(uint32_t Instance, uint32_t *XSize)
 {
   *XSize = Lcd_Ctx[0].XSize;
 
-  return DRV_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 /**
@@ -231,7 +234,7 @@ int32_t LCD_GetYSize(uint32_t Instance, uint32_t *YSize)
 {
   *YSize = Lcd_Ctx[0].YSize;
 
-  return DRV_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 
@@ -399,7 +402,7 @@ static uint8_t LCD_Init(void){
 
   /* Initialize the OTM8009A LCD Display IC Driver (KoD LCD IC Driver) */
   IOCtx.Address     = 0;
-  IOCtx.GetTick     = BSP_GetTick;
+  IOCtx.GetTick     = DISP_GetTick;
   IOCtx.WriteReg    = DSI_IO_Write;
   IOCtx.ReadReg     = DSI_IO_Read;
   OTM8009A_RegisterBusIO(&OTM8009AObj, &IOCtx);
@@ -435,7 +438,7 @@ static uint8_t LCD_Init(void){
   GPIO_Init_Structure.Alternate = GPIO_AF13_DSI;
   HAL_GPIO_Init(GPIOJ, &GPIO_Init_Structure);
 
-  return DRV_ERROR_NONE;
+  return DRV_ERR_NONE;
 }
 
 /**
@@ -515,7 +518,7 @@ static void LCD_LayertInit(uint16_t LayerIndex, uint32_t Address)
   */
 static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
-  int32_t ret = DRV_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(Size <= 1U)
   {
@@ -545,7 +548,7 @@ static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, u
   */
 static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size)
 {
-  int32_t ret = DRV_ERROR_NONE;
+  int32_t ret = DRV_ERR_NONE;
 
   if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
   {

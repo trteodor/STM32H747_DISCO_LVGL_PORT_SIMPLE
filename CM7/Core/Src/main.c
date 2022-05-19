@@ -37,6 +37,8 @@
 
 #include "lvglAppMain.h"
 
+#include "DispTest.h"
+
 /***************IMPORANT******************************************************************************************/
 /*IN file ltdc.c i overwrite cube because he generate error braces "();"*/
 /***************IMPORANT******************************************************************************************/
@@ -162,14 +164,14 @@ Error_Handler();
   /* USER CODE BEGIN 2 */
 
   /* Initialize the LCD */
-   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
-  /* Initialize the Touch Screen Controller in interrupt mode to handle Touch Points correctly with used screen */
-   BSP_TS_InitIT_OTM8009a();
-
-  UTIL_LCD_SetFuncDriver(&LCD_Driver);
-  UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTMAGENTA);
-  HAL_Delay(30);
+//   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
+//  /* Initialize the Touch Screen Controller in interrupt mode to handle Touch Points correctly with used screen */
+//   BSP_TS_InitIT_OTM8009a();
+//
+//  UTIL_LCD_SetFuncDriver(&LCD_Driver);
+//  UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
+//  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTMAGENTA);
+//  HAL_Delay(30);
 
   /*Registers Utils to easy draw on display..*/
 
@@ -179,7 +181,9 @@ Error_Handler();
 //  SDRAM_DMA_demo();
 //  HAL_Delay(1000);
 
-  LvglInitApp();
+//  LvglInitApp();
+  LCD_OTM8009a_InitFull();
+  HAL_Delay(2000);
 
   static uint32_t SavedLvglTime =0;
   /* USER CODE END 2 */
@@ -192,7 +196,8 @@ Error_Handler();
 	  {
 		  SavedLvglTime = HAL_GetTick();
 
-		  LvglProcesTask();
+//		  LvglProcesTask();
+		  LCD_Task();
 	  }
 
 //	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);

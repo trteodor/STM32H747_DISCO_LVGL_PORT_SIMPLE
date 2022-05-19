@@ -23,9 +23,13 @@
 #define STM32H747I_DISCO_LCD_H
 
 #include "main.h"
-
+#include "lcd.h"
+#include "../Components/otm8009a/otm8009a.h"
 
 #define LCD_INSTANCES_NBR          1
+
+#define LCD_FRAME_BUFFER        0xD0000000
+
 /**
   * @brief  HDMI Format
   */

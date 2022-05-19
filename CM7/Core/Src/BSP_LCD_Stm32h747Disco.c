@@ -4,29 +4,14 @@
 
 #include "DRVs_ErrorCodes.h"
 
-/** @addtogroup BSP
-  * @{
-  */
 
-/** @addtogroup STM32H747I_DISCO
-  * @{
-  */
 
-/** @defgroup STM32H747I_DISCO_LCD LCD
-  * @{
-  */
-/** @defgroup STM32H747I_DISCO_LCD_Private_Variables Private Variables
-  * @{
-  */
+
+
+
 static LCD_Drv_t                *Lcd_Drv = NULL;
-/**
-  * @}
-  */
 
-/** @defgroup STM32H747I_DISCO_LCD_Private_TypesDefinitions Private TypesDefinitions
-  * @{
-  */
-const LCD_UTILS_Drv_t LCD_Driver =
+const LCD_UTILS_Drv_t LCD_Driverr =
 {
   BSP_LCD_DrawBitmap,
   BSP_LCD_FillRGBRect,
@@ -67,10 +52,10 @@ typedef struct
 /** @defgroup STM32H747I_DISCO_LCD_Exported_Variables Exported Variables
   * @{
   */
-void                *Lcd_CompObj = NULL;
-DSI_HandleTypeDef   *hlcd_dsi;
+void                *Lcd_CompObjj = NULL;
+DSI_HandleTypeDef   *hlcd_dsii;
 DMA2D_HandleTypeDef hlcd_dma2dd;
-LTDC_HandleTypeDef  *hlcd_ltdc;
+LTDC_HandleTypeDef  *hlcd_ltdcc;
 BSP_Lcd_Ctxx_t       Lcd_Ctxx[LCD_INSTANCES_NBR];
 /**
   * @}
@@ -84,9 +69,9 @@ static void DSI_MspDeInit(DSI_HandleTypeDef *hdsi);
 static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size);
 static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, uint16_t Size);
 
-#if (USE_LCD_CTRL_OTM8009A > 0)
-static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation);
-# endif /* USE_LCD_CTRL_OTM8009A > 0 */
+
+static int32_t OTM8009A_Probee(uint32_t ColorCoding, uint32_t Orientation);
+
 
 static void LTDC_MspInit(LTDC_HandleTypeDef *hltdc);
 static void LTDC_MspDeInit(LTDC_HandleTypeDef *hltdc);
@@ -185,13 +170,13 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
 
         /* Enable the DSI host and wrapper after the LTDC initialization
         To avoid any synchronization issue, the DSI shall be started after enabling the LTDC */
-        (void)HAL_DSI_Start(hlcd_dsi);
+        (void)HAL_DSI_Start(hlcd_dsii);
 
         /* Enable the DSI BTW for read operations */
-        (void)HAL_DSI_ConfigFlowControl(hlcd_dsi, DSI_FLOW_CONTROL_BTA);
+        (void)HAL_DSI_ConfigFlowControl(hlcd_dsii, DSI_FLOW_CONTROL_BTA);
 
 
-        if(OTM8009A_Probe(ctrl_pixel_format, Orientation) != DRV_ERR_NONE)
+        if(OTM8009A_Probee(ctrl_pixel_format, Orientation) != DRV_ERR_NONE)
         {
           ret = DRV_ERROR_UNKNOWN_COMPONENT;
         }
@@ -225,21 +210,21 @@ int32_t BSP_LCD_DeInit(uint32_t Instance)
   {
     LCD_DeInitSequence();
 #if (USE_HAL_LTDC_REGISTER_CALLBACKS == 0)
-    LTDC_MspDeInit(hlcd_ltdc);
+    LTDC_MspDeInit(hlcd_ltdcc);
 #endif /* (USE_HAL_LTDC_REGISTER_CALLBACKS == 0) */
 
     DMA2D_MspDeInit(&hlcd_dma2dd);
 
 #if (USE_HAL_DSI_REGISTER_CALLBACKS == 0)
-    DSI_MspDeInit(hlcd_dsi);
+    DSI_MspDeInit(hlcd_dsii);
 #endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 0) */
-    if(HAL_DSI_DeInit(hlcd_dsi) != HAL_OK)
+    if(HAL_DSI_DeInit(hlcd_dsii) != HAL_OK)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
     else
     {
-      (void)HAL_LTDC_DeInit(hlcd_ltdc);
+      (void)HAL_LTDC_DeInit(hlcd_ltdcc);
       if(HAL_DMA2D_DeInit(&hlcd_dma2dd) != HAL_OK)
       {
         ret = DRV_ERROR_PERIPH_FAILURE;
@@ -387,7 +372,7 @@ int32_t BSP_LCD_ConfigLayer(uint32_t Instance, uint32_t LayerIndex, BSP_LCD_Laye
   }
   else
   {
-    if (MX_LTDC_ConfigLayer(hlcd_ltdc, LayerIndex, Config) != HAL_OK)
+    if (MX_LTDC_ConfigLayer(hlcd_ltdcc, LayerIndex, Config) != HAL_OK)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
@@ -459,7 +444,7 @@ int32_t BSP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType)
   {
     Lcd_Ctxx[Instance].ReloadEnable = 0U;
   }
-  else if(HAL_LTDC_Reload (hlcd_ltdc, ReloadType) != HAL_OK)
+  else if(HAL_LTDC_Reload (hlcd_ltdcc, ReloadType) != HAL_OK)
   {
     ret = DRV_ERROR_PERIPH_FAILURE;
   }
@@ -493,16 +478,16 @@ int32_t BSP_LCD_SetLayerVisible(uint32_t Instance, uint32_t LayerIndex, Function
   {
     if(State == ENABLE)
     {
-      __HAL_LTDC_LAYER_ENABLE(hlcd_ltdc, LayerIndex);
+      __HAL_LTDC_LAYER_ENABLE(hlcd_ltdcc, LayerIndex);
     }
     else
     {
-      __HAL_LTDC_LAYER_DISABLE(hlcd_ltdc, LayerIndex);
+      __HAL_LTDC_LAYER_DISABLE(hlcd_ltdcc, LayerIndex);
     }
 
     if(Lcd_Ctxx[Instance].ReloadEnable == 1U)
     {
-      __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(hlcd_ltdc);
+      __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(hlcd_ltdcc);
     }
   }
 
@@ -529,11 +514,11 @@ int32_t BSP_LCD_SetTransparency(uint32_t Instance, uint32_t LayerIndex, uint8_t 
   {
     if(Lcd_Ctxx[Instance].ReloadEnable == 1U)
     {
-      (void)HAL_LTDC_SetAlpha(hlcd_ltdc, Transparency, LayerIndex);
+      (void)HAL_LTDC_SetAlpha(hlcd_ltdcc, Transparency, LayerIndex);
     }
     else
     {
-      (void)HAL_LTDC_SetAlpha_NoReload(hlcd_ltdc, Transparency, LayerIndex);
+      (void)HAL_LTDC_SetAlpha_NoReload(hlcd_ltdcc, Transparency, LayerIndex);
     }
   }
 
@@ -559,11 +544,11 @@ int32_t BSP_LCD_SetLayerAddress(uint32_t Instance, uint32_t LayerIndex, uint32_t
   {
     if(Lcd_Ctxx[Instance].ReloadEnable == 1U)
     {
-      (void)HAL_LTDC_SetAddress(hlcd_ltdc, Address, LayerIndex);
+      (void)HAL_LTDC_SetAddress(hlcd_ltdcc, Address, LayerIndex);
     }
     else
     {
-      (void)HAL_LTDC_SetAddress_NoReload(hlcd_ltdc, Address, LayerIndex);
+      (void)HAL_LTDC_SetAddress_NoReload(hlcd_ltdcc, Address, LayerIndex);
     }
   }
 
@@ -593,14 +578,14 @@ int32_t BSP_LCD_SetLayerWindow(uint32_t Instance, uint16_t LayerIndex, uint16_t 
     if(Lcd_Ctxx[Instance].ReloadEnable == 1U)
     {
       /* Reconfigure the layer size  and position */
-      (void)HAL_LTDC_SetWindowSize(hlcd_ltdc, Width, Height, LayerIndex);
-      (void)HAL_LTDC_SetWindowPosition(hlcd_ltdc, Xpos, Ypos, LayerIndex);
+      (void)HAL_LTDC_SetWindowSize(hlcd_ltdcc, Width, Height, LayerIndex);
+      (void)HAL_LTDC_SetWindowPosition(hlcd_ltdcc, Xpos, Ypos, LayerIndex);
     }
     else
     {
       /* Reconfigure the layer size and position */
-      (void)HAL_LTDC_SetWindowSize_NoReload(hlcd_ltdc, Width, Height, LayerIndex);
-      (void)HAL_LTDC_SetWindowPosition_NoReload(hlcd_ltdc, Xpos, Ypos, LayerIndex);
+      (void)HAL_LTDC_SetWindowSize_NoReload(hlcd_ltdcc, Width, Height, LayerIndex);
+      (void)HAL_LTDC_SetWindowPosition_NoReload(hlcd_ltdcc, Xpos, Ypos, LayerIndex);
     }
 
     Lcd_Ctxx[Instance].XSize = Width;
@@ -630,14 +615,14 @@ int32_t BSP_LCD_SetColorKeying(uint32_t Instance, uint32_t LayerIndex, uint32_t 
     if(Lcd_Ctxx[Instance].ReloadEnable == 1U)
     {
       /* Configure and Enable the color Keying for LCD Layer */
-      (void)HAL_LTDC_ConfigColorKeying(hlcd_ltdc, Color, LayerIndex);
-      (void)HAL_LTDC_EnableColorKeying(hlcd_ltdc, LayerIndex);
+      (void)HAL_LTDC_ConfigColorKeying(hlcd_ltdcc, Color, LayerIndex);
+      (void)HAL_LTDC_EnableColorKeying(hlcd_ltdcc, LayerIndex);
     }
     else
     {
       /* Configure and Enable the color Keying for LCD Layer */
-      (void)HAL_LTDC_ConfigColorKeying_NoReload(hlcd_ltdc, Color, LayerIndex);
-      (void)HAL_LTDC_EnableColorKeying_NoReload(hlcd_ltdc, LayerIndex);
+      (void)HAL_LTDC_ConfigColorKeying_NoReload(hlcd_ltdcc, Color, LayerIndex);
+      (void)HAL_LTDC_EnableColorKeying_NoReload(hlcd_ltdcc, LayerIndex);
     }
   }
   return ret;
@@ -656,12 +641,12 @@ int32_t BSP_LCD_ResetColorKeying(uint32_t Instance, uint32_t LayerIndex)
     if(Lcd_Ctxx[Instance].ReloadEnable == 1U)
     {
       /* Disable the color Keying for LCD Layer */
-      (void)HAL_LTDC_DisableColorKeying(hlcd_ltdc, LayerIndex);
+      (void)HAL_LTDC_DisableColorKeying(hlcd_ltdcc, LayerIndex);
     }
     else
     {
       /* Disable the color Keying for LCD Layer */
-      (void)HAL_LTDC_DisableColorKeying_NoReload(hlcd_ltdc, LayerIndex);
+      (void)HAL_LTDC_DisableColorKeying_NoReload(hlcd_ltdcc, LayerIndex);
     }
   }
 
@@ -710,7 +695,7 @@ int32_t BSP_LCD_DisplayOn(uint32_t Instance)
   }
   else
   {
-    if(Lcd_Drv->DisplayOn(Lcd_CompObj) != DRV_ERR_NONE)
+    if(Lcd_Drv->DisplayOn(Lcd_CompObjj) != DRV_ERR_NONE)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
@@ -733,7 +718,7 @@ int32_t BSP_LCD_DisplayOff(uint32_t Instance)
   }
   else
   {
-    if(Lcd_Drv->DisplayOff(Lcd_CompObj) != DRV_ERR_NONE)
+    if(Lcd_Drv->DisplayOff(Lcd_CompObjj) != DRV_ERR_NONE)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
@@ -756,7 +741,7 @@ int32_t BSP_LCD_SetBrightness(uint32_t Instance, uint32_t Brightness)
   }
   else
   {
-    if(Lcd_Drv->SetBrightness(Lcd_CompObj, Brightness) != DRV_ERR_NONE)
+    if(Lcd_Drv->SetBrightness(Lcd_CompObjj, Brightness) != DRV_ERR_NONE)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
@@ -775,7 +760,7 @@ int32_t BSP_LCD_GetBrightness(uint32_t Instance, uint32_t *Brightness)
   }
   else
   {
-    if(Lcd_Drv->GetBrightness(Lcd_CompObj, Brightness) != DRV_ERR_NONE)
+    if(Lcd_Drv->GetBrightness(Lcd_CompObjj, Brightness) != DRV_ERR_NONE)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
@@ -805,7 +790,7 @@ int32_t BSP_LCD_DrawBitmap(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint
   bit_pixel = (uint32_t)pBmp[28] + ((uint32_t)pBmp[29] << 8);
 
   /* Set the address */
-  Address = hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (((Lcd_Ctxx[Instance].XSize*Ypos) + Xpos)*Lcd_Ctxx[Instance].BppFactor);
+  Address = hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (((Lcd_Ctxx[Instance].XSize*Ypos) + Xpos)*Lcd_Ctxx[Instance].BppFactor);
 
   /* Get the layer pixel format */
   if ((bit_pixel/8U) == 4U)
@@ -860,7 +845,7 @@ int32_t BSP_LCD_DrawHLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
   uint32_t  Xaddress;
 
   /* Get the line address */
-  Xaddress = hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (Lcd_Ctxx[Instance].BppFactor*((Lcd_Ctxx[Instance].XSize*Ypos) + Xpos));
+  Xaddress = hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (Lcd_Ctxx[Instance].BppFactor*((Lcd_Ctxx[Instance].XSize*Ypos) + Xpos));
 
   /* Write line */
   if((Xpos + Length) > Lcd_Ctxx[Instance].XSize)
@@ -877,7 +862,7 @@ int32_t BSP_LCD_DrawVLine(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
   uint32_t  Xaddress;
 
   /* Get the line address */
-  Xaddress = (hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress) + (Lcd_Ctxx[Instance].BppFactor*(Lcd_Ctxx[Instance].XSize*Ypos + Xpos));
+  Xaddress = (hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress) + (Lcd_Ctxx[Instance].BppFactor*(Lcd_Ctxx[Instance].XSize*Ypos + Xpos));
 
   /* Write line */
   if((Ypos + Length) > Lcd_Ctxx[Instance].YSize)
@@ -904,7 +889,7 @@ int32_t BSP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32
   uint32_t  Xaddress;
 
   /* Get the rectangle start address */
-  Xaddress = (hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress) + (Lcd_Ctxx[Instance].BppFactor*(Lcd_Ctxx[Instance].XSize*Ypos + Xpos));
+  Xaddress = (hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress) + (Lcd_Ctxx[Instance].BppFactor*(Lcd_Ctxx[Instance].XSize*Ypos + Xpos));
 
   /* Fill the rectangle */
  LL_FillBuffer(Instance, (uint32_t *)Xaddress, Width, Height, (Lcd_Ctxx[Instance].XSize - Width), Color);
@@ -914,15 +899,15 @@ int32_t BSP_LCD_FillRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32
 
 int32_t BSP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t *Color)
 {
-  if(hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
+  if(hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
   {
     /* Read data value from SDRAM memory */
-    *Color = *(__IO uint32_t*) (hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (4U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos)));
+    *Color = *(__IO uint32_t*) (hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (4U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos)));
   }
-  else /* if((hlcd_ltdc->LayerCfg[layer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565) */
+  else /* if((hlcd_ltdcc->LayerCfg[layer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565) */
   {
     /* Read data value from SDRAM memory */
-    *Color = *(__IO uint16_t*) (hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (2U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos)));
+    *Color = *(__IO uint16_t*) (hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (2U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos)));
   }
 
   return DRV_ERR_NONE;
@@ -930,15 +915,15 @@ int32_t BSP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
 
 int32_t BSP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Color)
 {
-  if(hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
+  if(hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
   {
     /* Write data value to SDRAM memory */
-    *(__IO uint32_t*) (hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (4U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos))) = Color;
+    *(__IO uint32_t*) (hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (4U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos))) = Color;
   }
   else
   {
     /* Write data value to SDRAM memory */
-    *(__IO uint16_t*) (hlcd_ltdc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (2U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos))) = Color;
+    *(__IO uint16_t*) (hlcd_ltdcc->LayerCfg[Lcd_Ctxx[Instance].ActiveLayer].FBStartAdress + (2U*(Ypos*Lcd_Ctxx[Instance].XSize + Xpos))) = Color;
   }
 
   return DRV_ERR_NONE;
@@ -1067,14 +1052,14 @@ static int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, u
 
   if(Size <= 1U)
   {
-    if(HAL_DSI_ShortWrite(hlcd_dsi, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
+    if(HAL_DSI_ShortWrite(hlcd_dsii, ChannelNbr, DSI_DCS_SHORT_PKT_WRITE_P1, Reg, (uint32_t)pData[Size]) != HAL_OK)
     {
       ret = DRV_ERROR_BUS_FAILURE;
     }
   }
   else
   {
-    if(HAL_DSI_LongWrite(hlcd_dsi, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
+    if(HAL_DSI_LongWrite(hlcd_dsii, ChannelNbr, DSI_DCS_LONG_PKT_WRITE, Size, (uint32_t)Reg, pData) != HAL_OK)
     {
       ret = DRV_ERROR_BUS_FAILURE;
     }
@@ -1087,7 +1072,7 @@ static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
 {
   int32_t ret = DRV_ERR_NONE;
 
-  if(HAL_DSI_Read(hlcd_dsi, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
+  if(HAL_DSI_Read(hlcd_dsii, ChannelNbr, pData, Size, DSI_DCS_SHORT_PKT_READ, Reg, pData) != HAL_OK)
   {
     ret = DRV_ERROR_BUS_FAILURE;
   }
@@ -1095,7 +1080,7 @@ static int32_t DSI_IO_Read(uint16_t ChannelNbr, uint16_t Reg, uint8_t *pData, ui
   return ret;
 }
 
-static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
+static int32_t OTM8009A_Probee(uint32_t ColorCoding, uint32_t Orientation)
 {
   int32_t ret;
   uint32_t id;
@@ -1114,9 +1099,9 @@ static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
   }
   else
   {
-    Lcd_CompObj = &OTM8009AObj;
+    Lcd_CompObjj = &OTM8009AObj;
 
-    if(OTM8009A_ReadID(Lcd_CompObj, &id) != OTM8009A_OK)
+    if(OTM8009A_ReadID(Lcd_CompObjj, &id) != OTM8009A_OK)
     {
       ret = DRV_ERROR_PERIPH_FAILURE;
     }
@@ -1124,7 +1109,7 @@ static int32_t OTM8009A_Probe(uint32_t ColorCoding, uint32_t Orientation)
     else
     {
       Lcd_Drv = (LCD_Drv_t *)(void *) &OTM8009A_LCD_Driver;
-      if(Lcd_Drv->Init(Lcd_CompObj, ColorCoding, Orientation) != OTM8009A_OK)
+      if(Lcd_Drv->Init(Lcd_CompObjj, ColorCoding, Orientation) != OTM8009A_OK)
       {
         ret = DRV_ERROR_PERIPH_FAILURE;
       }
