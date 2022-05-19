@@ -23,13 +23,16 @@
 #define STM32H747I_DISCO_LCD_H
 
 #include "main.h"
+
 #include "lcd.h"
-#include "../Components/otm8009a/otm8009a.h"
+
+
+#ifdef __cplusplus
+ extern "C" {
+#endif
+
 
 #define LCD_INSTANCES_NBR          1
-
-#define LCD_FRAME_BUFFER        0xD0000000
-
 /**
   * @brief  HDMI Format
   */
@@ -174,7 +177,7 @@ typedef struct
   uint32_t BppFactor;
   uint32_t IsMspCallbacksValid;
   uint32_t ReloadEnable;
-} BSP_Lcd_Ctxx_t;
+} BSP_LCD_Ctx_t;
 
 typedef struct
 {
@@ -184,21 +187,15 @@ typedef struct
   uint32_t Y1;
   uint32_t PixelFormat;
   uint32_t Address;
-}MX_LTDC_LayerConfigg_t;
+}MX_LTDC_LayerConfig_t;
 
-#define BSP_LCD_LayerConfig_t MX_LTDC_LayerConfigg_t
+#define BSP_LCD_LayerConfig_t MX_LTDC_LayerConfig_t
 
-/**
-  * @}
-  */
 
-/** @addtogroup STM32H747I_DISCO_LCD_Exported_Variables
-  * @{
-  */
 extern DSI_HandleTypeDef   *hlcd_dsi;
-extern DMA2D_HandleTypeDef hlcd_dma2dd;
+extern DMA2D_HandleTypeDef hlcd_dma2d;
 extern LTDC_HandleTypeDef  *hlcd_ltdc;
-extern BSP_Lcd_Ctxx_t       Lcd_Ctxx[];
+extern BSP_LCD_Ctx_t       Lcd_Ctxx[];
 extern void               *Lcd_CompObj;
 /**
   * @}
@@ -209,9 +206,16 @@ extern void               *Lcd_CompObj;
 /* Initialization APIs */
 int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation);
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
-
+#if (USE_LCD_CTRL_ADV7533 > 0)
+int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format);
+#endif /* (USE_LCD_CTRL_ADV7533 > 0) */
 int32_t BSP_LCD_DeInit(uint32_t Instance);
 
+/* Register Callbacks APIs */
+#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
+int32_t BSP_LCD_RegisterDefaultMspCallbacks (uint32_t Instance);
+int32_t BSP_LCD_RegisterMspCallbacks (uint32_t Instance, BSP_LCD_Cb_t *CallBacks);
+#endif /*(USE_HAL_DSI_REGISTER_CALLBACKS == 1) */
 
 /* LCD specific APIs: Layer control & LCD HW reset */
 int32_t BSP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType);
@@ -243,7 +247,7 @@ int32_t BSP_LCD_ReadPixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint3
 int32_t BSP_LCD_WritePixel(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint32_t Color);
 
 /* LCD MX APIs */
-//HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t LayerIndex, MX_LTDC_LayerConfigg_t *Config);
+HAL_StatusTypeDef MX_LTDC_ConfigLayer(LTDC_HandleTypeDef *hltdc, uint32_t LayerIndex, MX_LTDC_LayerConfig_t *Config);
 HAL_StatusTypeDef MX_LTDC_ClockConfig(LTDC_HandleTypeDef *hltdc);
 HAL_StatusTypeDef MX_LTDC_ClockConfig2(LTDC_HandleTypeDef *hltdc);
 int32_t BSP_LCD_FillRGBRect(uint32_t Instance, uint32_t Xpos, uint32_t Ypos, uint8_t *pData, uint32_t Width, uint32_t Height);

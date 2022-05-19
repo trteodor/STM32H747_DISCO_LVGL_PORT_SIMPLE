@@ -35,13 +35,13 @@ extern "C" {
 extern I2C_HandleTypeDef hi2c4;
 
 /* USER CODE BEGIN Private defines */
-
+#ifdef AA
 /* USER CODE END Private defines */
 
 void MX_I2C4_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+#endif
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

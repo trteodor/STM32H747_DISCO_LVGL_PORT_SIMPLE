@@ -31,11 +31,11 @@ void MX_I2C4_Init(void)
 {
 
   /* USER CODE BEGIN I2C4_Init 0 */
-//
+
   /* USER CODE END I2C4_Init 0 */
 
   /* USER CODE BEGIN I2C4_Init 1 */
-//
+
   /* USER CODE END I2C4_Init 1 */
   hi2c4.Instance = I2C4;
   hi2c4.Init.Timing = 0x009034B6;
@@ -65,7 +65,7 @@ void MX_I2C4_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN I2C4_Init 2 */
-//
+
   /* USER CODE END I2C4_Init 2 */
 
 }

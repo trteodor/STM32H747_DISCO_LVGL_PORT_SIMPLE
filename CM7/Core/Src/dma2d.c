@@ -57,7 +57,7 @@ void HAL_DMA2D_MspInit(DMA2D_HandleTypeDef* dma2dHandle)
   if(dma2dHandle->Instance==DMA2D)
   {
   /* USER CODE BEGIN DMA2D_MspInit 0 */
-//
+
   /* USER CODE END DMA2D_MspInit 0 */
     /* DMA2D clock enable */
     __HAL_RCC_DMA2D_CLK_ENABLE();
@@ -66,7 +66,7 @@ void HAL_DMA2D_MspInit(DMA2D_HandleTypeDef* dma2dHandle)
     HAL_NVIC_SetPriority(DMA2D_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA2D_IRQn);
   /* USER CODE BEGIN DMA2D_MspInit 1 */
-//
+
   /* USER CODE END DMA2D_MspInit 1 */
   }
 }

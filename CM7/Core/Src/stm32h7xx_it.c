@@ -232,6 +232,8 @@ void LTDC_IRQHandler(void)
   /* USER CODE END LTDC_IRQn 1 */
 }
 
+
+extern DMA2D_HandleTypeDef   hdma2d;
 /**
   * @brief This function handles DMA2D global interrupt.
   */
@@ -246,17 +248,18 @@ void DMA2D_IRQHandler(void)
   /* USER CODE END DMA2D_IRQn 1 */
 }
 
+
 /**
   * @brief This function handles QUADSPI global interrupt.
   */
 void QUADSPI_IRQHandler(void)
 {
   /* USER CODE BEGIN QUADSPI_IRQn 0 */
-
+#ifdef AA
   /* USER CODE END QUADSPI_IRQn 0 */
   HAL_QSPI_IRQHandler(&hqspi);
   /* USER CODE BEGIN QUADSPI_IRQn 1 */
-
+#endif
   /* USER CODE END QUADSPI_IRQn 1 */
 }
 
@@ -266,11 +269,11 @@ void QUADSPI_IRQHandler(void)
 void I2C4_EV_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C4_EV_IRQn 0 */
-
+#ifdef TODO
   /* USER CODE END I2C4_EV_IRQn 0 */
   HAL_I2C_EV_IRQHandler(&hi2c4);
   /* USER CODE BEGIN I2C4_EV_IRQn 1 */
-
+#endif
   /* USER CODE END I2C4_EV_IRQn 1 */
 }
 
@@ -280,11 +283,11 @@ void I2C4_EV_IRQHandler(void)
 void I2C4_ER_IRQHandler(void)
 {
   /* USER CODE BEGIN I2C4_ER_IRQn 0 */
-
+#ifdef TODO
   /* USER CODE END I2C4_ER_IRQn 0 */
   HAL_I2C_ER_IRQHandler(&hi2c4);
   /* USER CODE BEGIN I2C4_ER_IRQn 1 */
-
+#endif
   /* USER CODE END I2C4_ER_IRQn 1 */
 }
 
@@ -317,16 +320,5 @@ void DSI_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-extern void Touch_HandlerIRQ();
-/*CubeMX don't support interrupts for GPIO in this MCU? probably.. :( */
-void EXTI9_5_IRQHandler(void)
-{
-//	HAL_EXTI_IRQHandler(&hexti);
-	/*Im'a a bit lazy with  it..*/
-	if(EXTI->PR1 && 0x80)
-	{
-		Touch_HandlerIRQ();
-		EXTI->PR1 |= 0x80; /*clear the IRQ flag by writing 1*/
-	}
-}
+
 /* USER CODE END 1 */

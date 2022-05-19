@@ -7,13 +7,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -32,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "BSP_LCD_Stm32h747Disco.h"
 
 #include "stm32_lcd.h"
 #include <stdio.h>
@@ -41,10 +40,11 @@ extern "C" {
 #include "fmc.h"
 #include "i2c.h"
 #include "quadspi.h"
-#include <FlashQspi_mt25tl01g.h>
-#include <Display_OTM8009A.h>
-#include "TouchC_ft6x06.h"
+//#include <FlashQspi_mt25tl01g.h>
+//#include <Display_OTM8009A.h>
+//#include "TouchC_ft6x06.h"
 #include "../Components/is42s32800j/is42s32800j.h"
+#include "../Components/otm8009a/otm8009a.h"
 #include "dma2d.h"
 #include "dsihost.h"
 #include "ltdc.h"
@@ -53,17 +53,19 @@ extern "C" {
 #include "gpio.h"
 #include "fmc.h"
 #include "DRVs_ErrorCodes.h"
-/**
-  * @brief  SDRAM Write read buffer start address after CAM Frame buffer
-  * Assuming Camera frame buffer is of size 800x480 and format ARGB8888 (32 bits per pixel).
-  */
-#define SDRAM_WRITE_READ_ADDR_OFFSET ((uint32_t)0x0800)
+#include "stm32_lcd.h"
 
+#include "BSP_LCD_Stm32h747Disco.h"
+#include "DispTest.h"
+
+#include "lcd.h"
+
+#include "stm32_lcd.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+#define LCD_FRAME_BUFFER        0xD0000000
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -243,10 +245,7 @@ void Error_Handler(void);
 #define FMC_D13_Pin GPIO_PIN_8
 #define FMC_D13_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
-/*Cube is Weak why don't generate this??*/
-/*And why don't initialize this pin??? So stupid Cube :( */
-#define DSI_PIN_RESET_PORT GPIOG
-#define DSI_PIN_RESET_PIN GPIO_PIN_3
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

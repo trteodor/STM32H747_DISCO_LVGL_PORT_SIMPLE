@@ -6,13 +6,12 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2021 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
   *
-  * This software component is licensed by ST under BSD 3-Clause license,
-  * the "License"; You may not use this file except in compliance with the
-  * License. You may obtain a copy of the License at:
-  *                        opensource.org/licenses/BSD-3-Clause
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
   */
@@ -31,23 +30,16 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
 
-#include "stlogo.h"
-#include "stdbool.h"
-
-#include "lvglAppMain.h"
-
-#include "DispTest.h"
-
-/***************IMPORANT******************************************************************************************/
-/*IN file ltdc.c i overwrite cube because he generate error braces "();"*/
-/***************IMPORANT******************************************************************************************/
-
-
+#include "ltdc.h"
+#include "dsihost.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -67,24 +59,19 @@
 
 /* USER CODE BEGIN PV */
 
+/* Private function prototypes -----------------------------------------------*/
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 void PeriphCommonClock_Config(void);
 /* USER CODE BEGIN PFP */
-static void LetsDrawSometging(void);
-extern void SDRAM_demo (void);
-extern void SDRAM_DMA_demo (void);
 
-
-void QSPI_demo (void);
-void QSPI_TestDist(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
 
 /* USER CODE END 0 */
 
@@ -143,12 +130,7 @@ Error_Handler();
 /* USER CODE END Boot_Mode_Sequence_2 */
 
   /* USER CODE BEGIN SysInit */
-//the order of calls is important ...
-/*CubeMX is stupid with it...*/
 
-/*In CubeMX I only set peripherials...
- * */
-/*Sometimes you as user have check it!!*/
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -157,54 +139,24 @@ Error_Handler();
   MX_DSIHOST_DSI_Init();
   MX_FMC_Init();
   MX_LTDC_Init();
-  MX_QUADSPI_Init();
+//  MX_QUADSPI_Init();
   MX_MDMA_Init();
   MX_DMA2D_Init();
-  MX_I2C4_Init();
+//  MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 
-  /* Initialize the LCD */
-//   DISP_LCD_Init(0, LCD_ORIENTATION_LANDSCAPE,&hdsi, &hltdc);
-//  /* Initialize the Touch Screen Controller in interrupt mode to handle Touch Points correctly with used screen */
-//   BSP_TS_InitIT_OTM8009a();
-//
-//  UTIL_LCD_SetFuncDriver(&LCD_Driver);
-//  UTIL_LCD_SetFont(&UTIL_LCD_DEFAULT_FONT);
-//  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTMAGENTA);
-//  HAL_Delay(30);
+/*Ram musi byc..*/
+//  BSP_SDRAM_Init(0);
 
-  /*Registers Utils to easy draw on display..*/
 
-  /**/
-//  QSPI_demo(); /*TODO: Some demonsation with DMA/MDMA Should Be Created else... */
-//  HAL_Delay(1000);
-//  SDRAM_DMA_demo();
-//  HAL_Delay(1000);
-
-//  LvglInitApp();
   LCD_OTM8009a_InitFull();
-  HAL_Delay(2000);
-
-  static uint32_t SavedLvglTime =0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(HAL_GetTick() -SavedLvglTime >= 5)
-	  {
-		  SavedLvglTime = HAL_GetTick();
-
-//		  LvglProcesTask();
-		  LCD_Task();
-	  }
-
-//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_LIGHTRED);
-//	  HAL_Delay(30);
-//	  UTIL_LCD_Clear(UTIL_LCD_COLOR_GREEN);
-//	  HAL_Delay(30);
-
+	  LCD_Task();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -307,49 +259,16 @@ void PeriphCommonClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-static void LetsDrawSometging(void)
-{
-  uint32_t x_size;
-  uint32_t y_size;
-  DISP_LCD_GetXSize(0, &x_size);
-  DISP_LCD_GetYSize(0, &y_size);
-  /* Clear the LCD */
-  UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
-
-  /*  Set the LCD Text Color */
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_DARKBLUE);
-  UTIL_LCD_FillRect(0, 0, x_size, 80, UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
-  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_BLUE);
-  UTIL_LCD_SetFont(&Font24);
-  UTIL_LCD_DisplayStringAt(0, 0, (uint8_t *)"HELLO DISPLAY", CENTER_MODE);
-  UTIL_LCD_SetFont(&Font12);
-  UTIL_LCD_DisplayStringAt(0, 300, (uint8_t *)"This example shows the different", CENTER_MODE);
-  UTIL_LCD_DisplayStringAt(0, 345, (uint8_t *)"Its really simple but difficult :/ ", CENTER_MODE);
-  UTIL_LCD_SetFont(&Font24);
-  UTIL_LCD_DisplayStringAt(0, 380, (uint8_t *)"Disturbances test will be activated", CENTER_MODE);
-  UTIL_LCD_DisplayStringAt(0, 410, (uint8_t *)"in time 5 seconds!", CENTER_MODE);
-
-  UTIL_LCD_DrawRect(10, 90, x_size - 20, y_size- 100, UTIL_LCD_COLOR_MAGENTA);
-  UTIL_LCD_DrawRect(11, 91, x_size - 22, y_size- 102, UTIL_LCD_COLOR_MAGENTA);
- }
-
-
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
+  * @brief Error Handler
   * @retval None
   */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */
+
+  while(1) { ; } /* Blocking on error */
 }
 
 #ifdef  USE_FULL_ASSERT
