@@ -69,7 +69,7 @@ typedef struct
   */
 void                *Lcd_CompObj = NULL;
 DSI_HandleTypeDef   *hlcd_dsi;
-DMA2D_HandleTypeDef hlcd_dma2d;
+DMA2D_HandleTypeDef hlcd_dma2dd;
 LTDC_HandleTypeDef  *hlcd_ltdc;
 BSP_LCD_Ctx_t       Lcd_Ctxx[LCD_INSTANCES_NBR];
 /**
@@ -169,7 +169,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     /* Initialize LCD special pins GPIOs */
     LCD_InitSequence();
 
-    DMA2D_MspInit(&hlcd_dma2d);
+    DMA2D_MspInit(&hlcd_dma2dd);
 
     MX_DSIHOST_DSI_Init();
 
@@ -180,13 +180,7 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
     if(ret == DRV_ERR_NONE)
     {
       /* Before configuring LTDC layer, ensure SDRAM is initialized */
-#if !defined(DATA_IN_ExtSDRAM)
-      /* Initialize the SDRAM */
-      if(BSP_SDRAM_Init(0) != DRV_ERR_NONE)
-      {
-        return DRV_ERROR_PERIPH_FAILURE;
-      }
-#endif /* DATA_IN_ExtSDRAM */
+
 
 
         /* Enable the DSI host and wrapper after the LTDC initialization
@@ -220,46 +214,46 @@ int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFo
   * @param  Instance    LCD Instance
   * @retval BSP status
   */
-int32_t BSP_LCD_DeInit(uint32_t Instance)
-{
-  int32_t ret = DRV_ERR_NONE;
-
-  if(Instance >= LCD_INSTANCES_NBR)
-  {
-    ret = DRV_ERROR_WRONG_PARAM;
-  }
-  else
-  {
-    LCD_DeInitSequence();
-#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 0)
-    LTDC_MspDeInit(hlcd_ltdc);
-#endif /* (USE_HAL_LTDC_REGISTER_CALLBACKS == 0) */
-
-    DMA2D_MspDeInit(&hlcd_dma2d);
-
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 0)
-    DSI_MspDeInit(hlcd_dsi);
-#endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 0) */
-    if(HAL_DSI_DeInit(hlcd_dsi) != HAL_OK)
-    {
-      ret = DRV_ERROR_PERIPH_FAILURE;
-    }
-    else
-    {
-      (void)HAL_LTDC_DeInit(hlcd_ltdc);
-      if(HAL_DMA2D_DeInit(&hlcd_dma2d) != HAL_OK)
-      {
-        ret = DRV_ERROR_PERIPH_FAILURE;
-      }
-      else
-      {
-        Lcd_Ctxx[Instance].IsMspCallbacksValid = 0;
-      }
-    }
-  }
-
-  return ret;
-}
+//int32_t BSP_LCD_DeInit(uint32_t Instance)
+//{
+//  int32_t ret = DRV_ERR_NONE;
+//
+//  if(Instance >= LCD_INSTANCES_NBR)
+//  {
+//    ret = DRV_ERROR_WRONG_PARAM;
+//  }
+//  else
+//  {
+//    LCD_DeInitSequence();
+//#if (USE_HAL_LTDC_REGISTER_CALLBACKS == 0)
+//    LTDC_MspDeInit(hlcd_ltdc);
+//#endif /* (USE_HAL_LTDC_REGISTER_CALLBACKS == 0) */
+//
+//    DMA2D_MspDeInit(&hlcd_dma2dd);
+//
+//#if (USE_HAL_DSI_REGISTER_CALLBACKS == 0)
+//    DSI_MspDeInit(hlcd_dsi);
+//#endif /* (USE_HAL_DSI_REGISTER_CALLBACKS == 0) */
+//    if(HAL_DSI_DeInit(hlcd_dsi) != HAL_OK)
+//    {
+//      ret = DRV_ERROR_PERIPH_FAILURE;
+//    }
+//    else
+//    {
+//      (void)HAL_LTDC_DeInit(hlcd_ltdc);
+//      if(HAL_DMA2D_DeInit(&hlcd_dma2dd) != HAL_OK)
+//      {
+//        ret = DRV_ERROR_PERIPH_FAILURE;
+//      }
+//      else
+//      {
+//        Lcd_Ctxx[Instance].IsMspCallbacksValid = 0;
+//      }
+//    }
+//  }
+//
+//  return ret;
+//}
 
 void BSP_LCD_Reset(uint32_t Instance)
 {
@@ -997,21 +991,21 @@ static void LL_FillBuffer(uint32_t Instance, uint32_t *pDst, uint32_t xSize, uin
   }
 
   /* Register to memory mode with ARGB8888 as color Mode */
-  hlcd_dma2d.Init.Mode         = DMA2D_R2M;
-  hlcd_dma2d.Init.ColorMode    = output_color_mode;
-  hlcd_dma2d.Init.OutputOffset = OffLine;
+  hlcd_dma2dd.Init.Mode         = DMA2D_R2M;
+  hlcd_dma2dd.Init.ColorMode    = output_color_mode;
+  hlcd_dma2dd.Init.OutputOffset = OffLine;
 
-  hlcd_dma2d.Instance = DMA2D;
+  hlcd_dma2dd.Instance = DMA2D;
 
   /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hlcd_dma2d) == HAL_OK)
+  if(HAL_DMA2D_Init(&hlcd_dma2dd) == HAL_OK)
   {
-    if(HAL_DMA2D_ConfigLayer(&hlcd_dma2d, 1) == HAL_OK)
+    if(HAL_DMA2D_ConfigLayer(&hlcd_dma2dd, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hlcd_dma2d, input_color, (uint32_t)pDst, xSize, ySize) == HAL_OK)
+      if (HAL_DMA2D_Start(&hlcd_dma2dd, input_color, (uint32_t)pDst, xSize, ySize) == HAL_OK)
       {
         /* Polling For DMA transfer */
-        (void)HAL_DMA2D_PollForTransfer(&hlcd_dma2d, 25);
+        (void)HAL_DMA2D_PollForTransfer(&hlcd_dma2dd, 25);
       }
     }
   }
@@ -1034,27 +1028,27 @@ static void LL_ConvertLineToRGB(uint32_t Instance, uint32_t *pSrc, uint32_t *pDs
   }
 
   /* Configure the DMA2D Mode, Color Mode and output offset */
-  hlcd_dma2d.Init.Mode         = DMA2D_M2M_PFC;
-  hlcd_dma2d.Init.ColorMode    = output_color_mode;
-  hlcd_dma2d.Init.OutputOffset = 0;
+  hlcd_dma2dd.Init.Mode         = DMA2D_M2M_PFC;
+  hlcd_dma2dd.Init.ColorMode    = output_color_mode;
+  hlcd_dma2dd.Init.OutputOffset = 0;
 
   /* Foreground Configuration */
-  hlcd_dma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hlcd_dma2d.LayerCfg[1].InputAlpha = 0xFF;
-  hlcd_dma2d.LayerCfg[1].InputColorMode = ColorMode;
-  hlcd_dma2d.LayerCfg[1].InputOffset = 0;
+  hlcd_dma2dd.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hlcd_dma2dd.LayerCfg[1].InputAlpha = 0xFF;
+  hlcd_dma2dd.LayerCfg[1].InputColorMode = ColorMode;
+  hlcd_dma2dd.LayerCfg[1].InputOffset = 0;
 
-  hlcd_dma2d.Instance = DMA2D;
+  hlcd_dma2dd.Instance = DMA2D;
 
   /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hlcd_dma2d) == HAL_OK)
+  if(HAL_DMA2D_Init(&hlcd_dma2dd) == HAL_OK)
   {
-    if(HAL_DMA2D_ConfigLayer(&hlcd_dma2d, 1) == HAL_OK)
+    if(HAL_DMA2D_ConfigLayer(&hlcd_dma2dd, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hlcd_dma2d, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
+      if (HAL_DMA2D_Start(&hlcd_dma2dd, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
       {
         /* Polling For DMA transfer */
-        (void)HAL_DMA2D_PollForTransfer(&hlcd_dma2d, 50);
+        (void)HAL_DMA2D_PollForTransfer(&hlcd_dma2dd, 50);
       }
     }
   }

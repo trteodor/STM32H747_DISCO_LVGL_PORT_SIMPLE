@@ -40,9 +40,9 @@ extern "C" {
 #include "fmc.h"
 #include "i2c.h"
 #include "quadspi.h"
-//#include <FlashQspi_mt25tl01g.h>
+#include <FlashQspi_mt25tl01g.h>
 //#include <Display_OTM8009A.h>
-//#include "TouchC_ft6x06.h"
+#include "TouchC_ft6x06.h"
 #include "../Components/is42s32800j/is42s32800j.h"
 #include "../Components/otm8009a/otm8009a.h"
 #include "dma2d.h"

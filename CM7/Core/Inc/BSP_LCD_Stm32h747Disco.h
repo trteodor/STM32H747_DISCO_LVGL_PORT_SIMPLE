@@ -193,7 +193,7 @@ typedef struct
 
 
 extern DSI_HandleTypeDef   *hlcd_dsi;
-extern DMA2D_HandleTypeDef hlcd_dma2d;
+extern DMA2D_HandleTypeDef hlcd_dma2dd;
 extern LTDC_HandleTypeDef  *hlcd_ltdc;
 extern BSP_LCD_Ctx_t       Lcd_Ctxx[];
 extern void               *Lcd_CompObj;
