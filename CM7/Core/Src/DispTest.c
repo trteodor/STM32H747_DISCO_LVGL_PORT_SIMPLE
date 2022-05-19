@@ -60,9 +60,9 @@ static RCC_PeriphCLKInitTypeDef  PeriphClkInitStruct;
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static int32_t pending_buffer = -1;
-static int32_t active_area = 0;
-static uint32_t ImageIndex = 0;
+static volatile int32_t pending_buffer = -1;
+static volatile int32_t active_area = 0;
+static volatile uint32_t ImageIndex = 0;
 static const uint32_t * Images[] =
 {
   image_320x240_argb8888,
@@ -89,6 +89,8 @@ static void CopyPicture(uint32_t *pSrc,
 
 void DMA2D_TransmitCpltCallBack(DMA2D_HandleTypeDef *hdma2d);
 static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize,void(*DMAtrEndCb)(void));
+
+void LvglFlushBuffer(uint32_t *pixelMap, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize,void(*DMAtrEndCb)(void));
 
 static uint8_t LCD_Init(void);
 static void LCD_LayertInit(uint16_t LayerIndex, uint32_t Address);
@@ -128,9 +130,14 @@ const LCD_UTILS_Drv_t LCD_UTIL_Driver =
 
 void LCD_Task(void)
 {
+	static int i=0;
     if(pending_buffer < 0)
     {
-    	LL_DMAFlushBuffer((uint32_t *)Images[ImageIndex++], (uint32_t *)LCD_FRAME_BUFFER, 0, 0, 800, 480,(void*)DMA2D_TransmitCpltCallBack);
+    	LL_DMAFlushBuffer((uint32_t *)Images[ImageIndex++], (uint32_t *)LCD_FRAME_BUFFER, 0, 0, 10*i, 480,(void*)DMA2D_TransmitCpltCallBack);
+
+	i++;
+	if(i> 80) i =0;
+
 
       if(ImageIndex >= 2)
       {
@@ -142,12 +149,48 @@ void LCD_Task(void)
       __DSI_UNMASK_TE();
     }
     /* Wait some time before switching to next image */
-//    HAL_Delay(500);
+    HAL_Delay(50);
+}
+
+
+static void(*TransmisionCpltCb)(void);
+
+
+void LvglFlushBuffer(uint32_t *pixelMap, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize,void(*DMAtrEndCb)(void))
+{
+//    if(pending_buffer < 0)
+    {
+    	LL_DMAFlushBuffer(pixelMap, (uint32_t *)LCD_FRAME_BUFFER, x, y, xsize, ysize,(void*)DMAtrEndCb);
+
+      if(ImageIndex >= 2)
+      {
+        ImageIndex = 0;
+      }
+      pending_buffer = 1;
+
+      /* UnMask the TE */
+      __DSI_UNMASK_TE();
+    }
+    /* Wait some time before switching to next image */
+//    HAL_Delay(30);
 }
 
 
 
+static void LCD_BriefDisplay(void)
+{
+  UTIL_LCD_SetFont(&Font24);
+  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_BLUE);
+  UTIL_LCD_FillRect(0, 0, Lcd_Ctxx[0].XSize, 112,UTIL_LCD_COLOR_BLUE);
+  UTIL_LCD_SetTextColor(UTIL_LCD_COLOR_WHITE);
+  UTIL_LCD_FillRect(0, 112, Lcd_Ctxx[0].XSize, 368, UTIL_LCD_COLOR_WHITE);
+  UTIL_LCD_SetBackColor(UTIL_LCD_COLOR_BLUE);
+  UTIL_LCD_DisplayStringAtLine(1, (uint8_t *)"   LCD_DSI_CmdMode_TearingEffect_ExtPin");
+  UTIL_LCD_SetFont(&Font16);
+  UTIL_LCD_DisplayStringAtLine(4, (uint8_t *)"This example shows how to display images on LCD DSI and prevent");
+  UTIL_LCD_DisplayStringAtLine(5, (uint8_t *)"Tearing Effect using DSI_TE pin ");
 
+}
 
 
 void LCD_OTM8009a_InitFull(void)
@@ -177,12 +220,21 @@ void LCD_OTM8009a_InitFull(void)
 	   /* Initialize LTDC layer 0 iused for Hint */
 	   LCD_LayertInit(0, LCD_FRAME_BUFFER);
 	   UTIL_LCD_SetFuncDriver(&LCD_UTIL_Driver);
+	   /* Update pitch : the draw is done on the whole physical X Size */
+	   HAL_LTDC_SetPitch(hlcd_ltdc, Lcd_Ctxx[0].XSize, 0);
 
 	   /* Enable DSI Wrapper so DSI IP will drive the LTDC */
 	   __HAL_DSI_WRAPPER_ENABLE(hlcd_dsi);
 
 	   HAL_DSI_LongWrite(hlcd_dsi, 0, DSI_DCS_LONG_PKT_WRITE, 4, OTM8009A_CMD_CASET, pColLeft);
 	   HAL_DSI_LongWrite(hlcd_dsi, 0, DSI_DCS_LONG_PKT_WRITE, 4, OTM8009A_CMD_PASET, pPage);
+
+		/* Display example brief   */
+		LCD_BriefDisplay();
+
+		/* Show first image */
+		CopyPicture((uint32_t *)Images[ImageIndex++], (uint32_t *)LCD_FRAME_BUFFER, 240, 160, 320, 240);
+
 
 	   pending_buffer = 0;
 	   active_area = LEFT_AREA;
@@ -195,6 +247,8 @@ void LCD_OTM8009a_InitFull(void)
 	                      DSI_DCS_SHORT_PKT_WRITE_P1,
 	                      OTM8009A_CMD_DISPON,
 	                      0x00);
+
+	   HAL_Delay(1000);
 }
 
 
@@ -656,7 +710,7 @@ static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16
   hdma2d.Init.RedBlueSwap   = DMA2D_RB_REGULAR;     /* No Output Red & Blue swap */
 
   /*##-2- DMA2D Callbacks Configuration ######################################*/
-  hdma2d.XferCpltCallback  = (void *)DMAtrEndCb;
+  hdma2d.XferCpltCallback  = (void *)DMA2D_TransmitCpltCallBack;
 
   /*##-3- Foreground Configuration ###########################################*/
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
@@ -676,13 +730,14 @@ static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16
   {
     if(HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start_IT(&hdma2d, source, destination, xsize, ysize) == HAL_OK)
+      if (HAL_DMA2D_Start(&hdma2d, source, destination, xsize, ysize) == HAL_OK)
       {
         /* Polling For DMA transfer */
-        while(FlagDmaTransmitEnd == 1)
-        {
-
-        }
+    	  HAL_DMA2D_PollForTransfer(&hdma2d, 100);
+//        while(FlagDmaTransmitEnd == 1)
+//        {
+        	DMAtrEndCb();
+//        }
       }
     }
   }

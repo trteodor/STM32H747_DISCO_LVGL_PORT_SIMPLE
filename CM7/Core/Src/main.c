@@ -35,6 +35,9 @@
 
 #include "ltdc.h"
 #include "dsihost.h"
+
+#include "lvglAppMain.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -142,21 +145,33 @@ Error_Handler();
 //  MX_QUADSPI_Init();
   MX_MDMA_Init();
   MX_DMA2D_Init();
-//  MX_I2C4_Init();
+  MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 
-/*Ram musi byc..*/
-//  BSP_SDRAM_Init(0);
-
-
   LCD_OTM8009a_InitFull();
+
+  BSP_TS_InitIT_OTM8009a();
+
+
+
+  LvglInitApp();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  LCD_Task();
+
+//	  HAL_Delay(200);
+	  static uint32_t LvglTime = 0;
+	  if(HAL_GetTick() - LvglTime > 5)
+	  {
+		  LvglTime = HAL_GetTick();
+
+		  LvglProcesTask();
+	  }
+//	  HAL_Delay(200);
+//	  LCD_Task();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

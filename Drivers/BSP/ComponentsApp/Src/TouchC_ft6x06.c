@@ -61,8 +61,8 @@ void BSP_TS_InitIT_OTM8009a(void) /*Gestures are not supported yet*/
 {
     uint32_t x_size, y_size;
 
-  DISP_LCD_GetXSize(0, &x_size);
-  DISP_LCD_GetYSize(0, &y_size);
+  x_size = 800;
+  y_size = 480;
 
   hTS.Width = x_size;
   hTS.Height = y_size;

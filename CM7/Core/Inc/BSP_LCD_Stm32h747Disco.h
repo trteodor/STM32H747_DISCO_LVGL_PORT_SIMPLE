@@ -206,16 +206,9 @@ extern void               *Lcd_CompObj;
 /* Initialization APIs */
 int32_t BSP_LCD_Init(uint32_t Instance, uint32_t Orientation);
 int32_t BSP_LCD_InitEx(uint32_t Instance, uint32_t Orientation, uint32_t PixelFormat, uint32_t Width, uint32_t Height);
-#if (USE_LCD_CTRL_ADV7533 > 0)
-int32_t BSP_LCD_InitHDMI(uint32_t Instance, uint32_t Format);
-#endif /* (USE_LCD_CTRL_ADV7533 > 0) */
+
 int32_t BSP_LCD_DeInit(uint32_t Instance);
 
-/* Register Callbacks APIs */
-#if (USE_HAL_DSI_REGISTER_CALLBACKS == 1)
-int32_t BSP_LCD_RegisterDefaultMspCallbacks (uint32_t Instance);
-int32_t BSP_LCD_RegisterMspCallbacks (uint32_t Instance, BSP_LCD_Cb_t *CallBacks);
-#endif /*(USE_HAL_DSI_REGISTER_CALLBACKS == 1) */
 
 /* LCD specific APIs: Layer control & LCD HW reset */
 int32_t BSP_LCD_Relaod(uint32_t Instance, uint32_t ReloadType);

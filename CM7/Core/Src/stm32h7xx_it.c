@@ -320,5 +320,16 @@ void DSI_IRQHandler(void)
 }
 
 /* USER CODE BEGIN 1 */
-
+extern void Touch_HandlerIRQ();
+/*CubeMX don't support interrupts for GPIO in this MCU? probably.. :( */
+void EXTI9_5_IRQHandler(void)
+{
+//	HAL_EXTI_IRQHandler(&hexti);
+	/*Im'a a bit lazy with  it..*/
+	if(EXTI->PR1 && 0x80)
+	{
+		Touch_HandlerIRQ();
+		EXTI->PR1 |= 0x80; /*clear the IRQ flag by writing 1*/
+	}
+}
 /* USER CODE END 1 */
