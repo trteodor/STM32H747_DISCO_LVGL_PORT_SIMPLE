@@ -15,14 +15,16 @@ static lv_disp_draw_buf_t disp_buf;
 
 #define DISCOH747_DISP_WIDTH 800
 #define DISCOH747_DISP_HIGH 480
-#define BufferDivider 40
+#define BufferDivider 1
+
+
+#define SDRAM_DEVICE_ADDR         0xD0000000U
 
 void BuffTransmitCpltCb(void);
-#ifndef TODO
+//#ifndef TODO
 /*todo: it maybe should be stored in external ram... */
-static lv_color_t buf_1[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
-static lv_color_t buf_2[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ; //__attribute__ ((section (".LvBufferSection")))
-#endif
+static volatile lv_color_t *buf_1 = (lv_color_t*)SDRAM_DEVICE_ADDR + (2*0x240000);
+static volatile lv_color_t *buf_2 = (lv_color_t*)SDRAM_DEVICE_ADDR + (3*0x240000);
 
 
 static lv_disp_drv_t disp_drv;
@@ -37,18 +39,8 @@ void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * co
 {
 	LastDriver = drv;
 
-#ifndef TODO /*It must else verified and tested.. Call arguments and size of the screen*/
-//	DISP_LCD_LL_FlushBufferDMA2D(0,
-//								area->x1,
-//								area->y1,
-//								area->x2 - area->x1 +1,
-//								area->y2 - area->y1 +1,
-//								(uint32_t *)color_map,
-//								BuffTransmitCpltCb);
-
 	LvglFlushBuffer((void*)color_map, area->x1, area->y1, area->x2 - area->x1 +1, area->y2 - area->y1 +1,BuffTransmitCpltCb);
 
-#endif
 }
 
 void BuffTransmitCpltCb(void)
@@ -60,7 +52,6 @@ void TouchCntrlFt6x06_Read(lv_indev_drv_t * drv, lv_indev_data_t*data)
 {
 	static TouchStateFt6x06_t PreviousTouchState;
 
-	/*BSP_TS_GetIT_State_OTM8009a function automatically Touch IRQ Flag*/
 	if(BSP_TS_GetIT_State_OTM8009a() == Touch_IRQ_FlagSet_ft6x06 || PreviousTouchState == Touch_Touched_ft6x06 )
 	{
 		int16_t readX,readY;

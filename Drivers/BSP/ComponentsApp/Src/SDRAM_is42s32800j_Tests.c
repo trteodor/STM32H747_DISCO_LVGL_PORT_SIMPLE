@@ -237,7 +237,7 @@ static void Fill_Buffer(uint32_t *pBuffer, uint32_t uwBufferLength, uint32_t uwO
   }
   /* Clean Data Cache to update the content of the SDRAM */
   /*TODO: To clarification!!!! This generate sometimes hard fault?? */
-//  SCB_CleanDCache_by_Addr((uint32_t*)pBuffer, uwBufferLength*4);
+  SCB_CleanDCache_by_Addr((uint32_t*)pBuffer, uwBufferLength*4);
 }
 
 /**

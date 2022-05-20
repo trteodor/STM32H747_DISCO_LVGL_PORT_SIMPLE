@@ -158,18 +158,16 @@ static void(*TransmisionCpltCb)(void);
 
 void LvglFlushBuffer(uint32_t *pixelMap, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize,void(*DMAtrEndCb)(void))
 {
+	while(pending_buffer >= 0)
+	{
+		/*Wait!!*/
+	}
 //    if(pending_buffer < 0)
     {
+        /* UnMask the TE */
     	LL_DMAFlushBuffer(pixelMap, (uint32_t *)LCD_FRAME_BUFFER, x, y, xsize, ysize,(void*)DMAtrEndCb);
-
-      if(ImageIndex >= 2)
-      {
-        ImageIndex = 0;
-      }
-      pending_buffer = 1;
-
-      /* UnMask the TE */
-      __DSI_UNMASK_TE();
+        __DSI_UNMASK_TE();
+        pending_buffer = 1;
     }
     /* Wait some time before switching to next image */
 //    HAL_Delay(30);
@@ -710,7 +708,7 @@ static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16
   hdma2d.Init.RedBlueSwap   = DMA2D_RB_REGULAR;     /* No Output Red & Blue swap */
 
   /*##-2- DMA2D Callbacks Configuration ######################################*/
-  hdma2d.XferCpltCallback  = (void *)DMA2D_TransmitCpltCallBack;
+  hdma2d.XferCpltCallback  = (void *)DMAtrEndCb;
 
   /*##-3- Foreground Configuration ###########################################*/
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
@@ -730,13 +728,13 @@ static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16
   {
     if(HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hdma2d, source, destination, xsize, ysize) == HAL_OK)
+      if (HAL_DMA2D_Start_IT(&hdma2d, source, destination, xsize, ysize) == HAL_OK)
       {
         /* Polling For DMA transfer */
-    	  HAL_DMA2D_PollForTransfer(&hdma2d, 100);
+//    	  HAL_DMA2D_PollForTransfer(&hdma2d, 100);
 //        while(FlagDmaTransmitEnd == 1)
 //        {
-        	DMAtrEndCb();
+//        	DMAtrEndCb();
 //        }
       }
     }
