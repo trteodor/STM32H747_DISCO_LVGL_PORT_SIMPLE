@@ -164,6 +164,8 @@ void LvglFlushBuffer(uint32_t *pixelMap, uint16_t x, uint16_t y, uint16_t xsize,
         /* UnMask the TE */
     	TransmisionCpltCb = (void*)DMAtrEndCb;
 
+
+
     	LL_DMAFlushBuffer(pixelMap, (uint32_t *)LCD_FRAME_BUFFER, x, y, xsize, ysize,(void*)DMAtrEndCb);
         __DSI_UNMASK_TE();
     }

@@ -91,6 +91,12 @@ int main(void)
   int32_t timeout;
 /* USER CODE END Boot_Mode_Sequence_0 */
 
+  /* Enable I-Cache---------------------------------------------------------*/
+  SCB_EnableICache();
+
+  /* Enable D-Cache---------------------------------------------------------*/
+  SCB_EnableDCache();
+
 /* USER CODE BEGIN Boot_Mode_Sequence_1 */
   /* Wait until CPU2 boots and enters in stop mode or timeout*/
   timeout = 0xFFFF;
@@ -151,6 +157,11 @@ Error_Handler();
 
 
   LCD_OTM8009a_InitFull();
+HAL_Delay(3000);
+SDRAM_demo();
+HAL_Delay(3000);
+
+
 
   BSP_TS_InitIT_OTM8009a();
 

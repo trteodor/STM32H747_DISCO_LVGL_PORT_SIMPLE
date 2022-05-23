@@ -51,8 +51,12 @@ static uint8_t Buffercmp(uint32_t* pBuffer1, uint32_t* pBuffer2, uint16_t Buffer
   * @param  None
   * @retval None
   */
+#define __DSI_UNMASK_TE() (GPIOJ->AFR[0] |= ((uint32_t)(GPIO_AF13_DSI) << 8)) /* UnMask DSI TearingEffect Pin*/
+
 void SDRAM_demo (void)
 {
+	__DSI_UNMASK_TE();
+
   SDRAM_SetHint();
 
    UTIL_LCD_DisplayStringAt(20, 100, (uint8_t *)"SDRAM Initialization : OK.", LEFT_MODE);
@@ -163,8 +167,8 @@ static void SDRAM_SetHint(void)
 {
   uint32_t x_size, y_size;
 
-  DISP_LCD_GetXSize(0, &x_size);
-  DISP_LCD_GetYSize(0, &y_size);
+  x_size = 800;
+  y_size = 480;
 
   /* Clear the LCD */
   UTIL_LCD_Clear(UTIL_LCD_COLOR_WHITE);
@@ -251,7 +255,7 @@ static uint8_t Buffercmp(uint32_t* pBuffer1, uint32_t* pBuffer2, uint16_t Buffer
 {
   /* Invalidate Data Cache to get the updated content of the SRAM*/
 	  /*TODO: To clarification!!!! This generate sometimes hard fault?? */
-//  SCB_CleanInvalidateDCache_by_Addr((uint32_t *)pBuffer2, BufferLength*4);
+  SCB_CleanInvalidateDCache_by_Addr((uint32_t *)pBuffer2, BufferLength*4);
 
   while (BufferLength--)
   {

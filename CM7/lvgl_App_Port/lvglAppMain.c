@@ -25,6 +25,8 @@ void BuffTransmitCpltCb(void);
 /*todo: it maybe should be stored in external ram... */
 static volatile lv_color_t *buf_1 = (lv_color_t*)SDRAM_DEVICE_ADDR + (2*0x240000);
 static volatile lv_color_t *buf_2 = (lv_color_t*)SDRAM_DEVICE_ADDR + (3*0x240000);
+//static lv_color_t buf_1[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
+//static lv_color_t buf_2[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
 
 
 static lv_disp_drv_t disp_drv;
@@ -35,17 +37,25 @@ static lv_indev_drv_t indev_drv;
 
 static lv_disp_drv_t *LastDriver;
 
+static lv_color_t *lasColorMapPointer;
+
 void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * color_map)
 {
 	LastDriver = drv;
+	lasColorMapPointer = color_map;
 
+
+	SCB_CleanDCache_by_Addr((uint32_t*)color_map, 480*800*4);
 	LvglFlushBuffer((void*)color_map, area->x1, area->y1, area->x2 - area->x1 +1, area->y2 - area->y1 +1,BuffTransmitCpltCb);
+
+
 
 }
 
+
 void BuffTransmitCpltCb(void)
 {
-
+	SCB_CleanInvalidateDCache();
 	lv_disp_flush_ready(LastDriver);
 }
 

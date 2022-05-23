@@ -83,9 +83,9 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Common"/>
 						<entry excluding="Src/touchscreen.c|Src/sdram.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
-						<entry excluding="BSP/ExcludedDrivers|BSP/ComponentsApp/Src/Display_OTM8009A.c|BSP/ComponentsApp/Src/Display_OTM8009A_Tests.c|BSP/STM32H747I-DISCO/stm32h747i_discovery_bus.c|STM32H7xx_HAL_Driver/Src|STM32H7xx_HAL_Driver/Inc|STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_delayblock.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_tim_template.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_rtc_wakeup_template.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_rtc_alarm_template.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry excluding="Fonts|CPU" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Utilities"/>
 						<entry excluding="lvgl/tests" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lvgl_App_Port"/>
+						<entry excluding="BSP/ExcludedDrivers|BSP/ComponentsApp/Src/Display_OTM8009A.c|BSP/ComponentsApp/Src/Display_OTM8009A_Tests.c|BSP/STM32H747I-DISCO/stm32h747i_discovery_bus.c|STM32H7xx_HAL_Driver/Src|STM32H7xx_HAL_Driver/Inc|STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_delayblock.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_tim_template.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_rtc_wakeup_template.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_rtc_alarm_template.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -160,9 +160,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
+						<entry excluding="BSP/ExcludedDrivers|BSP/ComponentsApp/Src/Display_OTM8009A.c|BSP/ComponentsApp/Src/Display_OTM8009A_Tests.c|BSP/STM32H747I-DISCO/stm32h747i_discovery_bus.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Common"/>
 						<entry excluding="Src/touchscreen.c|Src/sdram.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
-						<entry excluding="BSP/ExcludedDrivers|BSP/ComponentsApp/Src/Display_OTM8009A.c|BSP/ComponentsApp/Src/Display_OTM8009A_Tests.c|BSP/STM32H747I-DISCO/stm32h747i_discovery_bus.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
