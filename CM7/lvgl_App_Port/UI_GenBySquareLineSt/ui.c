@@ -19,8 +19,6 @@ lv_obj_t * ui_Panel1;
 lv_obj_t * ui_Screen1;
 lv_obj_t * ui_TextArea1;
 lv_obj_t * ui_Keyboard1;
-lv_obj_t * ui_Arc1;
-lv_obj_t * ui_Arc2;
 lv_obj_t * ui_Button1;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -217,36 +215,6 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_y(ui_Keyboard1, 51);
 
     lv_obj_set_align(ui_Keyboard1, LV_ALIGN_CENTER);
-
-    // ui_Arc1
-
-    ui_Arc1 = lv_arc_create(ui_Screen1);
-
-    lv_obj_set_width(ui_Arc1, 150);
-    lv_obj_set_height(ui_Arc1, 150);
-
-    lv_obj_set_x(ui_Arc1, -259);
-    lv_obj_set_y(ui_Arc1, 317);
-
-    lv_obj_set_align(ui_Arc1, LV_ALIGN_CENTER);
-
-    lv_arc_set_range(ui_Arc1, 0, 100);
-    lv_arc_set_bg_angles(ui_Arc1, 120, 60);
-
-    // ui_Arc2
-
-    ui_Arc2 = lv_arc_create(ui_Screen1);
-
-    lv_obj_set_width(ui_Arc2, 150);
-    lv_obj_set_height(ui_Arc2, 150);
-
-    lv_obj_set_x(ui_Arc2, 13);
-    lv_obj_set_y(ui_Arc2, 315);
-
-    lv_obj_set_align(ui_Arc2, LV_ALIGN_CENTER);
-
-    lv_arc_set_range(ui_Arc2, 0, 100);
-    lv_arc_set_bg_angles(ui_Arc2, 120, 60);
 
     // ui_Button1
 

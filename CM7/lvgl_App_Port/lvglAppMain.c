@@ -41,13 +41,18 @@ static lv_color_t *lasColorMapPointer;
 
 void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * color_map)
 {
-	LastDriver = drv;
-	lasColorMapPointer = color_map;
+	LTDC_Layer1->CFBAR = (uint32_t)color_map;
+	LTDC->SRCR = LTDC_SRCR_VBR;
+	lv_disp_flush_ready(drv);
 
 
-	SCB_CleanDCache_by_Addr((uint32_t*)color_map, 480*800*4);
-	LvglFlushBuffer((void*)color_map, area->x1, area->y1, area->x2 - area->x1 +1, area->y2 - area->y1 +1,BuffTransmitCpltCb);
-
+//	LastDriver = drv;
+//	lasColorMapPointer = color_map;
+//
+//
+//	SCB_CleanDCache_by_Addr((uint32_t*)color_map, 480*800*4);
+//	LvglFlushBuffer((void*)color_map, area->x1, area->y1, area->x2 - area->x1 +1, area->y2 - area->y1 +1,BuffTransmitCpltCb);
+//
 
 
 }

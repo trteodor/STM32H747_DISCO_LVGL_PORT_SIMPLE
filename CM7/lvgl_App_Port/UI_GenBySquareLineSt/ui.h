@@ -28,8 +28,6 @@ extern lv_obj_t * ui_Panel1;
 extern lv_obj_t * ui_Screen1;
 extern lv_obj_t * ui_TextArea1;
 extern lv_obj_t * ui_Keyboard1;
-extern lv_obj_t * ui_Arc1;
-extern lv_obj_t * ui_Arc2;
 extern lv_obj_t * ui_Button1;
 
 
