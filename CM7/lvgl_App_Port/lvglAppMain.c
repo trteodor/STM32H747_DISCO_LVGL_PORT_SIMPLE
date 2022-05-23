@@ -36,9 +36,23 @@ static lv_disp_drv_t *LastDriver;
 
 void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * color_map)
 {
-	LTDC_Layer1->CFBAR = (uint32_t)color_map;
-	LTDC->SRCR = LTDC_SRCR_VBR;
-	lv_disp_flush_ready(drv);
+	LastDriver = drv;
+
+		LastDriver = drv;
+
+	#ifndef TODO /*It must else verified and tested.. Call arguments and size of the screen*/
+		DISP_LCD_LL_FlushBufferDMA2D(0,
+									area->x1,
+									area->y1,
+									area->x2 - area->x1 +1,
+									area->y2 - area->y1 +1,
+									(uint32_t *)color_map,
+									BuffTransmitCpltCb);
+	#endif
+
+//	LTDC_Layer1->CFBAR = (uint32_t)color_map;
+//	LTDC->SRCR = LTDC_SRCR_IMR;
+//	lv_disp_flush_ready(drv);
 }
 
 void BuffTransmitCpltCb(void)
@@ -108,7 +122,7 @@ void TouchCntrlFt6x06_Read(lv_indev_drv_t * drv, lv_indev_data_t*data)
 void LvglInitApp(void)
 {
 	  lv_init();
-	  lv_disp_draw_buf_init(&disp_buf, buf_1, buf_2, (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH)/ BufferDivider);
+	  lv_disp_draw_buf_init(&disp_buf, buf_1, buf_2, (4* DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH)/ BufferDivider);
 	  lv_disp_drv_init(&disp_drv);            /*Basic initialization*/
 	  disp_drv.draw_buf = &disp_buf;          /*Set an initialized buffer*/
 	  disp_drv.flush_cb = OTM8009_flush;        /*Set a flush callback to draw to the display*/
