@@ -14,15 +14,17 @@ static lv_disp_draw_buf_t disp_buf;
 
 #define DISCOH747_DISP_WIDTH 800
 #define DISCOH747_DISP_HIGH 480
-#define BufferDivider 20
+#define BufferDivider 1
 
 void BuffTransmitCpltCb(void);
-#ifndef TODO
-/*todo: it maybe should be stored in external ram... */
-static lv_color_t buf_1[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
-static lv_color_t buf_2[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ; //__attribute__ ((section (".LvBufferSection")))
-#endif
 
+#define SDRAM_DEVICE_ADDR         0xD0000000U
+
+
+static volatile lv_color_t *buf_1 = (lv_color_t*)SDRAM_DEVICE_ADDR + (2*0x240000);
+static volatile lv_color_t *buf_2 = (lv_color_t*)SDRAM_DEVICE_ADDR + (3*0x240000);
+//static lv_color_t buf_1[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
+//static lv_color_t buf_2[ (DISCOH747_DISP_WIDTH * DISCOH747_DISP_HIGH) /BufferDivider ] ;
 
 static lv_disp_drv_t disp_drv;
 static lv_indev_drv_t indev_drv;
@@ -34,17 +36,9 @@ static lv_disp_drv_t *LastDriver;
 
 void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * color_map)
 {
-	LastDriver = drv;
-
-#ifndef TODO /*It must else verified and tested.. Call arguments and size of the screen*/
-	DISP_LCD_LL_FlushBufferDMA2D(0,
-								area->x1,
-								area->y1,
-								area->x2 - area->x1 +1,
-								area->y2 - area->y1 +1,
-								(uint32_t *)color_map,
-								BuffTransmitCpltCb);
-#endif
+	LTDC_Layer1->CFBAR = (uint32_t)color_map;
+	LTDC->SRCR = LTDC_SRCR_VBR;
+	lv_disp_flush_ready(drv);
 }
 
 void BuffTransmitCpltCb(void)
