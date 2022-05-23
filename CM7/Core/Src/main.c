@@ -147,6 +147,8 @@ Error_Handler();
   MX_DMA2D_Init();
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
+	SCB_CleanInvalidateDCache();
+
 
   LCD_OTM8009a_InitFull();
 

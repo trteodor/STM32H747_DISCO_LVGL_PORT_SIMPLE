@@ -153,21 +153,19 @@ void LCD_Task(void)
 }
 
 
-static void(*TransmisionCpltCb)(void);
+static void(*TransmisionCpltCb)(void) = NULL;
 
 
 void LvglFlushBuffer(uint32_t *pixelMap, uint16_t x, uint16_t y, uint16_t xsize, uint16_t ysize,void(*DMAtrEndCb)(void))
 {
-	while(pending_buffer >= 0)
-	{
-		/*Wait!!*/
-	}
+
 //    if(pending_buffer < 0)
     {
         /* UnMask the TE */
+    	TransmisionCpltCb = (void*)DMAtrEndCb;
+
     	LL_DMAFlushBuffer(pixelMap, (uint32_t *)LCD_FRAME_BUFFER, x, y, xsize, ysize,(void*)DMAtrEndCb);
         __DSI_UNMASK_TE();
-        pending_buffer = 1;
     }
     /* Wait some time before switching to next image */
 //    HAL_Delay(30);
@@ -302,8 +300,6 @@ void HAL_DSI_TearingEffectCallback(DSI_HandleTypeDef *hdsi)
   */
 void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef *hdsi)
 {
-  if(pending_buffer >= 0)
-  {
     if(active_area == LEFT_AREA)
     {
       /* Disable DSI Wrapper */
@@ -331,9 +327,11 @@ void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef *hdsi)
       __HAL_DSI_WRAPPER_ENABLE(hlcd_dsi);
 
       HAL_DSI_LongWrite(hdsi, 0, DSI_DCS_LONG_PKT_WRITE, 4, OTM8009A_CMD_CASET, pColLeft);
-      pending_buffer = -1;
+      if(TransmisionCpltCb != 0){
+    	  TransmisionCpltCb();
+      }
+
     }
-  }
   active_area = (active_area == LEFT_AREA)? RIGHT_AREA : LEFT_AREA;
 }
 
@@ -708,7 +706,7 @@ static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16
   hdma2d.Init.RedBlueSwap   = DMA2D_RB_REGULAR;     /* No Output Red & Blue swap */
 
   /*##-2- DMA2D Callbacks Configuration ######################################*/
-  hdma2d.XferCpltCallback  = (void *)DMAtrEndCb;
+  hdma2d.XferCpltCallback  = (void *)DMA2D_TransmitCpltCallBack;
 
   /*##-3- Foreground Configuration ###########################################*/
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;

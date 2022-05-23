@@ -45,6 +45,7 @@ void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * co
 
 void BuffTransmitCpltCb(void)
 {
+
 	lv_disp_flush_ready(LastDriver);
 }
 
