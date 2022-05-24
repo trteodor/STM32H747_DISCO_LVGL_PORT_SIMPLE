@@ -31,7 +31,6 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "BSP_LCD_Stm32h747Disco.h"
 
 #include "stm32_lcd.h"
 #include <stdio.h>
@@ -41,7 +40,6 @@ extern "C" {
 #include "i2c.h"
 #include "quadspi.h"
 #include <FlashQspi_mt25tl01g.h>
-//#include <Display_OTM8009A.h>
 #include "TouchC_ft6x06.h"
 #include "../Components/is42s32800j/is42s32800j.h"
 #include "../Components/otm8009a/otm8009a.h"
@@ -55,8 +53,6 @@ extern "C" {
 #include "DRVs_ErrorCodes.h"
 #include "stm32_lcd.h"
 
-#include "BSP_LCD_Stm32h747Disco.h"
-#include "DispTest.h"
 
 #include "lcd.h"
 
@@ -158,6 +154,8 @@ void Error_Handler(void);
 #define FMC_A3_GPIO_Port GPIOF
 #define FMC_BA0_Pin GPIO_PIN_4
 #define FMC_BA0_GPIO_Port GPIOG
+#define DSI_PIN_RESET_Pin GPIO_PIN_3
+#define DSI_PIN_RESET_GPIO_Port GPIOG
 #define FMC_A12_Pin GPIO_PIN_2
 #define FMC_A12_GPIO_Port GPIOG
 #define OSC_OUT_Pin GPIO_PIN_1

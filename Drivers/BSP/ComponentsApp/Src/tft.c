@@ -111,21 +111,19 @@ void monitor_cb(lv_disp_drv_t * d, uint32_t t, uint32_t p)
 }
 
 void tft_init_1(void){
-	MX_GPIO_Init_LCD();
-
-	/************************/
+	/************************/ //reset lcd
 	HAL_GPIO_WritePin(LCD_RESET_GPIO_Port, LCD_RESET_Pin, GPIO_PIN_RESET);
 	HAL_Delay(20);/* wait 20 ms */
 	HAL_GPIO_WritePin(LCD_RESET_GPIO_Port, LCD_RESET_Pin, GPIO_PIN_SET);/* Deactivate XRES */
 	HAL_Delay(10);/* Wait for 10ms after releasing XRES before sending commands */
-
+/********************************/
 
 	__HAL_LTDC_DISABLE(&hltdc);
 	DSI_LPCmdTypeDef LPCmd;
 
 	HAL_DSI_Start(&hdsi);
 
-	/* Configure the audio driver */
+	/* Configure the lcd driver */
 	IOCtx.Address     = 0;
 	IOCtx.GetTick     = LCD_TFT_GetTick;
 	IOCtx.WriteReg    = DSI_IO_Write;
@@ -144,9 +142,6 @@ void tft_init_1(void){
 	HAL_LTDC_SetPitch(&hltdc, 800, 0);
 	__HAL_LTDC_ENABLE(&hltdc);
 
-
-	/************************/
-	MX_DMA_Init();
 }
 
 void TouchCntrlFt6x06_Read(lv_indev_drv_t * drv, lv_indev_data_t*data)
@@ -357,51 +352,5 @@ int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t* pData, uint16_t
      }
 
      return ret;
- }
-
-
- void MX_GPIO_Init_LCD(void)
- {
-   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-   /* GPIO Ports Clock Enable */
-   __HAL_RCC_GPIOG_CLK_ENABLE();
-   __HAL_RCC_GPIOE_CLK_ENABLE();
-   __HAL_RCC_GPIOA_CLK_ENABLE();
-   __HAL_RCC_GPIOC_CLK_ENABLE();
-   __HAL_RCC_GPIOJ_CLK_ENABLE();
-   __HAL_RCC_GPIOD_CLK_ENABLE();
-   __HAL_RCC_GPIOF_CLK_ENABLE();
-   __HAL_RCC_GPIOB_CLK_ENABLE();
-
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(LCD_BL_GPIO_Port, LCD_BL_Pin, GPIO_PIN_RESET);
-
-   /*Configure GPIO pin Output Level */
-   HAL_GPIO_WritePin(LCD_RESET_GPIO_Port, LCD_RESET_Pin, GPIO_PIN_RESET);
-
-   /*Configure GPIO pin : LCD_BL_Pin */
-   GPIO_InitStruct.Pin = LCD_BL_Pin;
-   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-   HAL_GPIO_Init(LCD_BL_GPIO_Port, &GPIO_InitStruct);
-
-   /*Configure GPIO pin : PA8 */
-   GPIO_InitStruct.Pin = GPIO_PIN_8;
-   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-   GPIO_InitStruct.Pull = GPIO_NOPULL;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-   GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
-   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-   /*Configure GPIO pin : LCD_RESET_Pin */
-   GPIO_InitStruct.Pin = LCD_RESET_Pin;
-   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-   GPIO_InitStruct.Pull = GPIO_PULLUP;
-   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-   HAL_GPIO_Init(LCD_RESET_GPIO_Port, &GPIO_InitStruct);
-
  }
 
