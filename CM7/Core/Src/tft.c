@@ -18,12 +18,6 @@
 #include "TouchC_ft6x06.h"
 
 
-
-//#include "stm32h747i_discovery.h"
-//#include "stm32h747i_discovery_lcd.h"
-//#include "stm32h747i_discovery_bus.h"
-//#include "stm32h747i_discovery_sdram.h"
-
 /*********************
  *      DEFINES
  *********************/
@@ -46,8 +40,6 @@
  *  STATIC PROTOTYPES
  **********************/
 
-DMA2D_HandleTypeDef hdma2d;
-
 DSI_HandleTypeDef hdsi;
 
 LTDC_HandleTypeDef hltdc;
@@ -60,7 +52,7 @@ OTM8009A_Object_t OTM8009AObj;
 OTM8009A_IO_t IOCtx;
 
 void MX_GPIO_Init_LCD(void);
-void MX_DMA2D_Init(void);
+
 void MX_DSIHOST_DSI_Init(void);
 void MX_LTDC_Init(void);
 void MX_DMA_Init(void);
@@ -153,7 +145,6 @@ void monitor_cb(lv_disp_drv_t * d, uint32_t t, uint32_t p)
  */
 void tft_init_1(void){
 	MX_GPIO_Init_LCD();
-	MX_DMA2D_Init();
 	MX_DSIHOST_DSI_Init();
 	MX_LTDC_Init();
 	MX_DMA_Init();
@@ -261,9 +252,8 @@ static void tft_flush_cb(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t
 	buf_to_flush = color_p;
 
 
-	/*Use DMA instead of DMA2D to leave it free for GPU*/
-	HAL_StatusTypeDef err;
 
+	HAL_StatusTypeDef err;
 
 //	__DSI_UNMASK_TE();
 
@@ -480,40 +470,7 @@ int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t* pData, uint16_t
 
  }
 
-/**
-  * @brief DMA2D Initialization Function
-  * @param None
-  * @retval None
-  */
-void MX_DMA2D_Init(void)
-{
 
-  /* USER CODE BEGIN DMA2D_Init 0 */
-
-  /* USER CODE END DMA2D_Init 0 */
-
-  /* USER CODE BEGIN DMA2D_Init 1 */
-
-  /* USER CODE END DMA2D_Init 1 */
-  hdma2d.Instance = DMA2D;
-  hdma2d.Init.Mode = DMA2D_R2M;
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB888;
-  hdma2d.Init.OutputOffset = 0;
-  if (HAL_DMA2D_Init(&hdma2d) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN DMA2D_Init 2 */
-
-  /* USER CODE END DMA2D_Init 2 */
-
-}
-
-/**
-  * @brief DSIHOST Initialization Function
-  * @param None
-  * @retval None
-  */
 void MX_DSIHOST_DSI_Init(void)
 {
 
@@ -764,56 +721,6 @@ void MX_DMA_Init(void)
   /* DMA2_Stream0_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-
-}
-
-/**
-* @brief DMA2D MSP Initialization
-* This function configures the hardware resources used in this example
-* @param hdma2d: DMA2D handle pointer
-* @retval None
-*/
-void HAL_DMA2D_MspInit(DMA2D_HandleTypeDef* hdma2d)
-{
-  if(hdma2d->Instance==DMA2D)
-  {
-  /* USER CODE BEGIN DMA2D_MspInit 0 */
-
-  /* USER CODE END DMA2D_MspInit 0 */
-    /* Peripheral clock enable */
-    __HAL_RCC_DMA2D_CLK_ENABLE();
-    /* DMA2D interrupt Init */
-    HAL_NVIC_SetPriority(DMA2D_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(DMA2D_IRQn);
-  /* USER CODE BEGIN DMA2D_MspInit 1 */
-
-  /* USER CODE END DMA2D_MspInit 1 */
-  }
-
-}
-
-/**
-* @brief DMA2D MSP De-Initialization
-* This function freeze the hardware resources used in this example
-* @param hdma2d: DMA2D handle pointer
-* @retval None
-*/
-void HAL_DMA2D_MspDeInit(DMA2D_HandleTypeDef* hdma2d)
-{
-  if(hdma2d->Instance==DMA2D)
-  {
-  /* USER CODE BEGIN DMA2D_MspDeInit 0 */
-
-  /* USER CODE END DMA2D_MspDeInit 0 */
-    /* Peripheral clock disable */
-    __HAL_RCC_DMA2D_CLK_DISABLE();
-
-    /* DMA2D interrupt DeInit */
-    HAL_NVIC_DisableIRQ(DMA2D_IRQn);
-  /* USER CODE BEGIN DMA2D_MspDeInit 1 */
-
-  /* USER CODE END DMA2D_MspDeInit 1 */
-  }
 
 }
 

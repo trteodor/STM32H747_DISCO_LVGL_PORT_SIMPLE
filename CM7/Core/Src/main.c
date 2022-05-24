@@ -154,7 +154,7 @@ Error_Handler();
 //  MX_LTDC_Init();
 //  MX_QUADSPI_Init();
 //  MX_MDMA_Init();
-//  MX_DMA2D_Init();
+  MX_DMA2D_Init();
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 	SCB_CleanInvalidateDCache();
