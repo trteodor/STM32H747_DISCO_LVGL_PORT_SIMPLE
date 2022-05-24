@@ -33,11 +33,10 @@
 /* USER CODE BEGIN Includes */
 #include <string.h>
 #include <stdio.h>
+#include <TemporaryExcluded_NotUsed/lvglAppMain.h>
 
 #include "ltdc.h"
 #include "dsihost.h"
-
-#include "lvglAppMain.h"
 
 #include "tft.h"
 
