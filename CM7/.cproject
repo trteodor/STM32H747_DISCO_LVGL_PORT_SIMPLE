@@ -56,6 +56,7 @@
 									<listOptionValue builtIn="false" value="../../Drivers/BSP/ComponentsApp/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/BSP/Components/Common"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32H747_Mastering_CM7/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="../lvgl_App_Port/lvgl/demos"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1810773905" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
 							</tool>

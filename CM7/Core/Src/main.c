@@ -40,6 +40,8 @@
 
 #include "tft.h"
 
+#include "lv_demos.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -174,7 +176,8 @@ Error_Handler();
 //
 //
 //  LvglInitApp();
-	 ui_init();
+//	 ui_init();
+	lv_demo_stress();
   /* USER CODE END 2 */
 
   /* Infinite loop */

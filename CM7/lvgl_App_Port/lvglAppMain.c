@@ -11,6 +11,9 @@
 //#include "Display_OTM8009A.h"
 #include "DispTest.h"
 
+
+#include "lv_demos.h"
+
 static lv_disp_draw_buf_t disp_buf;
 
 #define DISCOH747_DISP_WIDTH 800
@@ -121,7 +124,8 @@ void LvglInitApp(void)
       HAL_Delay(10);
 
 //      lv_example_get_started_1();
-      ui_init();
+//      ui_init();
+      lv_demo_benchmark();
 //      lv_example_chart_5();
 }
 

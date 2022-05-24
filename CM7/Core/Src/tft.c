@@ -17,6 +17,8 @@
 
 #include "TouchC_ft6x06.h"
 
+
+
 //#include "stm32h747i_discovery.h"
 //#include "stm32h747i_discovery_lcd.h"
 //#include "stm32h747i_discovery_bus.h"
