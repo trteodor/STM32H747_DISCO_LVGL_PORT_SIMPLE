@@ -32,67 +32,6 @@ void MX_LTDC_Init(void)
 
   /* USER CODE BEGIN LTDC_Init 0 */
 
-
-
-	  hltdc.Instance = LTDC;
-	  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-	  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
-	  hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
-	  hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-
-	  hltdc.Init.HorizontalSync     = OTM8009A_480X800_HSYNC - 1;
-	  hltdc.Init.AccumulatedHBP     = OTM8009A_480X800_HSYNC + OTM8009A_480X800_HBP - 1;
-	  hltdc.Init.AccumulatedActiveW = OTM8009A_480X800_HSYNC + LCD_DEFAULT_WIDTH + OTM8009A_480X800_HBP - 1;
-	  hltdc.Init.TotalWidth         = OTM8009A_480X800_HSYNC + LCD_DEFAULT_WIDTH + OTM8009A_480X800_HBP + OTM8009A_480X800_HFP - 1;
-	  hltdc.Init.VerticalSync       = OTM8009A_480X800_VSYNC - 1;
-	  hltdc.Init.AccumulatedVBP     = OTM8009A_480X800_VSYNC + OTM8009A_480X800_VBP - 1;
-	  hltdc.Init.AccumulatedActiveH = OTM8009A_480X800_VSYNC + LCD_DEFAULT_HEIGHT + OTM8009A_480X800_VBP - 1;
-	  hltdc.Init.TotalHeigh         = OTM8009A_480X800_VSYNC + LCD_DEFAULT_HEIGHT + OTM8009A_480X800_VBP + OTM8009A_480X800_VFP - 1;
-
-	  hltdc.Init.Backcolor.Blue  = 0x00;
-	  hltdc.Init.Backcolor.Green = 0x00;
-	  hltdc.Init.Backcolor.Red   = 0x00;
-	  if (HAL_LTDC_Init(&hltdc) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-
-
-	  LTDC_LayerCfgTypeDef pLayerCfg;
-
-	  MX_LTDC_LayerConfig_t config;
-
-      config.X0          = 0;
-      config.X1          = LCD_DEFAULT_WIDTH;
-      config.Y0          = 0;
-      config.Y1          = LCD_DEFAULT_HEIGHT;
-      config.PixelFormat = LCD_PIXEL_FORMAT_RGB888;
-      config.Address     = LCD_FRAME_BUFFER;
-
-
-	  pLayerCfg.WindowX0 = config.X0;
-	  pLayerCfg.WindowX1 = config.X1;
-	  pLayerCfg.WindowY0 = config.Y0;
-	  pLayerCfg.WindowY1 = config.Y1;
-	  pLayerCfg.PixelFormat = config.PixelFormat;
-	  pLayerCfg.Alpha = 255;
-	  pLayerCfg.Alpha0 = 0;
-	  pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
-	  pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
-	  pLayerCfg.FBStartAdress = config.Address;
-	  pLayerCfg.ImageWidth = (config.X1 - config.X0);
-	  pLayerCfg.ImageHeight = (config.Y1 - config.Y0);
-	  pLayerCfg.Backcolor.Blue = 0;
-	  pLayerCfg.Backcolor.Green = 0;
-	  pLayerCfg.Backcolor.Red = 0;
-
-	  if (HAL_LTDC_ConfigLayer(&hltdc, &pLayerCfg, 0) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
-
-
-#ifdef AA
   /* USER CODE END LTDC_Init 0 */
 
   LTDC_LayerCfgTypeDef pLayerCfg = {0};
@@ -101,36 +40,36 @@ void MX_LTDC_Init(void)
 
   /* USER CODE END LTDC_Init 1 */
   hltdc.Instance = LTDC;
-  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
+  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AH;
+  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AH;
   hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
   hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc.Init.HorizontalSync = 1;
+  hltdc.Init.HorizontalSync = 0;
   hltdc.Init.VerticalSync = 0;
-  hltdc.Init.AccumulatedHBP = 35;
-  hltdc.Init.AccumulatedVBP = 15;
-  hltdc.Init.AccumulatedActiveW = 835;
-  hltdc.Init.AccumulatedActiveH = 495;
-  hltdc.Init.TotalWidth = 869;
-  hltdc.Init.TotalHeigh = 511;
+  hltdc.Init.AccumulatedHBP = 2;
+  hltdc.Init.AccumulatedVBP = 2;
+  hltdc.Init.AccumulatedActiveW = 202;
+  hltdc.Init.AccumulatedActiveH = 482;
+  hltdc.Init.TotalWidth = 203;
+  hltdc.Init.TotalHeigh = 483;
   hltdc.Init.Backcolor.Blue = 0;
   hltdc.Init.Backcolor.Green = 0;
-  hltdc.Init.Backcolor.Red = 20;
+  hltdc.Init.Backcolor.Red = 0;
   if (HAL_LTDC_Init(&hltdc) != HAL_OK)
   {
     Error_Handler();
   }
   pLayerCfg.WindowX0 = 0;
-  pLayerCfg.WindowX1 = 800;
+  pLayerCfg.WindowX1 = 200;
   pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 480;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
+  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_PAxCA;
   pLayerCfg.BlendingFactor2 = LTDC_BLENDING_FACTOR2_PAxCA;
   pLayerCfg.FBStartAdress = 0xD0000000;
-  pLayerCfg.ImageWidth = 800;
+  pLayerCfg.ImageWidth = 200;
   pLayerCfg.ImageHeight = 480;
   pLayerCfg.Backcolor.Blue = 20;
   pLayerCfg.Backcolor.Green = 40;
@@ -140,10 +79,11 @@ void MX_LTDC_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN LTDC_Init 2 */
-#endif
+
   /* USER CODE END LTDC_Init 2 */
 
 }
+
 
 void HAL_LTDC_MspInit(LTDC_HandleTypeDef* ltdcHandle)
 {
