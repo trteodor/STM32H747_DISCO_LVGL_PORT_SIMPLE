@@ -734,7 +734,7 @@ typedef  void (*pDSI_CallbackTypeDef)(DSI_HandleTypeDef *hdsi);  /*!< pointer to
 /** @defgroup DSI_HSYNC_Polarity DSI HSYNC Polarity
   * @{
   */
-#define DSI_HSYNC_ACTIVE_HIGH       0x00000004U
+#define DSI_HSYNC_ACTIVE_HIGH       0x00000000U
 #define DSI_HSYNC_ACTIVE_LOW        DSI_LPCR_HSP
 /**
   * @}
@@ -743,7 +743,7 @@ typedef  void (*pDSI_CallbackTypeDef)(DSI_HandleTypeDef *hdsi);  /*!< pointer to
 /** @defgroup DSI_VSYNC_Active_Polarity DSI VSYNC Active Polarity
   * @{
   */
-#define DSI_VSYNC_ACTIVE_HIGH       0x00000004U
+#define DSI_VSYNC_ACTIVE_HIGH       0x00000000U
 #define DSI_VSYNC_ACTIVE_LOW        DSI_LPCR_VSP
 /**
   * @}

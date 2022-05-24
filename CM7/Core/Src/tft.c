@@ -12,45 +12,28 @@
 
 #include "tft.h"
 #include "stm32h7xx_hal.h"
-
 #include "DRVs_ErrorCodes.h"
-
 #include "TouchC_ft6x06.h"
-
 #include "dsihost.h"
 #include "ltdc.h"
-
+#include "dma.h"
 
 /*********************
  *      DEFINES
  *********************/
 
 #define LCD_FB_START_ADDRESS 0xD0000000
-
-
-
 #define ZONES               4       /*Divide the screen into zones to handle tearing effect*/
-
 #define HACT                (OTM8009A_800X480_WIDTH / ZONES)
-
 #define LAYER0_ADDRESS      (LCD_FB_START_ADDRESS)
-
-/**********************
- *      TYPEDEFS
- **********************/
 
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-
-DMA_HandleTypeDef hdma_memtomem_dma2_stream0;
-
-
 OTM8009A_Object_t OTM8009AObj;
 OTM8009A_IO_t IOCtx;
 
 void MX_GPIO_Init_LCD(void);
-
 void MX_DSIHOST_DSI_Init(void);
 void MX_LTDC_Init(void);
 void MX_DMA_Init(void);
@@ -70,21 +53,13 @@ uint8_t pColLeft[] = { 0x00, 0x00, 0x01, 0x8f }; /*   0 -> 399 */
 uint8_t pColRight[] = { 0x01, 0x90, 0x03, 0x1F }; /* 400 -> 799 */
 
 
-/*For LittlevGL*/
+
 static void tft_flush_cb(lv_disp_drv_t * drv, const lv_area_t * area, lv_color_t * color_p);
 
-/*LCD*/
-
-/*DMA to flush to frame buffer*/
 static void DMA_TransferComplete(DMA_HandleTypeDef *han);
 
-/**********************
- *  STATIC VARIABLES
- **********************/
 
 static uint16_t * my_fb = (uint16_t *)LAYER0_ADDRESS;
-
-
 
 #define __DSI_MASK_TE()   (GPIOJ->AFR[0] &= (0xFFFFF0FFU))   /* Mask DSI TearingEffect Pin*/
 #define __DSI_UNMASK_TE() (GPIOJ->AFR[0] |= ((uint32_t)(GPIO_AF13_DSI) << 8)) /* UnMask DSI TearingEffect Pin*/
@@ -130,10 +105,6 @@ int32_t LCD_TFT_GetTick(void)
   return (int32_t)HAL_GetTick();
 }
 
-
-/**
- * Monitor refresh time
- * */
 void monitor_cb(lv_disp_drv_t * d, uint32_t t, uint32_t p)
 {
     t_last = t;
@@ -211,6 +182,8 @@ void TouchCntrlFt6x06_Read(lv_indev_drv_t * drv, lv_indev_data_t*data)
 
 
 void LCD_SetUpdateRegion(int idx);
+
+
 void tft_init_2(void)
 {
 	LCD_SetUpdateRegion(0);
@@ -329,7 +302,6 @@ void HAL_DSI_EndOfRefreshCallback(DSI_HandleTypeDef *hdsi)
 
 static void DMA_TransferComplete(DMA_HandleTypeDef *han)
 {
-
 	y_flush_act++;
 
 	if(y_flush_act > y2_flush)
@@ -432,49 +404,4 @@ int32_t DSI_IO_Write(uint16_t ChannelNbr, uint16_t Reg, uint8_t* pData, uint16_t
    HAL_GPIO_Init(LCD_RESET_GPIO_Port, &GPIO_InitStruct);
 
  }
-
-
-
-void MX_DMA_Init(void)
-{
-
-  /* DMA controller clock enable */
-  __HAL_RCC_DMA2_CLK_ENABLE();
-
-  /* Configure DMA request hdma_memtomem_dma2_stream0 on DMA2_Stream0 */
-  hdma_memtomem_dma2_stream0.Instance = DMA2_Stream0;
-  hdma_memtomem_dma2_stream0.Init.Request = DMA_REQUEST_MEM2MEM;
-  hdma_memtomem_dma2_stream0.Init.Direction = DMA_MEMORY_TO_MEMORY;
-  hdma_memtomem_dma2_stream0.Init.PeriphInc = DMA_PINC_ENABLE;
-  hdma_memtomem_dma2_stream0.Init.MemInc = DMA_MINC_ENABLE;
-  hdma_memtomem_dma2_stream0.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;
-  hdma_memtomem_dma2_stream0.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
-  hdma_memtomem_dma2_stream0.Init.Mode = DMA_NORMAL;
-  hdma_memtomem_dma2_stream0.Init.Priority = DMA_PRIORITY_HIGH;
-  hdma_memtomem_dma2_stream0.Init.FIFOMode = DMA_FIFOMODE_ENABLE;
-  hdma_memtomem_dma2_stream0.Init.FIFOThreshold = DMA_FIFO_THRESHOLD_1QUARTERFULL;
-  hdma_memtomem_dma2_stream0.Init.MemBurst = DMA_MBURST_SINGLE;
-  hdma_memtomem_dma2_stream0.Init.PeriphBurst = DMA_PBURST_SINGLE;
-  if (HAL_DMA_Init(&hdma_memtomem_dma2_stream0) != HAL_OK)
-  {
-    Error_Handler( );
-  }
-
-  /* DMA interrupt init */
-  /* DMA2_Stream0_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA2_Stream0_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA2_Stream0_IRQn);
-
-}
-
-void DMA2_Stream0_IRQHandler(void)
-{
-  /* USER CODE BEGIN DMA2_Stream0_IRQn 0 */
-
-  /* USER CODE END DMA2_Stream0_IRQn 0 */
-  HAL_DMA_IRQHandler(&hdma_memtomem_dma2_stream0);
-  /* USER CODE BEGIN DMA2_Stream0_IRQn 1 */
-
-  /* USER CODE END DMA2_Stream0_IRQn 1 */
-}
 

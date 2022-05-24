@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "dma.h"
 #include "hdmi_cec.h"
 #include "mdma.h"
 #include "rtc.h"
@@ -112,9 +113,10 @@ int main(void)
   MX_RTC_Init();
   MX_SAI1_Init();
   MX_SPDIFRX1_Init();
-  MX_TIM13_Init();
   MX_MDMA_Init();
+  MX_DMA_Init();
   MX_TIM8_Init();
+  MX_TIM13_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
