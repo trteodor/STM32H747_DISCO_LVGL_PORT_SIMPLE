@@ -38,6 +38,8 @@
 
 #include "lvglAppMain.h"
 
+#include "tft.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -145,29 +147,34 @@ Error_Handler();
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART1_UART_Init();
-  MX_DSIHOST_DSI_Init();
+//  MX_DSIHOST_DSI_Init();
   MX_FMC_Init();
-  MX_LTDC_Init();
+//  MX_LTDC_Init();
 //  MX_QUADSPI_Init();
-  MX_MDMA_Init();
-  MX_DMA2D_Init();
+//  MX_MDMA_Init();
+//  MX_DMA2D_Init();
   MX_I2C4_Init();
   /* USER CODE BEGIN 2 */
 	SCB_CleanInvalidateDCache();
 
+	tft_init_1();
+	BSP_TS_InitIT_OTM8009a();
+	lv_init();
+	tft_init_2();
 
-  LCD_OTM8009a_InitFull();
-HAL_Delay(3000);
-SDRAM_demo();
-HAL_Delay(3000);
+//  LCD_OTM8009a_InitFull();
+//HAL_Delay(3000);
+//SDRAM_demo();
+//HAL_Delay(3000);
+//
+//
+//
 
-
-
-  BSP_TS_InitIT_OTM8009a();
-
-
-
-  LvglInitApp();
+//
+//
+//
+//  LvglInitApp();
+	 ui_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -177,11 +184,13 @@ HAL_Delay(3000);
 
 //	  HAL_Delay(200);
 	  static uint32_t LvglTime = 0;
-	  if(HAL_GetTick() - LvglTime > 5)
+	  if(HAL_GetTick() - LvglTime >= 1)
 	  {
 		  LvglTime = HAL_GetTick();
+		  lv_tick_inc(1);
 
-		  LvglProcesTask();
+		  lv_task_handler();
+
 	  }
 //	  HAL_Delay(200);
 //	  LCD_Task();
@@ -204,32 +213,22 @@ void SystemClock_Config(void)
   /** Supply configuration update enable
   */
   HAL_PWREx_ConfigSupply(PWR_DIRECT_SMPS_SUPPLY);
-
   /** Configure the main internal regulator output voltage
   */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
   while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
-
-  /** Macro to configure the PLL clock source
-  */
-  __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
-
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_LSI
-                              |RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLM = 5;
-  RCC_OscInitStruct.PLL.PLLN = 160;
+  RCC_OscInitStruct.PLL.PLLN = 192;
   RCC_OscInitStruct.PLL.PLLP = 2;
-  RCC_OscInitStruct.PLL.PLLQ = 5;
+  RCC_OscInitStruct.PLL.PLLQ = 2;
   RCC_OscInitStruct.PLL.PLLR = 2;
   RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_2;
   RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
@@ -238,7 +237,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -252,11 +250,10 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
   RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
     Error_Handler();
   }
-  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI, RCC_MCODIV_1);
 }
 
 /**

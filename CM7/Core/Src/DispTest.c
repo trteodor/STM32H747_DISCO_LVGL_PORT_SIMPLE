@@ -162,12 +162,12 @@ void LvglFlushBuffer(uint32_t *pixelMap, uint16_t x, uint16_t y, uint16_t xsize,
 //    if(pending_buffer < 0)
     {
         /* UnMask the TE */
-    	TransmisionCpltCb = (void*)DMAtrEndCb;
+//    	TransmisionCpltCb = (void*)DMAtrEndCb;
 
 
 
     	LL_DMAFlushBuffer(pixelMap, (uint32_t *)LCD_FRAME_BUFFER, x, y, xsize, ysize,(void*)DMAtrEndCb);
-        __DSI_UNMASK_TE();
+//        __DSI_UNMASK_TE();
     }
     /* Wait some time before switching to next image */
 //    HAL_Delay(30);
@@ -288,10 +288,10 @@ int32_t LCD_GetYSize(uint32_t Instance, uint32_t *YSize)
 void HAL_DSI_TearingEffectCallback(DSI_HandleTypeDef *hdsi)
 {
   /* Mask the TE */
-  __DSI_MASK_TE();
-
-  /* Refresh the right part of the display */
-  HAL_DSI_Refresh(hdsi);
+//  __DSI_MASK_TE();
+//
+//  /* Refresh the right part of the display */
+//  HAL_DSI_Refresh(hdsi);
 }
 
 /**
@@ -708,7 +708,7 @@ static void LL_DMAFlushBuffer(uint32_t *pSrc, uint32_t *pDst, uint16_t x, uint16
   hdma2d.Init.RedBlueSwap   = DMA2D_RB_REGULAR;     /* No Output Red & Blue swap */
 
   /*##-2- DMA2D Callbacks Configuration ######################################*/
-  hdma2d.XferCpltCallback  = (void *)DMA2D_TransmitCpltCallBack;
+  hdma2d.XferCpltCallback  = (void *)DMAtrEndCb;
 
   /*##-3- Foreground Configuration ###########################################*/
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;

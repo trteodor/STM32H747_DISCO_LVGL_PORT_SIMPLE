@@ -41,18 +41,18 @@ static lv_color_t *lasColorMapPointer;
 
 void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * color_map)
 {
-	LTDC_Layer1->CFBAR = (uint32_t)color_map;
-	LTDC->SRCR = LTDC_SRCR_VBR;
-	lv_disp_flush_ready(drv);
+//	LTDC_Layer1->CFBAR = (uint32_t)color_map;
+//	LTDC->SRCR = LTDC_SRCR_VBR;
+//	lv_disp_flush_ready(drv);
 
 
-//	LastDriver = drv;
-//	lasColorMapPointer = color_map;
-//
-//
-//	SCB_CleanDCache_by_Addr((uint32_t*)color_map, 480*800*4);
-//	LvglFlushBuffer((void*)color_map, area->x1, area->y1, area->x2 - area->x1 +1, area->y2 - area->y1 +1,BuffTransmitCpltCb);
-//
+	LastDriver = drv;
+	lasColorMapPointer = color_map;
+
+
+	SCB_CleanDCache_by_Addr((uint32_t*)color_map, 480*800*4);
+	LvglFlushBuffer((void*)color_map, area->x1, area->y1, area->x2 - area->x1 +1, area->y2 - area->y1 +1,BuffTransmitCpltCb);
+
 
 
 }
@@ -61,7 +61,12 @@ void OTM8009_flush(lv_disp_drv_t * drv, const lv_area_t * area,  lv_color_t * co
 void BuffTransmitCpltCb(void)
 {
 	SCB_CleanInvalidateDCache();
+
+
+	if(lv_disp_flush_is_last(LastDriver)) HAL_DSI_Refresh(&hdsi);
 	lv_disp_flush_ready(LastDriver);
+
+//	lv_disp_flush_ready(LastDriver);
 }
 
 void TouchCntrlFt6x06_Read(lv_indev_drv_t * drv, lv_indev_data_t*data)
@@ -126,6 +131,6 @@ void LvglInitApp(void)
 /*Called from main.c with period 5ms*/
 void LvglProcesTask(void)
 {
-    lv_task_handler();
     lv_tick_inc(5);
+    lv_task_handler();
 }

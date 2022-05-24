@@ -16,19 +16,18 @@ extern "C" {
 #include "lvgl/lvgl.h"
 #endif
 
-extern lv_obj_t * ui_Screen2;
-extern lv_obj_t * ui_Arc3;
-extern lv_obj_t * ui_Slider1;
-extern lv_obj_t * ui_Switch1;
-extern lv_obj_t * ui_Dropdown1;
-extern lv_obj_t * ui_Chart1;
-extern lv_obj_t * ui_Spinner1;
-extern lv_obj_t * ui_Bar1;
-extern lv_obj_t * ui_Panel1;
 extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_TextArea1;
+extern lv_obj_t * ui_Arc1;
+extern lv_obj_t * ui_Arc2;
+extern lv_obj_t * ui_Button2;
 extern lv_obj_t * ui_Keyboard1;
-extern lv_obj_t * ui_Button1;
+extern lv_obj_t * ui_Button3;
+extern lv_obj_t * ui_Arc3;
+extern lv_obj_t * ui_Image3;
+extern lv_obj_t * ui_Screen2;
+extern lv_obj_t * ui_Button5;
+extern lv_obj_t * ui_Spinner1;
+extern lv_obj_t * ui_Chart1;
 
 
 
