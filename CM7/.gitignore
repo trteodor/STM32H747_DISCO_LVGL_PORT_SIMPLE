@@ -1,3 +1,4 @@
 /Debug/*
 !Debug/STM32H747_Mastering_CM7.elf
 
+/Debug/

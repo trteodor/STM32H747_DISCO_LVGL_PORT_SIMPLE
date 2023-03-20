@@ -49,13 +49,11 @@
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
 									<listOptionValue builtIn="false" value="../../Drivers/CMSIS/Include"/>
 									<listOptionValue builtIn="false" value="../../Utilities/lcd"/>
-									<listOptionValue builtIn="false" value="../Core/Inc"/>
-									<listOptionValue builtIn="false" value="../../Drivers/BSP/STM32H747I-DISCO"/>
-									<listOptionValue builtIn="false" value="../lvgl_App_Port"/>
-									<listOptionValue builtIn="false" value="../lvgl_App_Port/UI_GenBySquareLineSt"/>
 									<listOptionValue builtIn="false" value="../../Drivers/BSP/ComponentsApp/Inc"/>
 									<listOptionValue builtIn="false" value="../../Drivers/BSP/Components/Common"/>
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/STM32H747_Mastering_CM7/GUI}&quot;"/>
+									<listOptionValue builtIn="false" value="../Core/Inc"/>
+									<listOptionValue builtIn="false" value="../lvgl_App_Port"/>
+									<listOptionValue builtIn="false" value="../lvgl_App_Port/UI_GenBySquareLineSt"/>
 									<listOptionValue builtIn="false" value="../lvgl_App_Port/lvgl/demos"/>
 								</option>
 								<inputType id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c.1810773905" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.input.c"/>
@@ -85,7 +83,7 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Common"/>
 						<entry excluding="Src/DispTest.c|Src/BSP_LCD_Stm32h747Disco.c|Src/sdram.c|Src/touchscreen.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
-						<entry excluding="STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_tim_template.c|BSP/ComponentsApp/Src/Display_OTM8009A.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_ll_delayblock.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_rtc_wakeup_template.c|BSP/ExcludedDrivers|STM32H7xx_HAL_Driver/Inc|STM32H7xx_HAL_Driver/Src|BSP/ComponentsApp/Src/Display_OTM8009A_Tests.c|BSP/STM32H747I-DISCO/stm32h747i_discovery_bus.c|STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_timebase_rtc_alarm_template.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
+						<entry excluding="BSP/ComponentsApp/Src/TouchC_ft6x06_Tests.c|BSP/ComponentsApp/Src/SDRAM_is42s32800j_Tests.c|BSP/ComponentsApp/Src/FlashQspi_mt25tl01g_Tests.c|BSP/ExcludedDrivers" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry excluding="CPU|Fonts" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Utilities"/>
 						<entry excluding="TemporaryExcluded_NotUsed|lvgl/tests|lvgl_HwPort.c|lvglAppMain.c" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="lvgl_App_Port"/>
 					</sourceEntries>
@@ -162,9 +160,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Common"/>
 						<entry excluding="Src/DispTest.c|Src/BSP_LCD_Stm32h747Disco.c|Src/sdram.c|Src/touchscreen.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>
-						<entry excluding="BSP/ComponentsApp/Src/Display_OTM8009A.c|BSP/ExcludedDrivers|BSP/ComponentsApp/Src/Display_OTM8009A_Tests.c|BSP/STM32H747I-DISCO/stm32h747i_discovery_bus.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
